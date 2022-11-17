@@ -1,23 +1,28 @@
 # from celery.result import AsyncResult
+import logging
+import sys
 import time
 import traceback
 import uuid
-import logging
-import sys
 
-from loguru import logger
-from gunicorn.app.base import BaseApplication
 from asgi_correlation_id import CorrelationIdMiddleware, correlation_id
 from asgi_correlation_id.middleware import is_valid_uuid4
 from fastapi import FastAPI, Request, Response
-from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from prometheus_fastapi_instrumentator import Instrumentator
+from fastapi.responses import JSONResponse
+from gunicorn.app.base import BaseApplication
+from loguru import logger
 
 from src.core.config import settings
-from src.utils.extensions.async_requests import async_http_req
-from src.utils.loggers import InterceptHandler, LOG_LEVEL, JSON_LOGS, WORKERS, StubbedGunicornLogger
 from src.register.context import correlation_id_filter
+from src.utils.extensions.async_requests import async_http_req
+from src.utils.loggers import (
+    JSON_LOGS,
+    LOG_LEVEL,
+    WORKERS,
+    InterceptHandler,
+    StubbedGunicornLogger,
+)
 
 
 class StandaloneApplication(BaseApplication):
@@ -30,7 +35,8 @@ class StandaloneApplication(BaseApplication):
 
     def load_config(self):
         config = {
-            key: value for key, value in self.options.items()
+            key: value
+            for key, value in self.options.items()
             if key in self.cfg.settings and value is not None
         }
         for key, value in config.items():
@@ -38,6 +44,7 @@ class StandaloneApplication(BaseApplication):
 
     def load(self):
         return self.application
+
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -47,7 +54,7 @@ app = FastAPI(
     docs_url=f"/api/v{settings.MAJAR_VERSION}/docs",
     redoc_url=f"/api/v{settings.MAJAR_VERSION}/redocs",
     # exception_handlers=exception_handlers,
-    )
+)
 
 
 async def assert_exception_handler(
@@ -94,14 +101,15 @@ async def add_audit_handler(request: Request, call_next):
         }
         return response
 
+
 app.add_middleware(
-        CORSMiddleware,
-        # allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    CORSMiddleware,
+    # allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.add_middleware(
     CorrelationIdMiddleware,
@@ -132,7 +140,7 @@ async def req_test(method, url):
     return res
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     intercept_handler = InterceptHandler()
     # logging.basicConfig(handlers=[intercept_handler], level=LOG_LEVEL)
     # logging.root.handlers = [intercept_handler]
@@ -153,8 +161,16 @@ if __name__ == '__main__':
             seen.add(name.split(".")[0])
             logging.getLogger(name).handlers = [intercept_handler]
 
-    logger.configure(handlers=[{"sink": sys.stdout, "serialize": JSON_LOGS, "format": fmt,
-            "filter": correlation_id_filter,}])
+    logger.configure(
+        handlers=[
+            {
+                "sink": sys.stdout,
+                "serialize": JSON_LOGS,
+                "format": fmt,
+                "filter": correlation_id_filter,
+            }
+        ]
+    )
 
     options = {
         "bind": "0.0.0.0",
@@ -162,7 +178,7 @@ if __name__ == '__main__':
         "accesslog": "-",
         "errorlog": "-",
         "worker_class": "uvicorn.workers.UvicornWorker",
-        "logger_class": StubbedGunicornLogger
+        "logger_class": StubbedGunicornLogger,
     }
 
     StandaloneApplication(app, options).run()
