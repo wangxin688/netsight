@@ -1,0 +1,42 @@
+services:
+  default_database:
+    restart: unless-stopped
+    image: postgres:latest
+    container_name: "netsight-postgresql"
+    volumes:
+      - ./data/netsight-rdbms:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${DEFAULT_DATABASE_DB}
+      - POSTGRES_USER=${DEFAULT_DATABASE_USER}
+      - POSTGRES_PASSWORD=${DEFAULT_DATABASE_PASSWORD}
+    env_file:
+      - .env
+    ports:
+      - "${DEFAULT_DATABASE_PORT}:5432"
+  rabbit:
+    image: rabbitmq:3.10.6-management
+    hostname: rabbit
+    container_name: "netsight-rabbitmq"
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+    env_file:
+      - .env
+    volumes:
+      - ./data/netsight-rabbitmq:/var/lib/rabbitmq 
+  redis:
+    image: redis:latest
+    restart: unless-stopped
+    container_name: "netsight-redis"
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/netsight-redis:/var/lib/redis
+    command: redis-server --requirepass ${REDIS_DEFAULT_PASS} --notify-keyspace-events Ex
+    env_file:
+      - .env
+    
