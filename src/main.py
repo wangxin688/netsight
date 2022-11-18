@@ -1,4 +1,3 @@
-# from celery.result import AsyncResult
 import logging
 import sys
 import time
@@ -99,6 +98,7 @@ async def add_audit_handler(request: Request, call_next):
             if request.path_params.get("audit")
             else None,
         }
+        logger.info(data)
         return response
 
 

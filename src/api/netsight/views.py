@@ -1,15 +1,19 @@
+from celery.result import AsyncResult
 from fastapi import APIRouter, Depends
 from fastapi.responses import ORJSONResponse
 from loguru import logger
 
 from src.api import deps
+from src.auth.models import User
 from src.utils.error_code import ERR_NUM_0, ERR_NUM_500, ERR_NUM_2002
 
 router = APIRouter()
 
 
 @router.get("/tasks/result/{task_id}")
-async def get_task_result(task_id: str, current_user=Depends(deps.get_current_user)):
+async def get_task_result(
+    task_id: str, current_user: User = Depends(deps.get_current_user)
+):
     task = AsyncResult(task_id)
     if not task.ready():
         return ORJSONResponse(status_code=200, content=ERR_NUM_2002._asdict())
