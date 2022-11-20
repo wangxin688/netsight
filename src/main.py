@@ -21,49 +21,53 @@ from src.utils.loggers import (
     logger,
 )
 
-app = FastAPI(
-    title=settings.PROJECT_NAME,
-    version=settings.VERSION,
-    description=settings.DESCRIPTION,
-    openapi_url="/api/v1/docs",
-    docs_url="/api/v1/docs",
-    redoc_url="/api/v1/redocs"
-    # swagger_ui_init_oauth={}
-)
+def create_app():
+
+    app = FastAPI(
+        title=settings.PROJECT_NAME,
+        version=settings.VERSION,
+        description=settings.DESCRIPTION,
+        openapi_url="/api/v1/docs",
+        docs_url="/api/v1/docs",
+        redoc_url="/api/v1/redocs"
+        # swagger_ui_init_oauth={}
+    )
 
 
-async def assert_exception_handler(
-    request: Request, exc: AssertionError
-) -> ORJSONResponse:
-    # return_info = ERR_NUM_1.dict()
-    # return_info.update({"data": jsonable_encoder(str(exc))})
-    return ORJSONResponse(status_code=500, content={"detail": str(exc)})
+    async def assert_exception_handler(
+        request: Request, exc: AssertionError
+    ) -> ORJSONResponse:
+        # return_info = ERR_NUM_1.dict()
+        # return_info.update({"data": jsonable_encoder(str(exc))})
+        return ORJSONResponse(status_code=500, content={"detail": str(exc)})
 
 
-@app.exception_handler(AssertionError)
-async def custom_assert_exception_handler(request, e):
-    logger.error(e)
-    return await assert_exception_handler(request, e)
+    @app.exception_handler(AssertionError)
+    async def custom_assert_exception_handler(request, e):
+        logger.error(e)
+        return await assert_exception_handler(request, e)
 
 
-app.add_middleware(
-    CorrelationIdMiddleware,
-    header_name="X-Request-ID",
-    generator=lambda: uuid.uuid4().hex,
-    validator=is_valid_uuid4,
-    transformer=lambda a: a,
-)
+    app.add_middleware(
+        CorrelationIdMiddleware,
+        header_name="X-Request-ID",
+        generator=lambda: uuid.uuid4().hex,
+        validator=is_valid_uuid4,
+        transformer=lambda a: a,
+    )
 
-app.add_middleware(
-    CORSMiddleware,
-    # allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+    app.add_middleware(
+        CORSMiddleware,
+        # allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
-app.include_router(router, prefix="/api/v1")
+    app.include_router(router, prefix="/api/v1")
+
+    return app
 
 
 if __name__ == "__main__":
@@ -106,5 +110,9 @@ if __name__ == "__main__":
         "worker_class": "uvicorn.workers.UvicornWorker",
         "logger_class": StubbedGunicornLogger,
     }
-    print("test")
-    StandaloneApplication(app, options).run()
+    app = create_app()
+    print("start app now")
+    try:
+        StandaloneApplication(app, options).run()
+    except Exception as e:
+        print(e)
