@@ -25,10 +25,14 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
+async def audit_request(audit: bool = True) -> bool:
+    return audit
+
+
 async def get_current_user(
     request: Request,
     session: AsyncSession = Depends(get_session),
-    token: str = Depends(auth_plugins[settings.AUTH]),
+    token: str = Depends(auth_plugins(settings.AUTH)),
 ) -> User:
     try:
         payload = jwt.decode(

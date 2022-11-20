@@ -37,7 +37,6 @@ class BaseResponse(GenericModel, Generic[DataT]):
     code: int
     data: Optional[DataT] = None
     msg: str
-    ch_msg: Optional[str]
 
     class Config:
         json_loads = orjson.loads
@@ -56,7 +55,6 @@ class BaseListResponse(GenericModel, Generic[DataT]):
     code: int
     data: ListData
     msg: str
-    ch_msg: str
 
     class Config:
         json_loads = orjson.loads

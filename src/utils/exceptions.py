@@ -8,6 +8,7 @@ from src.utils.error_code import (
     ERR_NUM_1,
     ERR_NUM_500,
     ERR_NUM_4001,
+    ERR_NUM_4002,
     ERR_NUM_4003,
     ERR_NUM_4004,
     ERR_NUM_4011,
@@ -44,11 +45,19 @@ from src.utils.loggers import logger
 #         return result
 
 
-class TokenInvalidExpiredError(Exception):
+class TokenNotProvidedError(Exception):
     pass
 
 
-class RefreshTokenInvalidExpiredError(Exception):
+class TokenInvalidError(Exception):
+    pass
+
+
+class TokenExpiredError(Exception):
+    pass
+
+
+class TokenInvalidForRefreshError(Exception):
     pass
 
 
@@ -78,16 +87,28 @@ class SessionNotInitError(Exception):
         super().__init__(*args)
 
 
-async def token_invalid_expired_handler(
-    request: Request, exc: TokenInvalidExpiredError
+async def token_not_provided_handler(
+    request: Request, exc: TokenNotProvidedError
 ) -> ORJSONResponse:
     return ORJSONResponse(status_code=status.HTTP_200_OK, content=ERR_NUM_4001.dict())
 
 
-async def refresh_token_invalid_expired_handler(
-    request: Request, exc: RefreshTokenInvalidExpiredError
+async def token_invalid_handler(
+    request: Request, exc: TokenInvalidError
+) -> ORJSONResponse:
+    return ORJSONResponse(status_code=status.HTTP_200_OK, content=ERR_NUM_4001.dict())
+
+
+async def invalid_token_for_refresh_handler(
+    request: Request, exc: TokenInvalidForRefreshError
 ) -> ORJSONResponse:
     return ORJSONResponse(status_code=status.HTTP_200_OK, content=ERR_NUM_4011.dict())
+
+
+async def token_expired_handler(
+    request: Request, exc: TokenExpiredError
+) -> ORJSONResponse:
+    return ORJSONResponse(status_code=status.HTTP_200_OK, content=ERR_NUM_4002.dict())
 
 
 async def permission_deny_handler(

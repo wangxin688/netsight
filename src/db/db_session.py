@@ -4,7 +4,7 @@ from sqlalchemy.pool import NullPool
 
 from src.core.config import settings
 
-async_sqlalchemy_database_uri = settings.DEFAULT_SQLALCHEMY_DATABASE_URI
+async_sqlalchemy_database_uri = settings.SQLALCHEMY_DATABASE_URI
 
 async_engine = create_async_engine(
     async_sqlalchemy_database_uri, pool_pre_ping=True, poolclass=NullPool

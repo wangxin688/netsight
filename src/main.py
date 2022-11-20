@@ -1,17 +1,35 @@
-import time
-import traceback
+import logging
+import sys
 import uuid
 
-from asgi_correlation_id import CorrelationIdMiddleware, correlation_id
+from asgi_correlation_id import CorrelationIdMiddleware
 from asgi_correlation_id.middleware import is_valid_uuid4
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import ORJSONResponse
 
-from src.api.auth.views import auth_router
-from tests.loggers import logger
+from src.core.config import settings
+from src.register.router import router
+from src.utils.loggers import (
+    JSON_LOGS,
+    LOG_LEVEL,
+    WORKERS,
+    InterceptHandler,
+    StandaloneApplication,
+    StubbedGunicornLogger,
+    correlation_id_filter,
+    logger,
+)
 
-app = FastAPI()
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION,
+    description=settings.DESCRIPTION,
+    openapi_url="/api/v1/docs",
+    docs_url="/api/v1/docs",
+    redoc_url="/api/v1/redocs"
+    # swagger_ui_init_oauth={}
+)
 
 
 async def assert_exception_handler(
@@ -26,35 +44,6 @@ async def assert_exception_handler(
 async def custom_assert_exception_handler(request, e):
     logger.error(e)
     return await assert_exception_handler(request, e)
-
-
-@app.middleware("http")
-async def add_process_time_header(request: Request, call_next):
-    start_time = time.time()
-    try:
-        response: Response = await call_next(request)
-    except Exception as e:
-        logger.error(e)
-        logger.info(traceback.print_exc())
-        response = ORJSONResponse(status_code=500, content={"detail": str(e)})
-    finally:
-        process_time = time.time() - start_time
-        response.headers["X-Process-Time"] = str(process_time)
-        # add glolbal params `audit` to enable or disable rsp data
-        data = {
-            "x-process-time": process_time,
-            "ip": request.client.host,
-            "method": request.method,
-            "path": request.url.path,
-            "parmas": request.path_params,
-            "code": response.status_code,
-            "x-request-id": correlation_id.get(),
-            "data": response.body.decode("utf-8")
-            if request.path_params.get("audit")
-            else None,
-        }
-        logger.info(data)
-        return response
 
 
 app.add_middleware(
@@ -74,4 +63,48 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth_router, prefix="/auth", tags=["auth"])
+app.include_router(router, prefix="/api/v1")
+
+
+if __name__ == "__main__":
+    intercept_handler = InterceptHandler()
+    # logging.basicConfig(handlers=[intercept_handler], level=LOG_LEVEL)
+    # logging.root.handlers = [intercept_handler]
+    logging.root.setLevel(LOG_LEVEL)
+    fmt = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <blue>{correlation_id}</blue> | <level>{level: <2}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
+
+    seen = set()
+    for name in [
+        *logging.root.manager.loggerDict.keys(),
+        "gunicorn",
+        "gunicorn.access",
+        "gunicorn.error",
+        "uvicorn",
+        "uvicorn.access",
+        "uvicorn.error",
+    ]:
+        if name not in seen:
+            seen.add(name.split(".")[0])
+            logging.getLogger(name).handlers = [intercept_handler]
+
+    logger.configure(
+        handlers=[
+            {
+                "sink": sys.stdout,
+                "serialize": JSON_LOGS,
+                "format": fmt,
+                "filter": correlation_id_filter,
+            }
+        ]
+    )
+
+    options = {
+        "bind": "0.0.0.0",
+        "workers": WORKERS,
+        "accesslog": "-",
+        "errorlog": "-",
+        "worker_class": "uvicorn.workers.UvicornWorker",
+        "logger_class": StubbedGunicornLogger,
+    }
+    print("test")
+    StandaloneApplication(app, options).run()

@@ -1,12 +1,40 @@
 import logging
 import os
 
+from asgi_correlation_id.context import correlation_id
+from gunicorn.app.base import BaseApplication
 from gunicorn.glogging import Logger
 from loguru import logger
 
 LOG_LEVEL = logging.getLevelName(os.environ.get("LOG_LEVEL", "DEBUG"))
 JSON_LOGS = True if os.environ.get("JSON_LOGS", "0") == "1" else False
 WORKERS = int(os.environ.get("GUNICORN_WORKERS", "5"))
+
+
+def correlation_id_filter(record):
+    record["correlation_id"] = correlation_id.get()
+    return record["correlation_id"]
+
+
+class StandaloneApplication(BaseApplication):
+    """Our Gunicorn application."""
+
+    def __init__(self, app, options=None):
+        self.options = options or {}
+        self.application = app
+        super().__init__()
+
+    def load_config(self):
+        config = {
+            key: value
+            for key, value in self.options.items()
+            if key in self.cfg.settings and value is not None
+        }
+        for key, value in config.items():
+            self.cfg.set(key.lower(), value)
+
+    def load(self):
+        return self.application
 
 
 class InterceptHandler(logging.Handler):

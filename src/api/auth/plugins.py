@@ -6,7 +6,7 @@ from fastapi.security import OAuth2, OAuth2PasswordBearer
 from fastapi.security.utils import get_authorization_scheme_param
 
 from src.core.config import settings
-from src.utils.exceptions import TokenInvalidExpiredError
+from src.utils.exceptions import TokenInvalidError
 
 
 class CustomOAuth2AuthorizationCodeBearer(OAuth2):
@@ -42,18 +42,22 @@ class CustomOAuth2AuthorizationCodeBearer(OAuth2):
         scheme, param = get_authorization_scheme_param(authorization)
         if not authorization or scheme.lower() != "bearer":
             if self.auto_error:
-                raise TokenInvalidExpiredError
+                raise TokenInvalidError
             else:
                 return None  # pragma: nocover
         return param
 
 
 def auth_plugins(plugins: Literal["Lark", "AD", "Simple"] = "Simple"):
-    lark_oauth2_schema = CustomOAuth2AuthorizationCodeBearer(
-        authorizationUrl=settings.REDIRECT_URI,
-        tokenUrl="auth/login",
-        refreshUrl="auth/refresh-token",
-    )
-    password_oauth2_schema = OAuth2PasswordBearer(tokenUrl="auth/access-token")
-    auth_choices = {"Simple": password_oauth2_schema, "Lark": lark_oauth2_schema}
+    auth_choices = {}
+    if plugins == "Lark":
+        lark_oauth2_schema = CustomOAuth2AuthorizationCodeBearer(
+            authorizationUrl=settings.REDIRECT_URI,
+            tokenUrl="auth/login",
+            refreshUrl="auth/refresh-token",
+        )
+        auth_choices.update({"Lark": lark_oauth2_schema})
+    if plugins == "Simple":
+        password_oauth2_schema = OAuth2PasswordBearer(tokenUrl="auth/access-token")
+        auth_choices.update({"Simple": password_oauth2_schema})
     return auth_choices[plugins]

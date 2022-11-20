@@ -18,6 +18,7 @@ __all__ = (
     "ERR_NUM_1",
     "ERR_NUM_500",
     "ERR_NUM_4001",
+    "ERR_NUM_4002",
     "ERR_NUM_4011",
     "ERR_NUM_4003",
     "ERR_NUM_4004",
@@ -39,10 +40,11 @@ ERR_NUM_1 = ErrCode(
     0, "Validation Error, please check requested params or body format", None
 )
 ERR_NUM_500 = ErrCode(500, "Internal Server Error", None)
-ERR_NUM_4001 = ErrCode(4001, "Refresh Token Expired, need re-login again", None)
-ERR_NUM_4011 = ErrCode(
-    4011, "Unauthenticated: Bearer token invalid or not provided", None
+ERR_NUM_4001 = ErrCode(
+    4001, "Authenticated failed: Bearer token invalid or not provide", None
 )
+ERR_NUM_4002 = ErrCode(4001, "Authenticated failed: Bearer token expired", None)
+ERR_NUM_4011 = ErrCode(4011, "Unauthenticated: Bearer token is refresh token", None)
 
 ERR_NUM_4003 = ErrCode(
     4003, "Permission Denied: Privilege limited, Operation not permit", None
