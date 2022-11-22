@@ -13,10 +13,10 @@ from src.core.config import settings
 from src.db.db_session import async_session
 from src.utils.exceptions import (
     PermissionDenyError,
+    ResourceNotFoundError,
     TokenExpiredError,
     TokenInvalidError,
     TokenInvalidForRefreshError,
-    UserNotFoundError,
 )
 
 
@@ -52,7 +52,7 @@ async def get_current_user(
     user: User | None = result.scalars().first()
 
     if not user:
-        raise UserNotFoundError
+        raise ResourceNotFoundError
     request.state.current_user = user.email
     return user
 

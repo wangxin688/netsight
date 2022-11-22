@@ -4,11 +4,11 @@ import uuid
 
 from asgi_correlation_id import CorrelationIdMiddleware
 from asgi_correlation_id.middleware import is_valid_uuid4
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import ORJSONResponse
 
 from src.core.config import settings
+from src.register.exception_handler import exception_handlers
 from src.register.router import router
 from src.utils.loggers import (
     JSON_LOGS,
@@ -21,32 +21,35 @@ from src.utils.loggers import (
     logger,
 )
 
+
 def create_app():
 
     app = FastAPI(
         title=settings.PROJECT_NAME,
         version=settings.VERSION,
         description=settings.DESCRIPTION,
-        openapi_url="/api/v1/docs",
+        openapi_url="/api/v1/openapi.json",
         docs_url="/api/v1/docs",
         redoc_url="/api/v1/redocs"
         # swagger_ui_init_oauth={}
     )
+    for handler in exception_handlers:
+        app.add_exception_handler(
+            exc_class_or_status_code=handler["name"],
+            handler=handler["handler"],
+        )
 
+    # async def assert_exception_handler(
+    #     request: Request, exc: AssertionError
+    # ) -> ORJSONResponse:
+    #     # return_info = ERR_NUM_1.dict()
+    #     # return_info.update({"data": jsonable_encoder(str(exc))})
+    #     return ORJSONResponse(status_code=500, content={"detail": str(exc)})
 
-    async def assert_exception_handler(
-        request: Request, exc: AssertionError
-    ) -> ORJSONResponse:
-        # return_info = ERR_NUM_1.dict()
-        # return_info.update({"data": jsonable_encoder(str(exc))})
-        return ORJSONResponse(status_code=500, content={"detail": str(exc)})
-
-
-    @app.exception_handler(AssertionError)
-    async def custom_assert_exception_handler(request, e):
-        logger.error(e)
-        return await assert_exception_handler(request, e)
-
+    # @app.exception_handler(AssertionError)
+    # async def custom_assert_exception_handler(request, e):
+    #     logger.error(e)
+    #     return await assert_exception_handler(request, e)
 
     app.add_middleware(
         CorrelationIdMiddleware,
@@ -103,15 +106,19 @@ if __name__ == "__main__":
     )
 
     options = {
-        "bind": "0.0.0.0",
+        "bind": "0.0.0.0:8000",
         "workers": WORKERS,
+        "timeout": 30,
+        "max-requests": 200,
+        "max-requests-jitter": 20,
+        "preload": "-",
+        "forwarded-allow-ips": "*",
         "accesslog": "-",
         "errorlog": "-",
         "worker_class": "uvicorn.workers.UvicornWorker",
         "logger_class": StubbedGunicornLogger,
     }
     app = create_app()
-    print("start app now")
     try:
         StandaloneApplication(app, options).run()
     except Exception as e:

@@ -13,21 +13,21 @@ services:
       - .env
     ports:
       - "${DEFAULT_DATABASE_PORT}:5432"
-  rabbit:
-    image: rabbitmq:3.10.6-management
-    hostname: rabbit
-    container_name: "netsight-rabbitmq"
-    restart: always
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
-      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
-    env_file:
-      - .env
-    volumes:
-      - ./data/netsight-rabbitmq:/var/lib/rabbitmq 
+  # rabbit:
+  #   image: rabbitmq:3.10.6-management
+  #   hostname: rabbit
+  #   container_name: "netsight-rabbitmq"
+  #   restart: always
+  #   ports:
+  #     - "5672:5672"
+  #     - "15672:15672"
+  #   environment:
+  #     - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+  #     - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+  #   env_file:
+  #     - .env
+  #   volumes:
+  #     - ./data/netsight-rabbitmq:/var/lib/rabbitmq 
   redis:
     image: redis:latest
     restart: unless-stopped

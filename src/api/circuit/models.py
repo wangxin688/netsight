@@ -11,75 +11,86 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import relationship
 
 from src.db.db_base import Base
-from src.db.db_mixin import NameMixin, PrimaryKeyMixin, TimestampMixin
+from src.db.db_mixin import NameMixin, TimestampMixin
 
-__all__ = ("Circuit", "CircuitTermination")
+__all__ = ("CircuitType", "Circuit", "CircuitTermination", "Provider")
 
 
-class Circuit(Base, PrimaryKeyMixin, NameMixin, TimestampMixin):
-    __tablename__ = "circuits"
+class CircuitType(Base, NameMixin):
+    __tablename__ = "circuit_type"
     id = Column(Integer, primary_key=True)
-    name = Column(String, unique=True, nullable=False)
+    circuit = relationship(
+        "Circuit", back_populates="circuit_type", passive_deletes=True
+    )
+
+
+class Circuit(Base, NameMixin, TimestampMixin):
+    __tablename__ = "circuit"
+    id = Column(Integer, primary_key=True)
     cid = Column(String, unique=True, nullable=True)
     provider_id = Column(
-        Integer, ForeignKey("circuit_providers.id", ondelete="SET NULL"), nullable=True
+        Integer, ForeignKey("circuit_provider.id", ondelete="SET NULL"), nullable=True
     )
 
-    circuit_providers = relationship(
+    circuit_provider = relationship(
         "Provider",
-        back_populates="circuits",
-        overlaps="circuits",
+        back_populates="circuit",
+        overlaps="circuit",
     )
     status = Column(String, nullable=False)
-    circuit_type = Column(String, nullable=False)
-    tenant_id = Column(
-        Integer, ForeignKey("tenants.id", ondelete="SET NULL"), nullable=True
+    circuit_type_id = Column(
+        Integer, ForeignKey("circuit_type.id", ondelete="SET NULL"), nullable=True
     )
-    tenants = relationship("Tenant", back_populates="circuits", overlaps="circuits")
+    circuit_type = relationship("Circuit", back_populates="circuit", overlaps="circuit")
+    tenant_id = Column(
+        Integer, ForeignKey("tenant.id", ondelete="SET NULL"), nullable=True
+    )
+    tenant = relationship("Tenant", back_populates="circuit", overlaps="circuit")
     install_date = Column(DateTime(timezone=True), nullable=True)
     purchase_term = Column(String, nullable=True)
     commit_rate = Column(Integer, nullable=True, comment="Mbps")
     comments = Column(TEXT, nullable=True)
     vendor_available_ip = Column(ARRAY(String), nullable=True)
     vendor_available_gateway = Column(ARRAY(String), nullable=True)
-    contacts = relationship(
+    contact = relationship(
         "Contact",
         secondary="circuit_contact_link",
-        overlaps="circuits",
-        back_populates="circuits",
+        overlaps="circuit",
+        back_populates="circuit",
     )
-    circuit_terminations = relationship(
-        "CircuitTermination", back_populates="circuits", passive_deletes=True
+    circuit_termination = relationship(
+        "CircuitTermination", back_populates="circuit", passive_deletes=True
     )
 
 
 class CircuitTermination(Base):
-    __tablename__ = "circuit_terminations"
+    __tablename__ = "circuit_termination"
     __table_args__ = (UniqueConstraint("circuit_id", "term_side"),)
     id = Column(Integer, primary_key=True)
     term_side = Column(String, nullable=False)
     circuit_id = Column(
-        Integer, ForeignKey("circuits.id", ondelete="SET NULL"), nullable=True
+        Integer, ForeignKey("circuit.id", ondelete="SET NULL"), nullable=True
     )
-    circuits = relationship(
+    circuit = relationship(
         "Circuit",
-        back_populates="circuit_terminations",
-        overlaps="circuit_terminations",
+        back_populates="circuit_termination",
+        overlaps="circuit_termination",
     )
     # interface_id
     # interfaces
 
 
-class Provider(Base, PrimaryKeyMixin, NameMixin):
-    __tablename__ = "circuit_providers"
+class Provider(Base, NameMixin):
+    __tablename__ = "circuit_provider"
+    id = Column(Integer, primary_key=True)
     asn = Column(String, nullable=True)
     account = Column(String, nullable=True)
     portal = Column(String, nullable=True)
     noc_contact = Column(ARRAY(String), nullable=True)
     admin_contact = Column(ARRAY(String), nullable=True)
     comments = Column(TEXT, nullable=True)
-    circuits = relationship(
+    circuit = relationship(
         "Circuit",
-        back_populates="circuit_providers",
-        overlaps="circuit_providers",
+        back_populates="circuit_provider",
+        overlaps="circuit_provider",
     )

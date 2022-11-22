@@ -17,10 +17,6 @@ class TimestampSingleMixin:
     created_at = Column(DateTime(timezone=True), default=func.now())
 
 
-class PrimaryKeyMixin:
-    id = Column(Integer, primary_key=True)
-
-
 class NameMixin:
     name = Column(String, nullable=False)
     slug = Column(String, nullable=False)

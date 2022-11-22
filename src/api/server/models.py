@@ -4,30 +4,36 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
 from src.db.db_base import Base
-from src.db.db_mixin import NameMixin, PrimaryKeyMixin, TimestampMixin
+from src.db.db_mixin import NameMixin, TimestampMixin
+
+__all__ = ("Server", "Cluster")
 
 
-class Server(Base, PrimaryKeyMixin, NameMixin, TimestampMixin):
+class Server(Base, NameMixin, TimestampMixin):
     __tablename__ = "server"
+    id = Column(Integer, primary_key=True)
     status = Column(String, nullable=False)
     role_id = Column(
         Integer, ForeignKey("dcim_device_role.id", ondelete="SET NULL"), nullable=True
     )
-    role = relationship("DeviceRole", back_populate="server", overlaps="server")
+    role = relationship("DeviceRole", back_populates="server", overlaps="server")
     platform_id = Column(
         Integer, ForeignKey("dcim_platform.id", ondelete="SET NULL"), nullable=True
     )
-    platform = relationship("DevicePlatform", back_populate="server", overlaps="server")
+    platform = relationship(
+        "DevicePlatform", back_populates="server", overlaps="server"
+    )
     tenant_id = Column(
         Integer, ForeignKey("tenant.id", ondelete="CASCADE"), nullable=True
     )
-    tenant = relationship("Tenant", back_populate="server", overlaps="server")
+    tenant = relationship("Tenant", back_populates="server", overlaps="server")
     primary_ipv4 = Column(INET, nullable=True)
     primary_ipv6 = Column(INET, nullable=True)
     tags = Column(ARRAY(String, dimensions=1), nullable=True)
     cluster_id = Column(
         Integer, ForeignKey("cluster.id", ondelete="SET NULL"), nullable=True
     )
+    cluster = relationship("Cluster", back_populates="server", overlaps="server")
     is_vm = Column(Boolean, nullable=False, server_default=expression.true())
     cpu = Column(Integer, nullable=True)
     memory = Column(String, nullable=False)
@@ -35,9 +41,11 @@ class Server(Base, PrimaryKeyMixin, NameMixin, TimestampMixin):
     contact_id = Column(
         Integer, ForeignKey("contact.id", ondelete="SET NULL"), nullable=True
     )
-    contact = relationship("Contant", back_populate="server", overlaps="server")
+    contact = relationship("Contant", back_populates="server", overlaps="server")
 
 
-class Cluster(Base, PrimaryKeyMixin, NameMixin, TimestampMixin):
+class Cluster(Base, NameMixin, TimestampMixin):
     __tablename__ = "cluster"
-    server = relationship("Server", back_populate="cluster", overlaps="cluster")
+    id = Column(Integer, primary_key=True)
+    server = relationship("Server", back_populates="cluster", passive_deletes=True)
+    dcim_device = relationship("Device", back_populates="cluster", passive_deletes=True)

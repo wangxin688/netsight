@@ -4,7 +4,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import AsyncEngine
 import asyncio
-from app.core import config as app_config
+from src.core import config as app_config
 from alembic import context
 
 
@@ -31,7 +31,7 @@ target_metadata = Base.metadata
 
 
 def get_database_uri():
-    return app_config.settings.DEFAULT_SQLALCHEMY_DATABASE_URI
+    return app_config.settings.SQLALCHEMY_DATABASE_URI
 
 
 def run_migrations_offline():

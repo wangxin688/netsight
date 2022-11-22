@@ -4,9 +4,22 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
 from src.db.db_base import Base
-from src.db.db_mixin import NameMixin, PrimaryKeyMixin, TimestampMixin
+from src.db.db_mixin import NameMixin, TimestampMixin
 
-__all__ = ("ASN", "Block", "IPAddress", "IPRange", "RIR", "IPRole")
+__all__ = (
+    "RIR",
+    "Block",
+    "IPRole",
+    "Prefix",
+    "ASN",
+    "IPRange",
+    "IPAddress",
+    "VLAN",
+    "VLANGroup",
+    "VRFRouteTargetLink",
+    "VRF",
+    "RouteTarget",
+)
 
 # class GetAvailablePrefixesMixin:
 
@@ -21,84 +34,84 @@ __all__ = ("ASN", "Block", "IPAddress", "IPRange", "RIR", "IPRole")
 #         stmt = select(Prefix).where(Prefix)
 
 
-class RIR(Base, PrimaryKeyMixin, NameMixin, TimestampMixin):
-    __tablename__ = "ipam_rirs"
+class RIR(Base, NameMixin, TimestampMixin):
+    __tablename__ = "ipam_rir"
+    id = Column(Integer, primary_key=True)
     is_private = Column(Boolean, server_default=expression.false())
-    ipam_blocks = relationship(
-        "Block", back_populates="ipam_rirs", passive_deletes=True
-    )
+    ipam_block = relationship("Block", back_populates="ipam_rir", passive_deletes=True)
 
 
-class Block(Base, PrimaryKeyMixin, TimestampMixin):
-    __tablename__ = "ipam_blocks"
+class Block(Base, TimestampMixin):
+    __tablename__ = "ipam_block"
+    id = Column(Integer, primary_key=True)
     prefix = Column(CIDR, nullable=False)
     rir_id = Column(
-        Integer, ForeignKey("ipam_rirs.id", ondelete="SET NULL"), nullable=True
+        Integer, ForeignKey("ipam_rir.id", ondelete="SET NULL"), nullable=True
     )
-    ipam_rirs = relationship(
-        "RIR", back_populates="ipam_blocks", overlaps="ipam_blocks"
-    )
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="SET NULL"))
-    tenants = relationship(
-        "Tenant", back_populates="ipam_blocks", overlaps="ipam_blocks"
-    )
+    ipam_rir = relationship("RIR", back_populates="ipam_block", overlaps="ipam_block")
+    tenant_id = Column(Integer, ForeignKey("tenant.id", ondelete="SET NULL"))
+    tenant = relationship("Tenant", back_populates="ipam_block", overlaps="ipam_block")
     description = Column(String, nullable=True)
 
 
-class IPRole(Base, PrimaryKeyMixin, NameMixin):
-    __tablename__ = "ipam_roles"
-    ipam_prefixes = relationship(
-        "Prefix", back_populates="ipam_roles", passive_deletes=True
+class IPRole(Base, NameMixin):
+    __tablename__ = "ipam_role"
+    id = Column(Integer, primary_key=True)
+    ipam_prefix = relationship(
+        "Prefix", back_populates="ipam_role", passive_deletes=True
     )
-    ipam_vlans = relationship("VLAN", back_populates="ipam_roles", passive_deletes=True)
-    ipam_ip_ranges = relationship(
-        "IPRange", back_populates="ipam_roles", passive_deletes=True
+    ipam_vlan = relationship("VLAN", back_populates="ipam_role", passive_deletes=True)
+    ipam_ip_range = relationship(
+        "IPRange", back_populates="ipam_role", passive_deletes=True
     )
 
 
-class Prefix(Base, PrimaryKeyMixin, TimestampMixin):
-    __tablename__ = "ipam_prefixes"
+class Prefix(Base, TimestampMixin):
+    __tablename__ = "ipam_prefix"
+    id = Column(Integer, primary_key=True)
     prefix = Column(CIDR, nullable=False)
     status = Column(String, nullable=False)
     site_id = Column(
-        Integer, ForeignKey("dcim_sites.id", ondelete="SET NULL"), nullable=True
+        Integer, ForeignKey("dcim_site.id", ondelete="SET NULL"), nullable=True
     )
-    dcim_sites = relationship(
-        "Site", back_populates="ipam_prefixes", overlaps="ipam_prefixes"
+    dcim_site = relationship(
+        "Site", back_populates="ipam_prefix", overlaps="ipam_prefix"
     )
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="SET NULL"))
-    tenants = relationship(
-        "Tenant", back_populates="ipam_prefixes", overlaps="ipam_prefixes"
+    tenant_id = Column(Integer, ForeignKey("tenant.id", ondelete="SET NULL"))
+    tenant = relationship(
+        "Tenant", back_populates="ipam_prefix", overlaps="ipam_prefix"
     )
     role_id = Column(
-        Integer, ForeignKey("ipam_roles.id", ondelete="SET NULL"), nullable=True
+        Integer, ForeignKey("ipam_role.id", ondelete="SET NULL"), nullable=True
     )
-    ipam_roles = relationship(
-        "IPRole", back_populates="ipam_prefixes", overlaps="ipam_prefixes"
+    ipam_role = relationship(
+        "IPRole", back_populates="ipam_prefix", overlaps="ipam_prefix"
     )
     is_pool = Column(Boolean, server_default=expression.false())
 
 
-class ASN(Base, PrimaryKeyMixin, TimestampMixin):
-    __tablename__ = "ipam_asns"
+class ASN(Base, TimestampMixin):
+    __tablename__ = "ipam_asn"
+    id = Column(Integer, primary_key=True)
     asn = Column(Integer, unique=True, nullable=False)
     description = Column(String, nullable=True)
-    tenants = relationship(
+    tenant = relationship(
         "Tenant",
-        secondary="tenant_asn_link",
-        overlaps="ipam_asns",
-        back_populates="ipam_asns",
+        secondary="tenant_ipam_asn_link",
+        overlaps="ipam_asn",
+        back_populates="ipam_asn",
     )
-    dcim_sites = relationship(
+    dcim_site = relationship(
         "Site",
         secondary="dcim_site_asn_link",
-        overlaps="ipam_asns",
-        back_populates="ipam_asns",
+        overlaps="ipam_asn",
+        back_populates="ipam_asn",
     )
 
 
-class IPRange(Base, PrimaryKeyMixin):
-    __tablename__ = "ipam_ip_ranges"
+class IPRange(Base):
+    __tablename__ = "ipam_ip_range"
+    id = Column(Integer, primary_key=True)
     start_address = Column(INET)
     end_address = Column(INET)
     # TODO: add pydantic size unchangeable
@@ -107,126 +120,126 @@ class IPRange(Base, PrimaryKeyMixin):
         Integer,
     )
     vrf_id = Column(
-        Integer, ForeignKey("ipam_vrfs.id", ondelete="SET NULL"), nullable=True
+        Integer, ForeignKey("ipam_vrf.id", ondelete="SET NULL"), nullable=True
     )
-    ipam_vrfs = relationship(
-        "VRF", back_populates="ipam_ip_ranges", overlaps="ipam_ip_ranges"
+    ipam_vrf = relationship(
+        "VRF", back_populates="ipam_ip_range", overlaps="ipam_ip_range"
     )
     role_id = Column(
-        Integer, ForeignKey("ipam_roles.id", ondelete="SET NULL"), nullable=True
+        Integer, ForeignKey("ipam_role.id", ondelete="SET NULL"), nullable=True
     )
-    ipam_roles = relationship(
-        "IPRole", back_populates="ipam_ip_ranges", overlaps="ipam_ip_ranges"
+    ipam_role = relationship(
+        "IPRole", back_populates="ipam_ip_range", overlaps="ipam_ip_range"
     )
     description = Column(String, nullable=True)
 
 
-class IPAddress(Base, PrimaryKeyMixin):
-    __tablename__ = "ipam_ip_addresses"
+class IPAddress(Base):
+    __tablename__ = "ipam_ip_address"
+    id = Column(Integer, primary_key=True)
     address = Column(INET, nullable=False)
     vrf_id = Column(
-        Integer, ForeignKey("ipam_vrfs.id", ondelete="SET NULL"), nullable=True
+        Integer, ForeignKey("ipam_vrf.id", ondelete="SET NULL"), nullable=True
     )
-    ipam_vrfs = relationship(
-        "VRF", back_populates="ipam_ip_addresses", overlaps="ipam_ip_addresses"
+    ipam_vrf = relationship(
+        "VRF", back_populates="ipam_ip_address", overlaps="ipam_ip_address"
     )
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="SET NULL"))
-    tenants = relationship(
-        "Tenant", back_populates="ipam_ip_addresses", overlaps="ipam_ip_addresses"
+    tenant_id = Column(Integer, ForeignKey("tenant.id", ondelete="SET NULL"))
+    tenant = relationship(
+        "Tenant", back_populates="ipam_ip_address", overlaps="ipam_ip_address"
     )
     status = Column(String, nullable=False)
-    # add role Enum
-    role = Column(String)
     dns_name = Column(String)
     description = Column(String, nullable=True)
 
 
-class VLAN(Base, PrimaryKeyMixin):
-    __tablename__ = "ipam_vlans"
+class VLAN(Base):
+    __tablename__ = "ipam_vlan"
     __table_args__ = (UniqueConstraint("site_id", "vlan_group_id", "vid", "id"),)
+    id = Column(Integer, primary_key=True)
     name = Column(String, unique=True, nullable=False)
     description = Column(String, nullable=True)
     status = Column(String, nullable=False)
     site_id = Column(
-        Integer, ForeignKey("dcim_sites.id", ondelete="SET NULL"), nullable=True
+        Integer, ForeignKey("dcim_site.id", ondelete="SET NULL"), nullable=True
     )
-    dcim_sites = relationship(
-        "Site", back_populates="ipam_vlans", overlaps="ipam_vlans"
-    )
+    dcim_site = relationship("Site", back_populates="ipam_vlan", overlaps="ipam_vlan")
     vlan_group_id = Column(
-        Integer, ForeignKey("ipam_vlan_groups.id", ondelete="SET NULL"), nullable=True
+        Integer, ForeignKey("ipam_vlan_group.id", ondelete="SET NULL"), nullable=True
     )
-    ipam_vlan_groups = relationship(
-        "VLANGroup", back_populates="ipam_vlans", overlaps="ipam_vlans"
+    ipam_vlan_group = relationship(
+        "VLANGroup", back_populates="ipam_vlan", overlaps="ipam_vlan"
     )
     vid = Column(Integer, nullable=False)
     name = Column(String, nullable=False)
     tenant_id = Column(
-        Integer, ForeignKey("tenants.id", ondelete="SET NULL"), nullable=True
+        Integer, ForeignKey("tenant.id", ondelete="SET NULL"), nullable=True
     )
-    tenants = relationship("Tenant", back_populates="ipam_vlans", overlaps="ipam_vlans")
+    tenant = relationship("Tenant", back_populates="ipam_vlan", overlaps="ipam_vlan")
     role_id = Column(
-        Integer, ForeignKey("ipam_roles.id", ondelete="SET NULL"), nullable=True
+        Integer, ForeignKey("ipam_role.id", ondelete="SET NULL"), nullable=True
     )
-    ipam_roles = relationship(
-        "IPRole", back_populates="ipam_vlans", overlaps="ipam_vlans"
+    ipam_role = relationship("IPRole", back_populates="ipam_vlan", overlaps="ipam_vlan")
+
+
+class VLANGroup(Base, NameMixin):
+    __tablename__ = "ipam_vlan_group"
+    id = Column(Integer, primary_key=True)
+    ipam_vlan = relationship(
+        "VLAN", back_populates="ipam_vlan_group", passive_deletes=True
     )
 
 
-class VLANGroup(Base, PrimaryKeyMixin, NameMixin):
-    __tablename__ = "ipam_vlan_groups"
-    ipam_vlans = relationship(
-        "VLAN", back_populates="ipam_vlan_groups", passive_deletes=True
-    )
-
-
-class VRFRouteTargetLink(Base, PrimaryKeyMixin):
-    __tablename__ = "vrf_route_target_link"
-    vrf_id = Column(Integer, ForeignKey("ipam_vrfs.id"), primary_key=True)
+class VRFRouteTargetLink(Base):
+    __tablename__ = "ipam_vrf_route_target_link"
+    id = Column(Integer, primary_key=True)
+    vrf_id = Column(Integer, ForeignKey("ipam_vrf.id"), primary_key=True)
     route_target_id = Column(
-        Integer, ForeignKey("ipam_route_targets.id"), primary_key=True
+        Integer, ForeignKey("ipam_route_target.id"), primary_key=True
     )
     target_type = Column(String, nullable=False)
 
 
-class VRF(Base, PrimaryKeyMixin, NameMixin):
-    __tablename__ = "ipam_vrfs"
+class VRF(Base, NameMixin):
+    __tablename__ = "ipam_vrf"
+    id = Column(Integer, primary_key=True)
     rd = Column(String, unique=True, nullable=True)
     tenant_id = Column(
-        Integer, ForeignKey("tenants.id", ondelete="SET NULL"), nullable=True
+        Integer, ForeignKey("tenant.id", ondelete="SET NULL"), nullable=True
     )
-    tenants = relationship("Tenant", back_populates="ipam_vrfs", overlaps="ipam_vrfs")
+    tenant = relationship("Tenant", back_populates="ipam_vrf", overlaps="ipam_vrf")
     enforce_unique = Column(
         Boolean,
         server_default=expression.true(),
         comment="Enforce unique space, prevent duplicate IP/prefix",
     )
     description = Column(String, nullable=True)
-    ipam_route_targets = relationship(
+    ipam_route_target = relationship(
         "RouteTarget",
-        secondary="vrf_route_target_link",
-        overlaps="ipam_vrfs",
-        back_populates="ipam_vrfs",
+        secondary="ipam_vrf_route_target_link",
+        overlaps="ipam_vrf",
+        back_populates="ipam_vrf",
     )
-    ipam_ip_ranges = relationship(
-        "IPRange", back_populates="ipam_vrfs", passive_deletes=True
+    ipam_ip_range = relationship(
+        "IPRange", back_populates="ipam_vrf", passive_deletes=True
     )
-    ipam_ip_addresses = relationship(
-        "IPAddress", back_populates="ipam_vrfs", passive_deletes=True
+    ipam_ip_address = relationship(
+        "IPAddress", back_populates="ipam_vrf", passive_deletes=True
     )
 
 
-class RouteTarget(Base, PrimaryKeyMixin, NameMixin):
-    __tablename__ = "ipam_route_targets"
+class RouteTarget(Base, NameMixin):
+    __tablename__ = "ipam_route_target"
+    id = Column(Integer, primary_key=True)
     tenant_id = Column(
-        Integer, ForeignKey("tenants.id", ondelete="SET NULL"), nullable=True
+        Integer, ForeignKey("tenant.id", ondelete="SET NULL"), nullable=True
     )
-    tenants = relationship(
-        "Tenant", back_populates="ipam_route_targets", overlaps="ipam_route_targets"
+    tenant = relationship(
+        "Tenant", back_populates="ipam_route_target", overlaps="ipam_route_target"
     )
-    ipam_vrfs = relationship(
+    ipam_vrf = relationship(
         "VRF",
-        secondary="vrf_route_target_link",
-        overlaps="ipam_route_targets",
-        back_populates="ipam_route_targets",
+        secondary="ipam_vrf_route_target_link",
+        overlaps="ipam_route_target",
+        back_populates="ipam_route_target",
     )
