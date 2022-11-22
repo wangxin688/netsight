@@ -59,7 +59,7 @@ class AuditRoute(APIRoute):
                         }
                     )
                 async with aiofiles.open(
-                    "audit.json", mode="a+", encoding="utf-8"
+                    "log/audit.json", mode="a+", encoding="utf-8"
                 ) as f:
                     await f.write(json.dumps(data))
                     await f.write("\n")
