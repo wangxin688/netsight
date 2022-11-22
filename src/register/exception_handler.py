@@ -86,16 +86,6 @@ async def assert_exception_handler(
     return ORJSONResponse(status_code=status.HTTP_200_OK, content=return_info)
 
 
-# exception_handlers = {
-#     "token_not_provided_handler": token_not_provided_handler,
-#     "token_invalid_handler": token_invalid_handler,
-#     "invalid_token_for_refresh_handler": invalid_token_for_refresh_handler,
-#     "token_expired_handler": token_invalid_handler,
-#     "permission_deny_handler": permission_deny_handler,
-#     "resource_not_found_handler": resource_not_found_handler,
-#     "request_validation_exception_handler": request_validation_exception_handler,
-#     "assert_exception_handler": assert_exception_handler,
-# }
 exception_handlers = [
     {
         "name": TokenNotProvidedError,

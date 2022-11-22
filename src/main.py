@@ -23,7 +23,7 @@ from src.utils.loggers import (
 
 
 def create_app():
-
+    #TODO: remove orjson in project
     app = FastAPI(
         title=settings.PROJECT_NAME,
         version=settings.VERSION,
