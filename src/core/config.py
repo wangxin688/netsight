@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 40320  # 28 days
     BACKEND_CORS_ORIGINS: list[AnyHttpUrl] = []
     ALLOWED_HOSTS: list[str] = ["localhost"]
-    LOG_LEVEL: Literal["DEBUG", "INFO", "ERROR"] = "DEBUG"
+    LOG_LEVEL: Literal["DEBUG", "INFO", "ERROR"] = "INFO"
     ENABLE_JSON_LOG: bool = "False"
     JSON_LOGS: bool = False
     WORKERS: int = multiprocessing.cpu_count() * 2
