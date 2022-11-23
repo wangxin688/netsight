@@ -7,8 +7,8 @@ Error_code is designed with four fields: code, en_msg, ch_msg, scope
 - code: unique return code of api response, type: integer
 - msg: unique english return message of api response, type: string
 - scope: error code scope for services, all or services leve
-* service app:              0-10000(reserved)
-* service rabc:             11000-11999
+* service netisht:              0-10000(reserved)
+* service auth:                 10001-11000
 """
 from dataclasses import asdict, dataclass
 from typing import Any, List
@@ -22,6 +22,10 @@ __all__ = (
     "ERR_NUM_4011",
     "ERR_NUM_4003",
     "ERR_NUM_4004",
+    "ERR_NUM_10001",
+    "ERR_NUM_10002",
+    "ERR_NUM_10003",
+    "ERR_NUM_10004",
 )
 
 
@@ -50,6 +54,10 @@ ERR_NUM_4003 = ErrCode(
     4003, "Permission Denied: Privilege limited, Operation not permit", None
 )
 ERR_NUM_4004 = ErrCode(4004, "Resource not found: Requested data not existed", None)
+ERR_NUM_10001 = ErrCode(10001, "Cannot use this email, already exists", None)
+ERR_NUM_10002 = ErrCode(10002, "Incorrect email for user, not found", None)
+ERR_NUM_10003 = ErrCode(10003, "Incorrect password", None)
+ERR_NUM_10004 = ErrCode(10004, "User not found", None)
 
 
 def __getattr__(name: str) -> ErrCode:

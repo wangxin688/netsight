@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     DESCRIPTION: str = PYPROJECT_CONTENT["description"]
     LOG_DIR: str = f"{PROJECT_DIR}/log/netsight.log"
     MAJAR_VERSION: int = 1
-    AUTH: Literal["Simple", "Lark", "AD"] = "Simple"
+    AUTH: Literal["Simple", "Lark"] = "Simple"
 
     # POSTGRESQL DEFAULT DATABASE
     DEFAULT_DATABASE_HOSTNAME: str

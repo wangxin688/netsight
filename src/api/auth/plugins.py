@@ -48,16 +48,16 @@ class CustomOAuth2AuthorizationCodeBearer(OAuth2):
         return param
 
 
-def auth_plugins(plugins: Literal["Lark", "AD", "Simple"] = "Simple"):
+def auth_plugins(plugins: Literal["Lark", "Simple"] = "Simple"):
     auth_choices = {}
     if plugins == "Lark":
         lark_oauth2_schema = CustomOAuth2AuthorizationCodeBearer(
             authorizationUrl=settings.REDIRECT_URI,
-            tokenUrl="auth/login",
-            refreshUrl="auth/refresh-token",
+            tokenUrl="jwt/login",
+            refreshUrl="jwt/refresh-token",
         )
         auth_choices.update({"Lark": lark_oauth2_schema})
     if plugins == "Simple":
-        password_oauth2_schema = OAuth2PasswordBearer(tokenUrl="auth/access-token")
+        password_oauth2_schema = OAuth2PasswordBearer(tokenUrl="jwt/login")
         auth_choices.update({"Simple": password_oauth2_schema})
     return auth_choices[plugins]

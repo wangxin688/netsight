@@ -30,8 +30,17 @@ def create_app():
         description=settings.DESCRIPTION,
         openapi_url="/api/v1/openapi.json",
         docs_url="/api/v1/docs",
-        redoc_url="/api/v1/redoc"
-        # swagger_ui_init_oauth={}
+        redoc_url="/api/v1/redoc",
+        swagger_ui_init_oauth={},
+        contact={
+            "name": "JeffryWang",
+            "email": "wangxin.jeffry@gmail.com",
+            "url": "https://github.com/wangxin688",
+        },
+        license={
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
+        },
     )
     for handler in exception_handlers:
         app.add_exception_handler(

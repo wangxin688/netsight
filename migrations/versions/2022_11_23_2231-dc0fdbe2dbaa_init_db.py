@@ -1,8 +1,8 @@
 """init db
 
-Revision ID: 6bb76b72a3fd
+Revision ID: dc0fdbe2dbaa
 Revises: 
-Create Date: 2022-11-23 09:24:29.694865
+Create Date: 2022-11-23 22:31:38.809706
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '6bb76b72a3fd'
+revision = 'dc0fdbe2dbaa'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -366,6 +366,13 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['tenant_id'], ['tenant.id'], ),
     sa.PrimaryKeyConstraint('tenant_id', 'asn_id')
     )
+    op.create_table('circuit_contact_link',
+    sa.Column('circuit_id', sa.Integer(), nullable=False),
+    sa.Column('contact_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['circuit_id'], ['circuit.id'], ),
+    sa.ForeignKeyConstraint(['contact_id'], ['contact.id'], ),
+    sa.PrimaryKeyConstraint('circuit_id', 'contact_id')
+    )
     op.create_table('circuit_termination',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('term_side', sa.String(), nullable=False),
@@ -385,6 +392,13 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['parent_id'], ['dcim_location.id'], ),
     sa.ForeignKeyConstraint(['site_id'], ['dcim_site.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('dcim_site_asn_link',
+    sa.Column('site_id', sa.Integer(), nullable=False),
+    sa.Column('asn_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['asn_id'], ['ipam_asn.id'], ),
+    sa.ForeignKeyConstraint(['site_id'], ['dcim_site.id'], ),
+    sa.PrimaryKeyConstraint('site_id', 'asn_id')
     )
     op.create_table('dcim_site_contact_link',
     sa.Column('site_id', sa.Integer(), nullable=False),
@@ -458,13 +472,6 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['route_target_id'], ['ipam_route_target.id'], ),
     sa.ForeignKeyConstraint(['vrf_id'], ['ipam_vrf.id'], ),
     sa.PrimaryKeyConstraint('id', 'vrf_id', 'route_target_id')
-    )
-    op.create_table('tenant_asn_link',
-    sa.Column('circuit_id', sa.Integer(), nullable=False),
-    sa.Column('contact_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['circuit_id'], ['circuit.id'], ),
-    sa.ForeignKeyConstraint(['contact_id'], ['contact.id'], ),
-    sa.PrimaryKeyConstraint('circuit_id', 'contact_id')
     )
     op.create_table('dcim_rack',
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
@@ -548,15 +555,16 @@ def downgrade() -> None:
     op.drop_table('dcim_interface')
     op.drop_table('dcim_device')
     op.drop_table('dcim_rack')
-    op.drop_table('tenant_asn_link')
     op.drop_table('ipam_vrf_route_target_link')
     op.drop_table('ipam_vlan')
     op.drop_table('ipam_prefix')
     op.drop_table('ipam_ip_range')
     op.drop_table('ipam_ip_address')
     op.drop_table('dcim_site_contact_link')
+    op.drop_table('dcim_site_asn_link')
     op.drop_table('dcim_location')
     op.drop_table('circuit_termination')
+    op.drop_table('circuit_contact_link')
     op.drop_table('tenant_ipam_asn_link')
     op.drop_table('tenant_contact_link')
     op.drop_table('server')

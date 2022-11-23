@@ -3,11 +3,13 @@ from typing import AsyncGenerator, Sequence
 
 import jwt
 from fastapi import Depends, Request
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.auth.models import User
-from src.api.auth.plugins import auth_plugins
+
+# from src.api.auth.plugins import auth_plugins
 from src.core import security
 from src.core.config import settings
 from src.db.db_session import async_session
@@ -19,20 +21,27 @@ from src.utils.exceptions import (
     TokenInvalidForRefreshError,
 )
 
+# oauth2_scheme = auth_plugins(settings.AUTH)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="jwt/login")
+
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
     async with async_session() as session:
         yield session
 
 
-async def audit_request(audit: bool = True) -> bool:
+def audit_with_data(audit: bool = True) -> bool:
+    return audit
+
+
+def audit_without_data(audit: bool = True) -> bool:
     return audit
 
 
 async def get_current_user(
     request: Request,
     session: AsyncSession = Depends(get_session),
-    token: str = Depends(auth_plugins(settings.AUTH)),
+    token: str = Depends(oauth2_scheme),
 ) -> User:
     try:
         payload = jwt.decode(

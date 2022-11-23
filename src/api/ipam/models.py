@@ -7,6 +7,7 @@ from src.db.db_base import Base
 from src.db.db_mixin import NameMixin, TimestampMixin
 
 __all__ = (
+    "SiteASN",
     "RIR",
     "Block",
     "IPRole",
@@ -21,17 +22,11 @@ __all__ = (
     "RouteTarget",
 )
 
-# class GetAvailablePrefixesMixin:
 
-
-#     def get_available_prefixes(self):
-#         """get available prefixes within thie block or prefix as an IPSet"""
-#         params = {
-#             'prefix__net_contained': str(self.prefix)
-#         }
-#         if hasattr(self, 'var'):
-#             params['vrf'] = self.vrf
-#         stmt = select(Prefix).where(Prefix)
+class SiteASN(Base):
+    __tablename__ = "dcim_site_asn_link"
+    site_id = Column(Integer, ForeignKey("dcim_site.id"), primary_key=True)
+    asn_id = Column(Integer, ForeignKey("ipam_asn.id"), primary_key=True)
 
 
 class RIR(Base, NameMixin, TimestampMixin):
@@ -49,7 +44,9 @@ class Block(Base, TimestampMixin):
         Integer, ForeignKey("ipam_rir.id", ondelete="SET NULL"), nullable=True
     )
     ipam_rir = relationship("RIR", back_populates="ipam_block", overlaps="ipam_block")
-    tenant_id = Column(Integer, ForeignKey("tenant.id", ondelete="SET NULL"))
+    tenant_id = Column(
+        Integer, ForeignKey("tenant.id", ondelete="SET NULL"), nullable=True
+    )
     tenant = relationship("Tenant", back_populates="ipam_block", overlaps="ipam_block")
     description = Column(String, nullable=True)
 

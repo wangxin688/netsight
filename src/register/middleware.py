@@ -33,12 +33,13 @@ class AuditRoute(APIRoute):
                 )
             finally:
                 body_ = await request.body()
+                print(body_)
                 process_time = time.time() - start_time
                 data = {
                     "x-process-time": process_time,
                     "ip": request.client.host,
                     "method": request.method,
-                    "body": body_ if body_ else "",
+                    "body": json.loads(body_) if body_ else "",
                     "path": request.url.path,
                     "path_params": request.path_params,
                     "query_params": request.query_params._dict,

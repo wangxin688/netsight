@@ -34,7 +34,6 @@ class SiteContact(Base):
 
 class CircuitContact(Base):
     __tablename__ = "circuit_contact_link"
-    __tablename__ = "tenant_asn_link"
     circuit_id = Column(Integer, ForeignKey("circuit.id"), primary_key=True)
     contact_id = Column(Integer, ForeignKey("contact.id"), primary_key=True)
 
@@ -46,7 +45,10 @@ class Tenant(Base, NameMixin, TimestampMixin):
         "Site", back_populates="tenant", cascade="all, delete", passive_deletes=True
     )
     ipam_asn = relationship(
-        "ASN", secondary="tenant_asn_link", overlaps="tenant", back_populates="tenant"
+        "ASN",
+        secondary="tenant_ipam_asn_link",
+        overlaps="tenant",
+        back_populates="tenant",
     )
     contact = relationship(
         "Contact",
@@ -55,7 +57,7 @@ class Tenant(Base, NameMixin, TimestampMixin):
         back_populates="tenant",
     )
     ipam_vrf = relationship("VRF", back_populates="tenant", passive_deletes=True)
-    ipam_block = relationship("Block", back_populates=True, passive_deletes=True)
+    ipam_block = relationship("Block", back_populates="tenant", passive_deletes=True)
     ipam_prefix = relationship("Prefix", back_populates="tenant", passive_deletes=True)
     ipam_ip_address = relationship(
         "IPAddress", back_populates="tenant", passive_deletes=True
@@ -65,6 +67,7 @@ class Tenant(Base, NameMixin, TimestampMixin):
     )
     ipam_vlan = relationship("VLAN", back_populates="tenant", passive_deletes=True)
     circuit = relationship("Circuit", back_populates="tenant", passive_deletes=True)
+    server = relationship("Server", back_populates="tenant", passive_deletes=True)
 
 
 class Contact(Base):
@@ -87,7 +90,8 @@ class Contact(Base):
     )
     circuit = relationship(
         "Circuit",
-        secondary="circuit_link",
+        secondary="circuit_contact_link",
         overlaps="contact",
         back_populates="contact",
     )
+    server = relationship("Server", back_populates="contact", passive_deletes=True)

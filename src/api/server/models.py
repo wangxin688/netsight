@@ -16,13 +16,13 @@ class Server(Base, NameMixin, TimestampMixin):
     role_id = Column(
         Integer, ForeignKey("dcim_device_role.id", ondelete="SET NULL"), nullable=True
     )
-    role = relationship("DeviceRole", back_populates="server", overlaps="server")
+    dcim_device_role = relationship(
+        "DeviceRole", back_populates="server", overlaps="server"
+    )
     platform_id = Column(
         Integer, ForeignKey("dcim_platform.id", ondelete="SET NULL"), nullable=True
     )
-    platform = relationship(
-        "DevicePlatform", back_populates="server", overlaps="server"
-    )
+    dcim_platform = relationship("Platform", back_populates="server", overlaps="server")
     tenant_id = Column(
         Integer, ForeignKey("tenant.id", ondelete="CASCADE"), nullable=True
     )
@@ -41,7 +41,7 @@ class Server(Base, NameMixin, TimestampMixin):
     contact_id = Column(
         Integer, ForeignKey("contact.id", ondelete="SET NULL"), nullable=True
     )
-    contact = relationship("Contant", back_populates="server", overlaps="server")
+    contact = relationship("Contact", back_populates="server", overlaps="server")
 
 
 class Cluster(Base, NameMixin, TimestampMixin):

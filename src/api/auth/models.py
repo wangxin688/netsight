@@ -63,13 +63,13 @@ class User(Base, TimestampMixin):
     email: str = Column(String, nullable=False, unique=True)
     hashed_password: str = Column(String, nullable=False)
     is_active: bool = Column(Boolean, default=True)
-    group = relationship(
+    auth_group = relationship(
         "Group",
         secondary="auth_user_group_link",
         back_populates="auth_user",
         overlaps="auth_user",
     )
-    role = relationship(
+    auth_role = relationship(
         "Role",
         secondary="auth_user_role_link",
         back_populates="auth_user",
@@ -166,13 +166,13 @@ class Group(Base, TimestampMixin):
     __tablename__ = "auth_group"
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True, nullable=False)
-    user = relationship(
+    auth_user = relationship(
         "User",
         secondary="auth_user_group_link",
         back_populates="auth_group",
         overlaps="auth_group",
     )
-    role = relationship(
+    auth_role = relationship(
         "Role",
         secondary="auth_group_role_link",
         back_populates="auth_group",
@@ -184,19 +184,19 @@ class Role(Base, TimestampMixin):
     __tablename__ = "auth_role"
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True, nullable=False)
-    user = relationship(
+    auth_user = relationship(
         "User",
         secondary="auth_user_role_link",
         back_populates="auth_role",
         overlaps="auth_role",
     )
-    group = relationship(
+    auth_group = relationship(
         "Group",
         secondary="auth_group_role_link",
         back_populates="auth_role",
         overlaps="auth_role",
     )
-    permission = relationship(
+    auth_permission = relationship(
         "Permission",
         secondary="auth_role_permission_link",
         back_populates="auth_role",
@@ -208,7 +208,7 @@ class Permission(Base, TimestampMixin):
     __tablename__ = "auth_permission"
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True, nullable=False)
-    roles = relationship(
+    auth_role = relationship(
         "Role",
         secondary="auth_role_permission_link",
         back_populates="auth_permission",

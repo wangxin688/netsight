@@ -80,13 +80,13 @@ class Site(Base, NameMixin, TimestampMixin):
     region_id = Column(
         Integer, ForeignKey("dcim_region.id", ondelete="SET NULL"), nullable=True
     )
-    dcim_regions = relationship(
+    dcim_region = relationship(
         "Region", back_populates="dcim_site", overlaps="dcim_site"
     )
     group_id = Column(
         Integer, ForeignKey("dcim_site_group.id", ondelete="SET NULL"), nullable=True
     )
-    dcim_site_groups = relationship(
+    dcim_site_group = relationship(
         "SiteGroup", back_populates="dcim_site", overlaps="dcim_site"
     )
     tenant_id = Column(Integer, ForeignKey("tenant.id", ondelete="CASCADE"))
@@ -263,6 +263,9 @@ class DeviceRole(Base, NameMixin):
     dcim_device = relationship(
         "Device", back_populates="dcim_device_role", passive_deletes=True
     )
+    server = relationship(
+        "Server", back_populates="dcim_device_role", passive_deletes=True
+    )
 
 
 class Platform(Base, NameMixin):
@@ -270,8 +273,11 @@ class Platform(Base, NameMixin):
     id = Column(Integer, primary_key=True)
     napalm_driver = Column(String, nullable=True)
     napalm_args = Column(JSONB, nullable=True)
-    dcim_devices = relationship(
+    dcim_device = relationship(
         "Device", back_populates="dcim_platform", passive_deletes=True
+    )
+    server = relationship(
+        "Server", back_populates="dcim_platform", passive_deletes=True
     )
 
 
@@ -339,7 +345,7 @@ class Device(Base, NameMixin, TimestampMixin):
         "VirtualChassis", back_populates="dcim_device", overlaps="dcim_device"
     )
     comments = Column(Text, nullable=True)
-    interface = relationship(
+    dcim_interface = relationship(
         "Interface",
         back_populates="dcim_device",
         cascade="all, delete",
@@ -351,7 +357,7 @@ class VirtualChassis(Base, NameMixin):
     __tablename__ = "dcim_virtual_chassis"
     id = Column(Integer, primary_key=True)
     domain = Column(String, nullable=True)
-    dcim_devices = relationship(
+    dcim_device = relationship(
         "Device",
         back_populates="dcim_virtual_chassis",
         passive_deletes=True,

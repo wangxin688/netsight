@@ -29,7 +29,7 @@ class NameMixin:
 
     @classmethod
     def __declare_last__(cls):
-        event.listen(cls, "after_create", cls._slug, propagate=True)
+        event.listen(cls, "before_insert", cls._slug, propagate=True)
 
 
 class FileColumn(types.TypeDecorator):

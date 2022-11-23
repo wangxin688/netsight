@@ -41,7 +41,9 @@ class Circuit(Base, NameMixin, TimestampMixin):
     circuit_type_id = Column(
         Integer, ForeignKey("circuit_type.id", ondelete="SET NULL"), nullable=True
     )
-    circuit_type = relationship("Circuit", back_populates="circuit", overlaps="circuit")
+    circuit_type = relationship(
+        "CircuitType", back_populates="circuit", overlaps="circuit"
+    )
     tenant_id = Column(
         Integer, ForeignKey("tenant.id", ondelete="SET NULL"), nullable=True
     )
