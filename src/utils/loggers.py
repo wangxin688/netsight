@@ -6,9 +6,11 @@ from gunicorn.app.base import BaseApplication
 from gunicorn.glogging import Logger
 from loguru import logger
 
-LOG_LEVEL = logging.getLevelName(os.environ.get("LOG_LEVEL", "DEBUG"))
-JSON_LOGS = True if os.environ.get("JSON_LOGS", "0") == "1" else False
-WORKERS = int(os.environ.get("GUNICORN_WORKERS", "5"))
+from src.core.config import settings
+
+LOG_LEVEL = settings.LOG_LEVEL
+JSON_LOGS = settings.JSON_LOGS
+WORKERS = settings.WORKERS
 
 
 def correlation_id_filter(record):
