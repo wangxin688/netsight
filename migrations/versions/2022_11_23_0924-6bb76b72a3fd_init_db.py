@@ -1,8 +1,8 @@
 """init db
 
-Revision ID: 7024b8aca1c2
+Revision ID: 6bb76b72a3fd
 Revises: 
-Create Date: 2022-11-22 21:40:00.407684
+Create Date: 2022-11-23 09:24:29.694865
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '7024b8aca1c2'
+revision = '6bb76b72a3fd'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -200,28 +200,28 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('auth_group_roles',
+    op.create_table('auth_group_role_link',
     sa.Column('group_id', sa.Integer(), nullable=False),
     sa.Column('role_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['group_id'], ['auth_group.id'], ),
     sa.ForeignKeyConstraint(['role_id'], ['auth_role.id'], ),
     sa.PrimaryKeyConstraint('group_id', 'role_id')
     )
-    op.create_table('auth_role_permissions',
+    op.create_table('auth_role_permission_link',
     sa.Column('role_id', sa.Integer(), nullable=False),
     sa.Column('permission_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['permission_id'], ['auth_permission.id'], ),
     sa.ForeignKeyConstraint(['role_id'], ['auth_role.id'], ),
     sa.PrimaryKeyConstraint('role_id', 'permission_id')
     )
-    op.create_table('auth_user_groups',
+    op.create_table('auth_user_group_link',
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('group_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['group_id'], ['auth_group.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ),
     sa.PrimaryKeyConstraint('user_id', 'group_id')
     )
-    op.create_table('auth_user_roles',
+    op.create_table('auth_user_role_link',
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('role_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['role_id'], ['auth_role.id'], ),
@@ -567,10 +567,10 @@ def downgrade() -> None:
     op.drop_table('dcim_device_type')
     op.drop_table('dcim_cable_termination')
     op.drop_table('circuit')
-    op.drop_table('auth_user_roles')
-    op.drop_table('auth_user_groups')
-    op.drop_table('auth_role_permissions')
-    op.drop_table('auth_group_roles')
+    op.drop_table('auth_user_role_link')
+    op.drop_table('auth_user_group_link')
+    op.drop_table('auth_role_permission_link')
+    op.drop_table('auth_group_role_link')
     op.drop_table('tenant')
     op.drop_table('ipam_vlan_group')
     op.drop_table('ipam_role')

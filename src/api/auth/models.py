@@ -25,7 +25,7 @@ CONFIG = "english"
 class UserRoleLink(Base):
     """user to role many-to-many relationship"""
 
-    __tablename__ = "auth_user_roles"
+    __tablename__ = "auth_user_role_link"
     user_id = Column(Integer, ForeignKey("auth_user.id"), primary_key=True)
     role_id = Column(Integer, ForeignKey("auth_role.id"), primary_key=True)
 
@@ -33,7 +33,7 @@ class UserRoleLink(Base):
 class UserGroupLink(Base):
     """user to group many-to-many relationship"""
 
-    __tablename__ = "auth_user_groups"
+    __tablename__ = "auth_user_group_link"
     user_id = Column(Integer, ForeignKey("auth_user.id"), primary_key=True)
     group_id = Column(Integer, ForeignKey("auth_group.id"), primary_key=True)
 
@@ -41,7 +41,7 @@ class UserGroupLink(Base):
 class GroupRoleLink(Base):
     """group to role many-to-many relationship"""
 
-    __tablename__ = "auth_group_roles"
+    __tablename__ = "auth_group_role_link"
     group_id = Column(Integer, ForeignKey("auth_group.id"), primary_key=True)
     role_id = Column(Integer, ForeignKey("auth_role.id"), primary_key=True)
 
@@ -49,7 +49,7 @@ class GroupRoleLink(Base):
 class RolePermissionLink(Base):
     """role to permission many-to-many relationship"""
 
-    __tablename__ = "auth_role_permissions"
+    __tablename__ = "auth_role_permission_link"
     role_id = Column(Integer, ForeignKey("auth_role.id"), primary_key=True)
     permission_id = Column(Integer, ForeignKey("auth_permission.id"), primary_key=True)
 
@@ -63,11 +63,17 @@ class User(Base, TimestampMixin):
     email: str = Column(String, nullable=False, unique=True)
     hashed_password: str = Column(String, nullable=False)
     is_active: bool = Column(Boolean, default=True)
-    groups = relationship(
-        "Group", secondary="auth_user_groups", back_populates="users", overlaps="users"
+    group = relationship(
+        "Group",
+        secondary="auth_user_group_link",
+        back_populates="auth_user",
+        overlaps="auth_user",
     )
-    roles = relationship(
-        "Role", secondary="auth_user_roles", back_populates="users", overlaps="users"
+    role = relationship(
+        "Role",
+        secondary="auth_user_role_link",
+        back_populates="auth_user",
+        overlaps="auth_user",
     )
 
     @property
@@ -160,11 +166,17 @@ class Group(Base, TimestampMixin):
     __tablename__ = "auth_group"
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True, nullable=False)
-    users = relationship(
-        "User", secondary="auth_user_groups", back_populates="groups", overlaps="groups"
+    user = relationship(
+        "User",
+        secondary="auth_user_group_link",
+        back_populates="auth_group",
+        overlaps="auth_group",
     )
-    roles = relationship(
-        "Role", secondary="auth_group_roles", back_populates="groups", overlaps="groups"
+    role = relationship(
+        "Role",
+        secondary="auth_group_role_link",
+        back_populates="auth_group",
+        overlaps="auth_group",
     )
 
 
@@ -172,17 +184,23 @@ class Role(Base, TimestampMixin):
     __tablename__ = "auth_role"
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True, nullable=False)
-    users = relationship(
-        "User", secondary="auth_user_roles", back_populates="roles", overlaps="roles"
+    user = relationship(
+        "User",
+        secondary="auth_user_role_link",
+        back_populates="auth_role",
+        overlaps="auth_role",
     )
-    groups = relationship(
-        "Group", secondary="auth_group_roles", back_populates="roles", overlaps="roles"
+    group = relationship(
+        "Group",
+        secondary="auth_group_role_link",
+        back_populates="auth_role",
+        overlaps="auth_role",
     )
-    permissions = relationship(
+    permission = relationship(
         "Permission",
-        secondary="auth_role_permissions",
-        back_populates="roles",
-        overlaps="roles",
+        secondary="auth_role_permission_link",
+        back_populates="auth_role",
+        overlaps="auth_role",
     )
 
 
@@ -192,7 +210,7 @@ class Permission(Base, TimestampMixin):
     name = Column(String, unique=True, nullable=False)
     roles = relationship(
         "Role",
-        secondary="auth_role_permissions",
-        back_populates="permissions",
-        overlaps="permissions",
+        secondary="auth_role_permission_link",
+        back_populates="auth_permission",
+        overlaps="auth_permission",
     )

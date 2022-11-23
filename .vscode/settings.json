@@ -1,7 +1,12 @@
 {
     "cSpell.words": [
+        "accesslog",
         "aiofiles",
+        "asgi",
         "fastapi",
-        "sqlalchemy"
+        "gunicorn",
+        "redoc",
+        "sqlalchemy",
+        "uvicorn"
     ]
 }

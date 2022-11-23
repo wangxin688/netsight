@@ -1,5 +1,6 @@
 import logging
 import sys
+import traceback
 import uuid
 
 from asgi_correlation_id import CorrelationIdMiddleware
@@ -23,14 +24,13 @@ from src.utils.loggers import (
 
 
 def create_app():
-    # TODO: remove orjson in project
     app = FastAPI(
         title=settings.PROJECT_NAME,
         version=settings.VERSION,
         description=settings.DESCRIPTION,
         openapi_url="/api/v1/openapi.json",
         docs_url="/api/v1/docs",
-        redoc_url="/api/v1/redocs"
+        redoc_url="/api/v1/redoc"
         # swagger_ui_init_oauth={}
     )
     for handler in exception_handlers:
@@ -38,18 +38,6 @@ def create_app():
             exc_class_or_status_code=handler["name"],
             handler=handler["handler"],
         )
-
-    # async def assert_exception_handler(
-    #     request: Request, exc: AssertionError
-    # ) -> JSONResponse:
-    #     # return_info = ERR_NUM_1.dict()
-    #     # return_info.update({"data": jsonable_encoder(str(exc))})
-    #     return JSONResponse(status_code=500, content={"detail": str(exc)})
-
-    # @app.exception_handler(AssertionError)
-    # async def custom_assert_exception_handler(request, e):
-    #     logger.error(e)
-    #     return await assert_exception_handler(request, e)
 
     app.add_middleware(
         CorrelationIdMiddleware,
@@ -75,8 +63,6 @@ def create_app():
 
 if __name__ == "__main__":
     intercept_handler = InterceptHandler()
-    # logging.basicConfig(handlers=[intercept_handler], level=LOG_LEVEL)
-    # logging.root.handlers = [intercept_handler]
     logging.root.setLevel(LOG_LEVEL)
     fmt = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <blue>{correlation_id}</blue> | <level>{level: <2}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
 
@@ -121,5 +107,5 @@ if __name__ == "__main__":
     app = create_app()
     try:
         StandaloneApplication(app, options).run()
-    except Exception as e:
-        print(e)
+    except Exception:
+        print(traceback.format_exc())
