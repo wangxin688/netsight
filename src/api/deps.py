@@ -22,7 +22,7 @@ from src.utils.exceptions import (
 )
 
 # oauth2_scheme = auth_plugins(settings.AUTH)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="jwt/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/jwt/login")
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
