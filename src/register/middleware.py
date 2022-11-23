@@ -6,7 +6,7 @@ from typing import Callable
 import aiofiles
 from asgi_correlation_id import correlation_id
 from fastapi import Request, Response
-from fastapi.responses import ORJSONResponse
+from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 
 from src.utils.loggers import logger
@@ -22,13 +22,13 @@ class AuditRoute(APIRoute):
                 response: Response = await original_route_handler(request)
             except Exception as e:
                 logger.error(e)
-                logger.info(traceback.print_exc())
-                response = ORJSONResponse(
-                    status_code=500,
+                logger.error(traceback.format_exc())
+                response = JSONResponse(
+                    status_code=200,
                     content={
                         "code": 500,
                         "data": str(e),
-                        "msg": "internal server error",
+                        "msg": "Internal server error",
                     },
                 )
             finally:
@@ -58,6 +58,7 @@ class AuditRoute(APIRoute):
                             "msg": rsp_data.get("msg"),
                         }
                     )
+                logger.info(data)
                 async with aiofiles.open(
                     "log/audit.json", mode="a+", encoding="utf-8"
                 ) as f:

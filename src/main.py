@@ -23,7 +23,7 @@ from src.utils.loggers import (
 
 
 def create_app():
-    #TODO: remove orjson in project
+    # TODO: remove orjson in project
     app = FastAPI(
         title=settings.PROJECT_NAME,
         version=settings.VERSION,
@@ -41,10 +41,10 @@ def create_app():
 
     # async def assert_exception_handler(
     #     request: Request, exc: AssertionError
-    # ) -> ORJSONResponse:
+    # ) -> JSONResponse:
     #     # return_info = ERR_NUM_1.dict()
     #     # return_info.update({"data": jsonable_encoder(str(exc))})
-    #     return ORJSONResponse(status_code=500, content={"detail": str(exc)})
+    #     return JSONResponse(status_code=500, content={"detail": str(exc)})
 
     # @app.exception_handler(AssertionError)
     # async def custom_assert_exception_handler(request, e):

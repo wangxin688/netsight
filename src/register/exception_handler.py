@@ -2,7 +2,7 @@ from fastapi import status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.requests import Request
-from fastapi.responses import ORJSONResponse
+from fastapi.responses import JSONResponse
 
 from src.utils.error_code import (
     ERR_NUM_1,
@@ -25,32 +25,32 @@ from src.utils.loggers import logger
 
 async def token_not_provided_handler(
     request: Request, exc: TokenNotProvidedError
-) -> ORJSONResponse:
-    return ORJSONResponse(status_code=status.HTTP_200_OK, content=ERR_NUM_4001.dict())
+) -> JSONResponse:
+    return JSONResponse(status_code=status.HTTP_200_OK, content=ERR_NUM_4001.dict())
 
 
 async def token_invalid_handler(
     request: Request, exc: TokenInvalidError
-) -> ORJSONResponse:
-    return ORJSONResponse(status_code=status.HTTP_200_OK, content=ERR_NUM_4001.dict())
+) -> JSONResponse:
+    return JSONResponse(status_code=status.HTTP_200_OK, content=ERR_NUM_4001.dict())
 
 
 async def invalid_token_for_refresh_handler(
     request: Request, exc: TokenInvalidForRefreshError
-) -> ORJSONResponse:
-    return ORJSONResponse(status_code=status.HTTP_200_OK, content=ERR_NUM_4011.dict())
+) -> JSONResponse:
+    return JSONResponse(status_code=status.HTTP_200_OK, content=ERR_NUM_4011.dict())
 
 
 async def token_expired_handler(
     request: Request, exc: TokenExpiredError
-) -> ORJSONResponse:
-    return ORJSONResponse(status_code=status.HTTP_200_OK, content=ERR_NUM_4002.dict())
+) -> JSONResponse:
+    return JSONResponse(status_code=status.HTTP_200_OK, content=ERR_NUM_4002.dict())
 
 
 async def permission_deny_handler(
     request: Request, exc: PermissionDenyError
-) -> ORJSONResponse:
-    return ORJSONResponse(
+) -> JSONResponse:
+    return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=ERR_NUM_4003._asdict(),
     )
@@ -58,17 +58,15 @@ async def permission_deny_handler(
 
 async def resource_not_found_handler(
     request: Request, exc: ResourceNotFoundError
-) -> ORJSONResponse:
-    return ORJSONResponse(
-        status_code=status.HTTP_200_OK, content=ERR_NUM_4004._asdict()
-    )
+) -> JSONResponse:
+    return JSONResponse(status_code=status.HTTP_200_OK, content=ERR_NUM_4004._asdict())
 
 
 async def request_validation_exception_handler(
     request: Request, exc: RequestValidationError
-) -> ORJSONResponse:
+) -> JSONResponse:
     logger.error("Request validation error", exc)
-    return ORJSONResponse(
+    return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={
             "code": 1,
@@ -80,10 +78,10 @@ async def request_validation_exception_handler(
 
 async def assert_exception_handler(
     request: Request, exc: AssertionError
-) -> ORJSONResponse:
+) -> JSONResponse:
     return_info = ERR_NUM_1.dict()
     return_info.update({"data": jsonable_encoder(str(exc))})
-    return ORJSONResponse(status_code=status.HTTP_200_OK, content=return_info)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=return_info)
 
 
 exception_handlers = [

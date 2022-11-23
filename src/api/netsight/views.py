@@ -1,6 +1,6 @@
 from celery.result import AsyncResult
 from fastapi import APIRouter, Depends
-from fastapi.responses import ORJSONResponse
+from fastapi.responses import JSONResponse
 from loguru import logger
 
 from src.api import deps
@@ -16,7 +16,7 @@ async def get_task_result(
 ):
     task = AsyncResult(task_id)
     if not task.ready():
-        return ORJSONResponse(status_code=200, content=ERR_NUM_2002._asdict())
+        return JSONResponse(status_code=200, content=ERR_NUM_2002._asdict())
     state = task.state
     if state == "FAILURE":
         traceback_info = task.traceback
@@ -24,7 +24,7 @@ async def get_task_result(
         error_msg = task.result
         return_info = ERR_NUM_500._asdict()
         return_info.update({"data": error_msg})
-        return ORJSONResponse(status_code=200, content=return_info)
+        return JSONResponse(status_code=200, content=return_info)
     result = task.get()
 
     return {

@@ -1,9 +1,8 @@
+import json
 from typing import Any
 
-import orjson
 import redis.asyncio as redis
 
-from src.api.base import orjson_dumps
 from src.core.config import settings
 
 
@@ -19,12 +18,12 @@ class RedisClient:
         self._redis = redis
 
     async def set(self, key: str, data: Any, expire: int = 1800):
-        return self._redis.set(key, orjson_dumps(data), ex=expire)
+        return self._redis.set(key, json.dumps(data), ex=expire)
 
     async def get(self, key: str):
         result = await self._redis.get(key)
         if result:
-            return orjson.loads(result)
+            return json.loads(result)
         return result
 
     async def delete(self, key: str):

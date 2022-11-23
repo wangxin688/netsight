@@ -12,7 +12,7 @@ from src.utils.exceptions import TokenInvalidExpiredError, RefreshTokenInvalidEx
 
 from tests.loggers import logger
 
-# from fastapi.responses import ORJSONResponse
+# from fastapi.responses import JSONResponse
 
 
 router = FastAPI()
@@ -85,7 +85,7 @@ router.add_middleware(
 # async def get_task_result(task_id: str, current_user=Depends(deps.get_current_user)):
 #     task = AsyncResult(task_id)
 #     if not task.ready():
-#         return ORJSONResponse(status_code=200, content=ERR_NUM_2002._asdict())
+#         return JSONResponse(status_code=200, content=ERR_NUM_2002._asdict())
 #     state = task.state
 #     if state == "FAILURE":
 #         traceback_info = task.traceback
@@ -93,7 +93,7 @@ router.add_middleware(
 #         error_msg = task.result
 #         return_info = ERR_NUM_500._asdict()
 #         return_info.update({"data": error_msg})
-#         return ORJSONResponse(status_code=200, content=return_info)
+#         return JSONResponse(status_code=200, content=return_info)
 #     result = task.get()
 
 #     return {
