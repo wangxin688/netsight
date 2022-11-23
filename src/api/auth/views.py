@@ -1,7 +1,9 @@
 import time
+from datetime import datetime
+from typing import Optional
 
 import jwt
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
@@ -22,6 +24,7 @@ from src.core.security import (
 from src.register.middleware import AuditRoute
 from src.utils.error_code import ERR_NUM_0, ERR_NUM_10001, ERR_NUM_10002, ERR_NUM_10003
 from src.utils.exceptions import TokenInvalidForRefreshError
+from src.utils.external.lark_api import LarkClient
 from src.utils.loggers import logger
 
 router = APIRouter(route_class=AuditRoute)
@@ -50,7 +53,6 @@ async def log_test(
 async def register_new_user(
     auth_user: schemas.AuthUserCreate,
     session: AsyncSession = Depends(get_session),
-    audit=Depends(audit_with_data),
 ):
     result = await session.execute(select(User).where(User.email == auth_user.email))
     if result.scalars().first() is not None:
@@ -71,7 +73,6 @@ async def register_new_user(
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(get_session),
-    audit=Depends(audit_with_data),
 ):
     result: AsyncResult = await session.execute(
         select(User).where(User.email == form_data.username)
@@ -84,6 +85,9 @@ async def login(
     return_info = ERR_NUM_0.dict()
     token = generate_access_token_response(str(user.id))
     return_info["data"] = token
+    user.updated_at = datetime.now()
+    session.add(user)
+    await session.commit()
     return return_info
 
 
@@ -91,7 +95,6 @@ async def login(
 async def token(
     refresh_token: str,
     session: AsyncSession = Depends(get_session),
-    audit=Depends(audit_with_data),
 ):
     """OAuth2 compatible token, get an access token for future requests using refresh token"""
     try:
@@ -122,3 +125,16 @@ async def token(
     return_info = ERR_NUM_0.dict()
     return_info["data"] = token
     return return_info
+
+
+@router.post("/jwt/lark-login")
+async def lark_login(
+    code: str,
+    user_agent: Optional[str],
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+):
+    app_access_token = request.state.app_access_token
+    lark_api = LarkClient(token=app_access_token)
+    await lark_api.get_user_identity(code)
+    # TODO: complete the oauth2 code bearer process

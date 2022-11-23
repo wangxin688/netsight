@@ -33,13 +33,17 @@ class AuditRoute(APIRoute):
                 )
             finally:
                 body_ = await request.body()
-                print(body_)
+                body_ = json.loads(body_) if body_ else ""
+                if body_ is not None:
+                    if body_.get("password"):
+                        body_ = ""
                 process_time = time.time() - start_time
+                response.headers["X-Response-Time"] = str(process_time)
                 data = {
                     "x-process-time": process_time,
                     "ip": request.client.host,
                     "method": request.method,
-                    "body": json.loads(body_) if body_ else "",
+                    "body": body_,
                     "path": request.url.path,
                     "path_params": request.path_params,
                     "query_params": request.query_params._dict,
@@ -48,7 +52,6 @@ class AuditRoute(APIRoute):
                 }
                 if request.query_params.get("audit"):
                     rsp_data = json.loads(response.body.decode("utf-8"))
-
                     data.update(
                         {
                             "request_user": request.state.current_user
