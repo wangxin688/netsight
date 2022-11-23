@@ -52,14 +52,14 @@ async def permission_deny_handler(
 ) -> JSONResponse:
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content=ERR_NUM_4003._asdict(),
+        content=ERR_NUM_4003.dict(),
     )
 
 
 async def resource_not_found_handler(
     request: Request, exc: ResourceNotFoundError
 ) -> JSONResponse:
-    return JSONResponse(status_code=status.HTTP_200_OK, content=ERR_NUM_4004._asdict())
+    return JSONResponse(status_code=status.HTTP_200_OK, content=ERR_NUM_4004.dict())
 
 
 async def request_validation_exception_handler(

@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 
 from src.api import deps
-from src.auth.models import User
+from src.api.auth.models import User
 from src.utils.error_code import ERR_NUM_0, ERR_NUM_500, ERR_NUM_2002
 
 router = APIRouter()
@@ -16,13 +16,13 @@ async def get_task_result(
 ):
     task = AsyncResult(task_id)
     if not task.ready():
-        return JSONResponse(status_code=200, content=ERR_NUM_2002._asdict())
+        return JSONResponse(status_code=200, content=ERR_NUM_2002.dict())
     state = task.state
     if state == "FAILURE":
         traceback_info = task.traceback
         logger.error(f"celery task id: {task_id} execute failed" + traceback_info)
         error_msg = task.result
-        return_info = ERR_NUM_500._asdict()
+        return_info = ERR_NUM_500.dict()
         return_info.update({"data": error_msg})
         return JSONResponse(status_code=200, content=return_info)
     result = task.get()
