@@ -1,8 +1,8 @@
 """init db
 
-Revision ID: dc0fdbe2dbaa
+Revision ID: 9d7c39093141
 Revises: 
-Create Date: 2022-11-23 22:31:38.809706
+Create Date: 2022-11-24 20:10:18.288071
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = 'dc0fdbe2dbaa'
+revision = '9d7c39093141'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -58,7 +58,7 @@ def upgrade() -> None:
     sa.Column('slug', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('asn', sa.String(), nullable=True),
+    sa.Column('asn', sa.Integer(), nullable=True),
     sa.Column('account', sa.String(), nullable=True),
     sa.Column('portal', sa.String(), nullable=True),
     sa.Column('noc_contact', postgresql.ARRAY(sa.String()), nullable=True),
@@ -237,15 +237,15 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('cid', sa.String(), nullable=True),
     sa.Column('provider_id', sa.Integer(), nullable=True),
-    sa.Column('status', sa.String(), nullable=False),
+    sa.Column('status', postgresql.ENUM('Planning', 'Active', 'Provisioning', 'Offline', name='circuit_status'), nullable=False),
     sa.Column('circuit_type_id', sa.Integer(), nullable=True),
     sa.Column('tenant_id', sa.Integer(), nullable=True),
     sa.Column('install_date', sa.DateTime(timezone=True), nullable=True),
     sa.Column('purchase_term', sa.String(), nullable=True),
     sa.Column('commit_rate', sa.Integer(), nullable=True, comment='Mbps'),
     sa.Column('comments', sa.TEXT(), nullable=True),
-    sa.Column('vendor_available_ip', postgresql.ARRAY(sa.String()), nullable=True),
-    sa.Column('vendor_available_gateway', postgresql.ARRAY(sa.String()), nullable=True),
+    sa.Column('vendor_available_ip', postgresql.ARRAY(postgresql.INET()), nullable=True),
+    sa.Column('vendor_available_gateway', postgresql.ARRAY(postgresql.INET()), nullable=True),
     sa.ForeignKeyConstraint(['circuit_type_id'], ['circuit_type.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['provider_id'], ['circuit_provider.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['tenant_id'], ['tenant.id'], ondelete='SET NULL'),
@@ -276,7 +276,7 @@ def upgrade() -> None:
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('site_code', sa.String(), nullable=False),
-    sa.Column('status', sa.String(), nullable=True),
+    sa.Column('status', postgresql.ENUM('Active', 'Retired', 'Planning', 'Staged', 'Canceled', 'Validated', name='site_status'), nullable=True),
     sa.Column('region_id', sa.Integer(), nullable=True),
     sa.Column('group_id', sa.Integer(), nullable=True),
     sa.Column('tenant_id', sa.Integer(), nullable=True),
@@ -289,9 +289,9 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['group_id'], ['dcim_site_group.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['region_id'], ['dcim_region.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['tenant_id'], ['tenant.id'], ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('site_code')
+    sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_dcim_site_site_code'), 'dcim_site', ['site_code'], unique=True)
     op.create_table('ipam_block',
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
@@ -412,18 +412,19 @@ def upgrade() -> None:
     sa.Column('address', postgresql.INET(), nullable=False),
     sa.Column('vrf_id', sa.Integer(), nullable=True),
     sa.Column('tenant_id', sa.Integer(), nullable=True),
-    sa.Column('status', sa.String(), nullable=False),
+    sa.Column('status', postgresql.ENUM('Active', 'Reserved', 'Deprecated', 'DHCP', 'Available', name='ip_status'), nullable=False),
     sa.Column('dns_name', sa.String(), nullable=True),
     sa.Column('description', sa.String(), nullable=True),
     sa.ForeignKeyConstraint(['tenant_id'], ['tenant.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['vrf_id'], ['ipam_vrf.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_ipam_ip_address_address'), 'ipam_ip_address', ['address'], unique=False)
     op.create_table('ipam_ip_range',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('start_address', postgresql.INET(), nullable=True),
     sa.Column('end_address', postgresql.INET(), nullable=True),
-    sa.Column('status', sa.String(), nullable=False),
+    sa.Column('status', postgresql.ENUM('Active', 'Reserved', 'Deprecated', name='vlan_status'), nullable=False),
     sa.Column('size', sa.Integer(), nullable=True),
     sa.Column('vrf_id', sa.Integer(), nullable=True),
     sa.Column('role_id', sa.Integer(), nullable=True),
@@ -437,7 +438,7 @@ def upgrade() -> None:
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('prefix', postgresql.CIDR(), nullable=False),
-    sa.Column('status', sa.String(), nullable=False),
+    sa.Column('status', postgresql.ENUM('Active', 'Reserved', 'Deprecated', name='vlan_status'), nullable=False),
     sa.Column('site_id', sa.Integer(), nullable=True),
     sa.Column('tenant_id', sa.Integer(), nullable=True),
     sa.Column('role_id', sa.Integer(), nullable=True),
@@ -450,7 +451,7 @@ def upgrade() -> None:
     op.create_table('ipam_vlan',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
-    sa.Column('status', sa.String(), nullable=False),
+    sa.Column('status', postgresql.ENUM('Active', 'Reserved', 'Deprecated', name='vlan_status'), nullable=False),
     sa.Column('site_id', sa.Integer(), nullable=True),
     sa.Column('vlan_group_id', sa.Integer(), nullable=True),
     sa.Column('vid', sa.Integer(), nullable=False),
@@ -502,11 +503,9 @@ def upgrade() -> None:
     op.create_table('dcim_device',
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('name', sa.String(), nullable=False),
-    sa.Column('slug', sa.String(), nullable=False),
-    sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('primary_ipv4', postgresql.INET(), nullable=True),
+    sa.Column('name', sa.String(), nullable=False),
+    sa.Column('primary_ipv4', postgresql.INET(), nullable=False),
     sa.Column('primary_ipv6', postgresql.INET(), nullable=True),
     sa.Column('device_type_id', sa.Integer(), nullable=True),
     sa.Column('device_role_id', sa.Integer(), nullable=True),
@@ -517,7 +516,7 @@ def upgrade() -> None:
     sa.Column('position', sa.Float(), nullable=True),
     sa.Column('serial_num', sa.String(), nullable=True),
     sa.Column('asset_tag', sa.String(), nullable=True),
-    sa.Column('status', sa.String(), nullable=False),
+    sa.Column('status', postgresql.ENUM('Active', 'Offline', 'Staged', 'Planning', name='device_status'), nullable=False),
     sa.Column('cluster_id', sa.Integer(), nullable=True),
     sa.Column('chassis_id', sa.Integer(), nullable=True),
     sa.Column('comments', sa.Text(), nullable=True),
@@ -534,6 +533,8 @@ def upgrade() -> None:
     sa.UniqueConstraint('chassis_id', 'name'),
     sa.UniqueConstraint('rack_id', 'position')
     )
+    op.create_index(op.f('ix_dcim_device_name'), 'dcim_device', ['name'], unique=False)
+    op.create_index(op.f('ix_dcim_device_primary_ipv4'), 'dcim_device', ['primary_ipv4'], unique=False)
     op.create_table('dcim_interface',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
@@ -553,12 +554,15 @@ def upgrade() -> None:
 def downgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
     op.drop_table('dcim_interface')
+    op.drop_index(op.f('ix_dcim_device_primary_ipv4'), table_name='dcim_device')
+    op.drop_index(op.f('ix_dcim_device_name'), table_name='dcim_device')
     op.drop_table('dcim_device')
     op.drop_table('dcim_rack')
     op.drop_table('ipam_vrf_route_target_link')
     op.drop_table('ipam_vlan')
     op.drop_table('ipam_prefix')
     op.drop_table('ipam_ip_range')
+    op.drop_index(op.f('ix_ipam_ip_address_address'), table_name='ipam_ip_address')
     op.drop_table('ipam_ip_address')
     op.drop_table('dcim_site_contact_link')
     op.drop_table('dcim_site_asn_link')
@@ -571,6 +575,7 @@ def downgrade() -> None:
     op.drop_table('ipam_vrf')
     op.drop_table('ipam_route_target')
     op.drop_table('ipam_block')
+    op.drop_index(op.f('ix_dcim_site_site_code'), table_name='dcim_site')
     op.drop_table('dcim_site')
     op.drop_table('dcim_device_type')
     op.drop_table('dcim_cable_termination')

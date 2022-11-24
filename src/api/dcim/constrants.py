@@ -1,4 +1,4 @@
-ALL_TIME_ZONES = [
+ALL_TIME_ZONES = (
     "Africa/Abidjan",
     "Africa/Accra",
     "Africa/Addis_Ababa",
@@ -594,8 +594,8 @@ ALL_TIME_ZONES = [
     "W-SU",
     "WET",
     "Zulu",
-]
+)
 
-SITE_STATUS = ["Active", "Retired", "Plannning", "Staged", "Canceled", "Validating"]
-DEVICE_STATUS = ["Active", "Offline", "Staged"]
-GENERAL_STATUS = ["Enabled", "Disabled"]
+SITE_STATUS = ("Active", "Retired", "Planning", "Staged", "Canceled", "Validated")
+DEVICE_STATUS = ("Active", "Offline", "Staged", "Planning")
+GENERAL_STATUS = ("Enabled", "Disabled")

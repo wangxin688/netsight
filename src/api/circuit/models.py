@@ -7,7 +7,7 @@ from sqlalchemy import (
     String,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY, ENUM, INET
 from sqlalchemy.orm import relationship
 
 from src.db.db_base import Base
@@ -37,7 +37,17 @@ class Circuit(Base, NameMixin, TimestampMixin):
         back_populates="circuit",
         overlaps="circuit",
     )
-    status = Column(String, nullable=False)
+    status = Column(
+        ENUM(
+            "Planning",
+            "Active",
+            "Provisioning",
+            "Offline",
+            name="circuit_status",
+            create_type=False,
+        ),
+        nullable=False,
+    )
     circuit_type_id = Column(
         Integer, ForeignKey("circuit_type.id", ondelete="SET NULL"), nullable=True
     )
@@ -52,8 +62,8 @@ class Circuit(Base, NameMixin, TimestampMixin):
     purchase_term = Column(String, nullable=True)
     commit_rate = Column(Integer, nullable=True, comment="Mbps")
     comments = Column(TEXT, nullable=True)
-    vendor_available_ip = Column(ARRAY(String), nullable=True)
-    vendor_available_gateway = Column(ARRAY(String), nullable=True)
+    vendor_available_ip = Column(ARRAY(INET), nullable=True)
+    vendor_available_gateway = Column(ARRAY(INET), nullable=True)
     contact = relationship(
         "Contact",
         secondary="circuit_contact_link",
@@ -85,7 +95,7 @@ class CircuitTermination(Base):
 class Provider(Base, NameMixin):
     __tablename__ = "circuit_provider"
     id = Column(Integer, primary_key=True)
-    asn = Column(String, nullable=True)
+    asn = Column(Integer, nullable=True)
     account = Column(String, nullable=True)
     portal = Column(String, nullable=True)
     noc_contact = Column(ARRAY(String), nullable=True)

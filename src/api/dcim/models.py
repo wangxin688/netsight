@@ -75,8 +75,19 @@ class SiteGroup(Base, NameMixin, TimestampMixin):
 class Site(Base, NameMixin, TimestampMixin):
     __tablename__ = "dcim_site"
     id = Column(Integer, primary_key=True)
-    site_code = Column(String, unique=True, nullable=False)
-    status = Column(String)
+    site_code = Column(String, unique=True, nullable=False, index=True)
+    status = Column(
+        ENUM(
+            "Active",
+            "Retired",
+            "Planning",
+            "Staged",
+            "Canceled",
+            "Validated",
+            name="site_status",
+            create_type=False,
+        )
+    )
     region_id = Column(
         Integer, ForeignKey("dcim_region.id", ondelete="SET NULL"), nullable=True
     )
@@ -281,14 +292,15 @@ class Platform(Base, NameMixin):
     )
 
 
-class Device(Base, NameMixin, TimestampMixin):
+class Device(Base, TimestampMixin):
     __tablename__ = "dcim_device"
     __table_args__ = (
         UniqueConstraint("rack_id", "position"),
         UniqueConstraint("chassis_id", "name"),
     )
     id = Column(Integer, primary_key=True)
-    primary_ipv4 = Column(INET, nullable=True)
+    name = Column(String, nullable=False, index=True)
+    primary_ipv4 = Column(INET, nullable=False, index=True)
     primary_ipv6 = Column(INET, nullable=True)
     comments = Column(String, nullable=True)
     device_type_id = Column(
@@ -328,7 +340,17 @@ class Device(Base, NameMixin, TimestampMixin):
     position = Column(Float, nullable=True)
     serial_num = Column(String, nullable=True)
     asset_tag = Column(String, unique=True, nullable=True)
-    status = Column(String, nullable=False)
+    status = Column(
+        ENUM(
+            "Active",
+            "Offline",
+            "Staged",
+            "Planning",
+            name="device_status",
+            create_type=False,
+        ),
+        nullable=False,
+    )
     # TODO: virtualization
     cluster_id = Column(
         Integer, ForeignKey("cluster.id", ondelete="SET NULL"), nullable=True

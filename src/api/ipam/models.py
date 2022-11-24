@@ -1,5 +1,5 @@
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, UniqueConstraint
-from sqlalchemy.dialects.postgresql import CIDR, INET
+from sqlalchemy.dialects.postgresql import CIDR, ENUM, INET
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
@@ -67,7 +67,10 @@ class Prefix(Base, TimestampMixin):
     __tablename__ = "ipam_prefix"
     id = Column(Integer, primary_key=True)
     prefix = Column(CIDR, nullable=False)
-    status = Column(String, nullable=False)
+    status = Column(
+        ENUM("Active", "Reserved", "Deprecated", name="vlan_status", create_type=False),
+        nullable=False,
+    )
     site_id = Column(
         Integer, ForeignKey("dcim_site.id", ondelete="SET NULL"), nullable=True
     )
@@ -112,7 +115,10 @@ class IPRange(Base):
     start_address = Column(INET)
     end_address = Column(INET)
     # TODO: add pydantic size unchangeable
-    status = Column(String, nullable=False)
+    status = Column(
+        ENUM("Active", "Reserved", "Deprecated", name="vlan_status", create_type=False),
+        nullable=False,
+    )
     size = Column(
         Integer,
     )
@@ -134,7 +140,7 @@ class IPRange(Base):
 class IPAddress(Base):
     __tablename__ = "ipam_ip_address"
     id = Column(Integer, primary_key=True)
-    address = Column(INET, nullable=False)
+    address = Column(INET, nullable=False, index=True)
     vrf_id = Column(
         Integer, ForeignKey("ipam_vrf.id", ondelete="SET NULL"), nullable=True
     )
@@ -145,7 +151,18 @@ class IPAddress(Base):
     tenant = relationship(
         "Tenant", back_populates="ipam_ip_address", overlaps="ipam_ip_address"
     )
-    status = Column(String, nullable=False)
+    status = Column(
+        ENUM(
+            "Active",
+            "Reserved",
+            "Deprecated",
+            "DHCP",
+            "Available",
+            name="ip_status",
+            create_type=False,
+        ),
+        nullable=False,
+    )
     dns_name = Column(String)
     description = Column(String, nullable=True)
 
@@ -156,7 +173,10 @@ class VLAN(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True, nullable=False)
     description = Column(String, nullable=True)
-    status = Column(String, nullable=False)
+    status = Column(
+        ENUM("Active", "Reserved", "Deprecated", name="vlan_status", create_type=False),
+        nullable=False,
+    )
     site_id = Column(
         Integer, ForeignKey("dcim_site.id", ondelete="SET NULL"), nullable=True
     )

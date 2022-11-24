@@ -1,5 +1,4 @@
 import logging
-import os
 
 from asgi_correlation_id.context import correlation_id
 from gunicorn.app.base import BaseApplication
