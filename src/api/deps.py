@@ -1,6 +1,6 @@
 import re
 import time
-from typing import AsyncGenerator, Sequence
+from typing import AsyncGenerator
 
 import jwt
 from fastapi import Depends, Request
@@ -8,7 +8,6 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.auth.constrants import ADMIN_INVALID_URLS, USER_VALID_URLS
 from src.api.auth.models import User
 
 # from src.api.auth.plugins import auth_plugins
@@ -64,42 +63,44 @@ async def get_current_user(
 
     if not user:
         raise ResourceNotFoundError
-    request.state.current_user = user.email
-    return user
-
-
-class RBACChecker:
-    def __init__(
-        self,
-        roles: str | Sequence[str] = None,
-        groups: str | Sequence[str] = None,
-        permissions: str | Sequence[str] = None,
-    ) -> None:
-        self.roles = roles
-        self.groups = groups
-        self.permissions = permissions
-
-    async def __call__(
-        self,
-        request: Request,
-        user: User = Depends(get_current_user),
-        session: AsyncSession = Depends(get_session),
-    ):
-        if user._has_roles(["superuser"]):
-            return user
-        path = request.url.path
-        method = request.method
-        if user._has_roles(["admin"]):
-            if path in ADMIN_INVALID_URLS:
-                raise PermissionError    
-        for valid_url in USER_VALID_URLS:
-            if re.match(valid_url, path):
+    request.state.current_user = user
+    if user._has_roles(["superuser"]):
+        return user
+    path = request.url.path
+    request.method
+    # TODO: confirm blacklist and whitelist? define all in database or not?
+    # TODO: more flexible rbac? role to api path permission and group to specific department or device_role or site?
+    # if user._has_roles(["admin"]):
+    #     if path in ADMIN_INVALID_URLS:
+    #         raise PermissionError
+    #     return user
+    # for valid_url in USER_VALID_URLS:
+    #     if re.match(valid_url, path):
+    #         return user
+    permission_dict: dict = request.state.permissions
+    for item in permission_dict.values():
+        urls = item["urls"]
+        for reg in urls:
+            reg = "^%s$" % reg
+            if re.match(reg, path):
                 return user
-        permission_dict: dict = request.state.permissions
-        for item in permission_dict.values():
-            urls = item["urls"]
-            for reg in urls:
-                reg = "^%s$"%reg
-                if re.match(reg, path):
-                    return user
-        raise PermissionDenyError
+    raise PermissionDenyError
+
+
+# class RBACChecker:
+#     def __init__(
+#         self,
+#         roles: str | Sequence[str] = None,
+#         groups: str | Sequence[str] = None,
+#         permissions: str | Sequence[str] = None,
+#     ) -> None:
+#         self.roles = roles
+#         self.groups = groups
+#         self.permissions = permissions
+
+#     async def __call__(
+#         self,
+#         request: Request,
+#         user: User = Depends(get_current_user),
+#         session: AsyncSession = Depends(get_session),
+#     ):

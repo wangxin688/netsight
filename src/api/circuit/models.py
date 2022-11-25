@@ -54,10 +54,6 @@ class Circuit(Base, NameMixin, TimestampMixin):
     circuit_type = relationship(
         "CircuitType", back_populates="circuit", overlaps="circuit"
     )
-    tenant_id = Column(
-        Integer, ForeignKey("tenant.id", ondelete="SET NULL"), nullable=True
-    )
-    tenant = relationship("Tenant", back_populates="circuit", overlaps="circuit")
     install_date = Column(DateTime(timezone=True), nullable=True)
     purchase_term = Column(String, nullable=True)
     commit_rate = Column(Integer, nullable=True, comment="Mbps")

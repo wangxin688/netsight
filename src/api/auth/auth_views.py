@@ -49,7 +49,7 @@ async def log_test(
     return {"code": 0, "data": res, "msg": "success"}
 
 
-@router.post("/jwt/register", response_model=BaseResponse[schemas.AuthUserResponse])
+@router.post("/register", response_model=BaseResponse[schemas.AuthUserResponse])
 async def register_new_user(
     auth_user: schemas.AuthUserCreate,
     session: AsyncSession = Depends(get_session),
@@ -69,7 +69,7 @@ async def register_new_user(
     return return_info
 
 
-@router.post("/jwt/login", response_model=BaseResponse[schemas.AccessToken])
+@router.post("/login", response_model=BaseResponse[schemas.AccessToken])
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(get_session),
@@ -91,7 +91,7 @@ async def login(
     return return_info
 
 
-@router.post("/jwt/refresh-token", response_model=BaseResponse[schemas.AccessToken])
+@router.post("/refresh-token", response_model=BaseResponse[schemas.AccessToken])
 async def token(
     refresh_token: str,
     session: AsyncSession = Depends(get_session),
@@ -127,7 +127,7 @@ async def token(
     return return_info
 
 
-@router.post("/jwt/lark-login")
+@router.post("/lark-login")
 async def lark_login(
     code: str,
     user_agent: Optional[str],

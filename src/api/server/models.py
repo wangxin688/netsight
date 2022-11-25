@@ -23,10 +23,6 @@ class Server(Base, NameMixin, TimestampMixin):
         Integer, ForeignKey("dcim_platform.id", ondelete="SET NULL"), nullable=True
     )
     dcim_platform = relationship("Platform", back_populates="server", overlaps="server")
-    tenant_id = Column(
-        Integer, ForeignKey("tenant.id", ondelete="CASCADE"), nullable=True
-    )
-    tenant = relationship("Tenant", back_populates="server", overlaps="server")
     primary_ipv4 = Column(INET, nullable=True)
     primary_ipv6 = Column(INET, nullable=True)
     tags = Column(ARRAY(String, dimensions=1), nullable=True)
@@ -42,6 +38,11 @@ class Server(Base, NameMixin, TimestampMixin):
         Integer, ForeignKey("contact.id", ondelete="SET NULL"), nullable=True
     )
     contact = relationship("Contact", back_populates="server", overlaps="server")
+    owner = Column(String, nullable=True)
+    department_id = Column(
+        Integer, ForeignKey("department.id", ondelete="SET NULL"), nullable=True
+    )
+    department = relationship("Department", back_populates="server", overlaps="server")
 
 
 class Cluster(Base, NameMixin, TimestampMixin):

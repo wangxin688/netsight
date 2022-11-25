@@ -18,17 +18,13 @@ from src.db.db_mixin import NameMixin, TimestampMixin
 
 __all__ = (
     "Region",
-    "SiteGroup",
     "Site",
     "Location",
     "RackRole",
     "Rack",
     "Manufacturer",
     "DeviceType",
-    # "ModuleType",
-    # "Module",
     "DeviceRole",
-    "VirtualChassis",
     "Interface",
     "Cable",
     "CablePath",
@@ -61,17 +57,6 @@ class Region(Base, NameMixin):
         )
 
 
-class SiteGroup(Base, NameMixin, TimestampMixin):
-    __tablename__ = "dcim_site_group"
-    id = Column(Integer, primary_key=True)
-    group_code = Column(String, unique=True, nullable=False)
-    dcim_site = relationship(
-        "Site",
-        back_populates="dcim_site_group",
-        passive_deletes=True,
-    )
-
-
 class Site(Base, NameMixin, TimestampMixin):
     __tablename__ = "dcim_site"
     id = Column(Integer, primary_key=True)
@@ -94,14 +79,6 @@ class Site(Base, NameMixin, TimestampMixin):
     dcim_region = relationship(
         "Region", back_populates="dcim_site", overlaps="dcim_site"
     )
-    group_id = Column(
-        Integer, ForeignKey("dcim_site_group.id", ondelete="SET NULL"), nullable=True
-    )
-    dcim_site_group = relationship(
-        "SiteGroup", back_populates="dcim_site", overlaps="dcim_site"
-    )
-    tenant_id = Column(Integer, ForeignKey("tenant.id", ondelete="CASCADE"))
-    tenant = relationship("Tenant", back_populates="dcim_site", overlaps="dcim_site")
     facility = Column(String, nullable=True)
     ipam_asn = relationship(
         "ASN",
@@ -109,7 +86,6 @@ class Site(Base, NameMixin, TimestampMixin):
         overlaps="dcim_site",
         back_populates="dcim_site",
     )
-    # TODO: pydantic timezone fields
     time_zone = Column(String, nullable=True)
     physical_address = Column(String, nullable=True)
     shipping_address = Column(String, nullable=True)
@@ -121,7 +97,6 @@ class Site(Base, NameMixin, TimestampMixin):
         overlaps="dcim_site",
         back_populates="dcim_site",
     )
-    # vlan_groups =
     dcim_location = relationship(
         "Location",
         back_populates="dcim_site",
@@ -140,7 +115,6 @@ class Site(Base, NameMixin, TimestampMixin):
         cascade="all, delete",
         passive_deletes=True,
     )
-    # image = Column(LargeBinary, nullable=True) or a url in cdn or object storage
     ipam_prefix = relationship(
         "Prefix", back_populates="dcim_site", passive_deletes=True
     )
@@ -169,8 +143,6 @@ class Location(Base, NameMixin):
         passive_deletes=True,
     )
     parent_id = Column(Integer, ForeignKey(id))
-    # tenant?
-    # vlan_group?
     children = relationship(
         "Location",
         cascade="all, delete-orphan",
@@ -259,14 +231,6 @@ class DeviceType(Base):
     )
 
 
-# class ModuleType:
-#     pass
-
-
-# class Module:
-#     pass
-
-
 class DeviceRole(Base, NameMixin):
     id = Column(Integer, primary_key=True)
     __tablename__ = "dcim_device_role"
@@ -296,7 +260,7 @@ class Device(Base, TimestampMixin):
     __tablename__ = "dcim_device"
     __table_args__ = (
         UniqueConstraint("rack_id", "position"),
-        UniqueConstraint("chassis_id", "name"),
+        UniqueConstraint("cluster_id", "name"),
     )
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, index=True)
@@ -338,7 +302,7 @@ class Device(Base, TimestampMixin):
         "Rack", back_populates="dcim_device", overlaps="dcim_device"
     )
     position = Column(Float, nullable=True)
-    serial_num = Column(String, nullable=True)
+    serial_num = Column(String, nullable=True, unique=True)
     asset_tag = Column(String, unique=True, nullable=True)
     status = Column(
         ENUM(
@@ -351,20 +315,11 @@ class Device(Base, TimestampMixin):
         ),
         nullable=False,
     )
-    # TODO: virtualization
     cluster_id = Column(
         Integer, ForeignKey("cluster.id", ondelete="SET NULL"), nullable=True
     )
     cluster = relationship(
         "Cluster", back_populates="dcim_device", overlaps="dcim_device"
-    )
-    chassis_id = Column(
-        Integer,
-        ForeignKey("dcim_virtual_chassis.id", ondelete="SET NULL"),
-        nullable=True,
-    )
-    dcim_virtual_chassis = relationship(
-        "VirtualChassis", back_populates="dcim_device", overlaps="dcim_device"
     )
     comments = Column(Text, nullable=True)
     dcim_interface = relationship(
@@ -373,16 +328,11 @@ class Device(Base, TimestampMixin):
         cascade="all, delete",
         passive_deletes=True,
     )
-
-
-class VirtualChassis(Base, NameMixin):
-    __tablename__ = "dcim_virtual_chassis"
-    id = Column(Integer, primary_key=True)
-    domain = Column(String, nullable=True)
-    dcim_device = relationship(
-        "Device",
-        back_populates="dcim_virtual_chassis",
-        passive_deletes=True,
+    department_id = Column(
+        Integer, ForeignKey("department.id", ondelete="SET NULL"), nullable=True
+    )
+    department = relationship(
+        "Department", back_populates="dcim_device", overlaps="=dcim_device"
     )
 
 

@@ -161,7 +161,7 @@ class User(Base, TimestampMixin):
         return bool(await session.execute(stmt).scalars().all())
 
 
-class Group(Base, TimestampMixin):
+class Group(Base):
     """auth user group table"""
 
     __tablename__ = "auth_group"
@@ -181,7 +181,7 @@ class Group(Base, TimestampMixin):
     )
 
 
-class Role(Base, TimestampMixin):
+class Role(Base):
     __tablename__ = "auth_role"
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True, nullable=False)
@@ -205,7 +205,7 @@ class Role(Base, TimestampMixin):
     )
 
 
-class Permission(Base, TimestampMixin):
+class Permission(Base):
     __tablename__ = "auth_permission"
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True, nullable=False)
