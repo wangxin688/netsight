@@ -1,3 +1,4 @@
+import re
 import time
 from typing import AsyncGenerator, Sequence
 
@@ -7,6 +8,7 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.api.auth.constrants import ADMIN_INVALID_URLS, USER_VALID_URLS
 from src.api.auth.models import User
 
 # from src.api.auth.plugins import auth_plugins
@@ -79,12 +81,25 @@ class RBACChecker:
 
     async def __call__(
         self,
+        request: Request,
         user: User = Depends(get_current_user),
         session: AsyncSession = Depends(get_session),
     ):
-        result = await user.has_requires(
-            session, roles=self.roles, groups=self.groups, permissions=self.permissions
-        )
-        if not result:
-            raise PermissionDenyError
-        return user
+        if user._has_roles(["superuser"]):
+            return user
+        path = request.url.path
+        method = request.method
+        if user._has_roles(["admin"]):
+            if path in ADMIN_INVALID_URLS:
+                raise PermissionError    
+        for valid_url in USER_VALID_URLS:
+            if re.match(valid_url, path):
+                return user
+        permission_dict: dict = request.state.permissions
+        for item in permission_dict.values():
+            urls = item["urls"]
+            for reg in urls:
+                reg = "^%s$"%reg
+                if re.match(reg, path):
+                    return user
+        raise PermissionDenyError

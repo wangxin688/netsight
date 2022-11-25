@@ -1,6 +1,7 @@
 import typing
 
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, and_, select
+from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.selectable import Exists
@@ -208,6 +209,11 @@ class Permission(Base, TimestampMixin):
     __tablename__ = "auth_permission"
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True, nullable=False)
+    url = Column(String, nullable=False)
+    action = Column(
+        ENUM("get", "put", "post", "delete", name="method", create_type=False),
+        nullable=False,
+    )
     auth_role = relationship(
         "Role",
         secondary="auth_role_permission_link",
