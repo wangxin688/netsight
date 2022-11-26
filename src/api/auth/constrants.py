@@ -1,7 +1,8 @@
-ADMIN_INVALID_URLS = ("/api/v1/auth/user-tokens",)
-USER_VALID_URLS = (
-    "/api/v1/auth/login",
-    "/api/v1/auth/lark-login",
-    "/api/v1/auth/register",
-    "/api/v1/auth/refresh-token",
-)
+ADMIN_BLACK_LIST = {"/api/v1/auth/user-tokens": "POST"}
+
+USER_WHITE_LIST = {
+    "/api/v1/auth/login": "POST",
+    "/api/v1/auth/lark-login": "POST",
+    "/api/v1/auth/register": "POST",
+    "/api/v1/auth/refresh-token": "POST",
+}

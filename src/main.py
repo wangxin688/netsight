@@ -22,6 +22,8 @@ from src.utils.loggers import (
     logger,
 )
 
+# from src.api.auth.services import permission_dict_generate
+
 
 def create_app():
     app = FastAPI(
@@ -64,6 +66,11 @@ def create_app():
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # @app.on_event("startup")
+    # async def startup_event(request: Request):
+    #     permissions = await permission_dict_generate()
+    #     request.state.permissions = permissions
 
     app.include_router(router, prefix="/api/v1")
 

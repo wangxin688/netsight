@@ -1,8 +1,8 @@
 """init db
 
-Revision ID: 03a24018f5b2
+Revision ID: 5b586e91c1e0
 Revises: 
-Create Date: 2022-11-26 00:08:47.037363
+Create Date: 2022-11-26 23:06:04.275290
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '03a24018f5b2'
+revision = '5b586e91c1e0'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -37,17 +37,6 @@ def upgrade() -> None:
     sa.Column('name', sa.String(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name')
-    )
-    op.create_table('auth_user',
-    sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('username', sa.String(), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
-    sa.Column('hashed_password', sa.String(), nullable=False),
-    sa.Column('is_active', sa.Boolean(), nullable=True),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('email')
     )
     op.create_table('circuit_provider',
     sa.Column('name', sa.String(), nullable=False),
@@ -192,13 +181,6 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('rd')
     )
-    op.create_table('auth_group_role_link',
-    sa.Column('group_id', sa.Integer(), nullable=False),
-    sa.Column('role_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['group_id'], ['auth_group.id'], ),
-    sa.ForeignKeyConstraint(['role_id'], ['auth_role.id'], ),
-    sa.PrimaryKeyConstraint('group_id', 'role_id')
-    )
     op.create_table('auth_role_permission_link',
     sa.Column('role_id', sa.Integer(), nullable=False),
     sa.Column('permission_id', sa.Integer(), nullable=False),
@@ -206,19 +188,18 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['role_id'], ['auth_role.id'], ),
     sa.PrimaryKeyConstraint('role_id', 'permission_id')
     )
-    op.create_table('auth_user_group_link',
-    sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('group_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['group_id'], ['auth_group.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ),
-    sa.PrimaryKeyConstraint('user_id', 'group_id')
-    )
-    op.create_table('auth_user_role_link',
-    sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('role_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['role_id'], ['auth_role.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ),
-    sa.PrimaryKeyConstraint('user_id', 'role_id')
+    op.create_table('auth_user',
+    sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('username', sa.String(), nullable=False),
+    sa.Column('email', sa.String(), nullable=False),
+    sa.Column('hashed_password', sa.String(), nullable=False),
+    sa.Column('is_active', sa.Boolean(), nullable=True),
+    sa.Column('role_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['role_id'], ['auth_role.id'], ondelete='SET NULL'),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('email')
     )
     op.create_table('circuit',
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
@@ -348,6 +329,13 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['platform_id'], ['dcim_platform.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['role_id'], ['dcim_device_role.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('auth_user_group_link',
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('group_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['group_id'], ['auth_group.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ),
+    sa.PrimaryKeyConstraint('user_id', 'group_id')
     )
     op.create_table('circuit_contact_link',
     sa.Column('circuit_id', sa.Integer(), nullable=False),
@@ -510,6 +498,7 @@ def downgrade() -> None:
     op.drop_table('dcim_location')
     op.drop_table('circuit_termination')
     op.drop_table('circuit_contact_link')
+    op.drop_table('auth_user_group_link')
     op.drop_table('server')
     op.drop_table('ipam_vrf_route_target_link')
     op.drop_table('ipam_ip_range')
@@ -521,10 +510,8 @@ def downgrade() -> None:
     op.drop_table('dcim_device_type')
     op.drop_table('dcim_cable_termination')
     op.drop_table('circuit')
-    op.drop_table('auth_user_role_link')
-    op.drop_table('auth_user_group_link')
+    op.drop_table('auth_user')
     op.drop_table('auth_role_permission_link')
-    op.drop_table('auth_group_role_link')
     op.drop_table('ipam_vrf')
     op.drop_table('ipam_vlan_group')
     op.drop_table('ipam_route_target')
@@ -542,7 +529,6 @@ def downgrade() -> None:
     op.drop_table('cluster')
     op.drop_table('circuit_type')
     op.drop_table('circuit_provider')
-    op.drop_table('auth_user')
     op.drop_table('auth_role')
     op.drop_table('auth_permission')
     op.drop_table('auth_group')

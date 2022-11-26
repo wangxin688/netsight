@@ -15,3 +15,10 @@ For following features, they are only my personal ideas and not related to curre
 ### More feature 
 1. add department to dcim devices and  classification to dcim site natively without extra custom fields
 2. use ENUM type for constraints without id-mapping, which will be more efficient and simple
+3. with more feature with WLAN(later)
+4. data analysis
+5. integrate with downstream and upstream plugins
+6. RBAC or ABAC ?
+   Personally I think rbac is enough for most case, ABAC is more powerful and flexible, in the same time, brings complex and need more efforts for management in your organization. Maybe it's a good idea to integrate with pycasbin for ABAC. But I don't have enough time to figure it out. 
+   user<--->role: many-to-one, one only can only have one role
+   role control api access permission, many-to-many

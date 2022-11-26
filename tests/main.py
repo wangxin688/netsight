@@ -26,13 +26,6 @@ async def get_all_tasks():
         _type_: _description_
     """
 
-# router.add_middleware(
-#         CorrelationIdMiddleware,
-#         header_name="X-Request-ID",
-#         generator=lambda: uuid.uuid4().hex,
-#         validator=is_valid_uuid4,
-#         transformer=lambda a: a,
-#     )
 
 async def assert_exception_handler(
     request: Request, exc: AssertionError
