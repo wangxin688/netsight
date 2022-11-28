@@ -22,3 +22,12 @@ For following features, they are only my personal ideas and not related to curre
    Personally I think rbac is enough for most case, ABAC is more powerful and flexible, in the same time, brings complex and need more efforts for management in your organization. Maybe it's a good idea to integrate with pycasbin for ABAC. But I don't have enough time to figure it out. 
    user<--->role: many-to-one, one only can only have one role
    role control api access permission, many-to-many
+
+
+### How to start?
+1. pull project from github
+2.`chmod +x init.sh pre-push.sh` and  execute `init.sh`
+3. execute `touch .env` in project root path, add environment variables, which define in `src/core/config.py Settings class`, you can always refer pydantic docs. also I add some comments in this file.
+4. set up one of python virtual environment: venv or poetry env as you prefer
+5. install requirements.txt 
+6. execute `python3 src/init_app.py` to create superuser 
