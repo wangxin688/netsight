@@ -8,6 +8,7 @@ from asgi_correlation_id.middleware import is_valid_uuid4
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.api.auth.services import permission_dict_generate
 from src.core.config import settings
 from src.register.exception_handler import exception_handlers
 from src.register.router import router
@@ -21,8 +22,6 @@ from src.utils.loggers import (
     correlation_id_filter,
     logger,
 )
-
-# from src.api.auth.services import permission_dict_generate
 
 
 def create_app():
@@ -67,10 +66,10 @@ def create_app():
         allow_headers=["*"],
     )
 
-    # @app.on_event("startup")
-    # async def startup_event(request: Request):
-    #     permissions = await permission_dict_generate()
-    #     request.state.permissions = permissions
+    @app.on_event("startup")
+    async def startup_event():
+        permissions = await permission_dict_generate()
+        app.state.permissions = permissions
 
     app.include_router(router, prefix="/api/v1")
 

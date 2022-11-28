@@ -26,6 +26,7 @@ __all__ = (
     "ERR_NUM_10002",
     "ERR_NUM_10003",
     "ERR_NUM_10004",
+    "ERR_NUM_10005",
 )
 
 
@@ -33,31 +34,30 @@ __all__ = (
 class ErrCode:
     code: int
     msg: str
-    data: Any
+    data: Any = None
 
     def dict(self):
         return asdict(self)
 
 
-ERR_NUM_0 = ErrCode(0, "success", None)
-ERR_NUM_1 = ErrCode(
-    0, "Validation Error, please check requested params or body format", None
-)
-ERR_NUM_500 = ErrCode(500, "Internal Server Error", None)
+ERR_NUM_0 = ErrCode(0, "success")
+ERR_NUM_1 = ErrCode(0, "Validation Error, please check requested params or body format")
+ERR_NUM_500 = ErrCode(500, "Internal Server Error")
 ERR_NUM_4001 = ErrCode(
-    4001, "Authenticated failed: Bearer token invalid or not provide", None
+    4001, "Authenticated failed: Bearer token invalid or not provide"
 )
-ERR_NUM_4002 = ErrCode(4001, "Authenticated failed: Bearer token expired", None)
-ERR_NUM_4011 = ErrCode(4011, "Unauthenticated: Bearer token is refresh token", None)
+ERR_NUM_4002 = ErrCode(4001, "Authenticated failed: Bearer token expired")
+ERR_NUM_4011 = ErrCode(4011, "Unauthenticated: Bearer token is refresh token")
 
 ERR_NUM_4003 = ErrCode(
-    4003, "Permission Denied: Privilege limited, Operation not permit", None
+    4003, "Permission Denied: Privilege limited, Operation not permit"
 )
-ERR_NUM_4004 = ErrCode(4004, "Resource not found: Requested data not existed", None)
-ERR_NUM_10001 = ErrCode(10001, "Cannot use this email, already exists", None)
-ERR_NUM_10002 = ErrCode(10002, "Incorrect email for user, not found", None)
-ERR_NUM_10003 = ErrCode(10003, "Incorrect password", None)
-ERR_NUM_10004 = ErrCode(10004, "User not found", None)
+ERR_NUM_4004 = ErrCode(4004, "Resource not found: Requested data not existed")
+ERR_NUM_10001 = ErrCode(10001, "Cannot use this email, already exists")
+ERR_NUM_10002 = ErrCode(10002, "Incorrect email for user, not found")
+ERR_NUM_10003 = ErrCode(10003, "Incorrect password")
+ERR_NUM_10004 = ErrCode(10004, "User not found")
+ERR_NUM_10005 = ErrCode(10005, "User email was already used")
 
 
 def __getattr__(name: str) -> ErrCode:

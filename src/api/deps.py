@@ -1,5 +1,5 @@
 import time
-from typing import AsyncGenerator
+from typing import AsyncGenerator, NamedTuple, Optional
 
 import jwt
 from fastapi import Depends, Request
@@ -24,6 +24,12 @@ from src.utils.exceptions import (
 oauth2_scheme = auth_plugins(settings.AUTH)
 
 
+class CommonParams(NamedTuple):
+    limit: int
+    offset: int
+    q: Optional[str]
+
+
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
     async with async_session() as session:
         yield session
@@ -35,6 +41,11 @@ def audit_with_data(audit: bool = True) -> bool:
 
 def audit_without_data(audit: bool = True) -> bool:
     return audit
+
+
+def common_params(limit: int = 20, offset: int = 0, q: str = None):
+    result = CommonParams(limit, offset, q)
+    return result
 
 
 async def get_current_user(

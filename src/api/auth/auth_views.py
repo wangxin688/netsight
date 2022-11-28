@@ -49,7 +49,7 @@ async def log_test(
     return {"code": 0, "data": res, "msg": "success"}
 
 
-@router.post("/register", response_model=BaseResponse[schemas.AuthUserResponse])
+@router.post("/register", response_model=BaseResponse[schemas.AuthUser])
 async def register_new_user(
     auth_user: schemas.AuthUserCreate,
     session: AsyncSession = Depends(get_session),

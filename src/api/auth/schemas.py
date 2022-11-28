@@ -1,4 +1,6 @@
-from pydantic import EmailStr, validator
+from typing import List, Optional
+
+from pydantic import EmailStr, Field, validator
 
 from src.api.base import BaseModel
 
@@ -13,12 +15,66 @@ class AccessToken(BaseModel):
     refresh_token_issued_at: int
 
 
-class AuthUser(BaseModel):
+class AuthPermission(BaseModel):
+    id: int
+    name: str
+    url: str | None
+    action: str
+
+    class Config:
+        orm_mode = True
+
+
+class AuthRole(BaseModel):
+    id: int
+    name: str
+    description: str | None
+    auth_permission: Optional[List[AuthPermission]]
+
+    class Config:
+        orm_mode = True
+
+
+class AuthRoleBase(BaseModel):
+    id: int
+    name: str
+    description: str | None
+
+    class Config:
+        orm_mode = True
+
+
+class AuthUserBase(BaseModel):
+    id: int
     username: str
     email: EmailStr
-    avatar: str
+    avatar: str | None
     is_active: bool
-    role: str
+
+    class Config:
+        orm_mode = True
+
+
+class AuthUser(BaseModel):
+    id: int
+    username: str
+    email: EmailStr
+    avatar: str | None
+    is_active: bool
+    auth_role: Optional[AuthRole]
+
+    class Config:
+        orm_mode = True
+
+
+class AuthGroup(BaseModel):
+    id: int
+    name: str
+    description: str | None
+    auth_user: Optional[List[AuthUserBase]]
+
+    class Config:
+        orm_mode = True
 
 
 class AuthUserCreate(BaseModel):
@@ -34,17 +90,18 @@ class AuthUserCreate(BaseModel):
         return v
 
 
-class AuthUserResponse(BaseModel):
-    id: int
-    username: str
-    email: EmailStr
+class AuthUserUpdate(BaseModel):
+    username: str | None
+    email: EmailStr | None
+    password: str | None
+    password2: str | None
 
-    class Config:
-        orm_mode = True
+    @validator("password2")
+    def passwords_match(cls, v, values, **kwargs):
+        if "password" in values and v != values["password"]:
+            raise ValueError("passwords do not match")
+        return v
 
 
-class UserCreate(BaseModel):
-    username: str
-    email: EmailStr
-    password: str
-    password2: str
+class AuthUserQuery(BaseModel):
+    id: Optional[List[int]] = Field(description="list auth user ids", ge=1)

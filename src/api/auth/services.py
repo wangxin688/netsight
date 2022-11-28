@@ -1,9 +1,9 @@
 import re
-from typing import List, Optional
 
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
-from src.api.auth.models import Permission, Role
+from src.api.auth.models import Role
 from src.db.db_session import async_session
 
 
@@ -20,19 +20,16 @@ def url_match(path: str, method: str, permissions: dict) -> bool:
 async def permission_dict_generate():
     result = {}
     async with async_session() as session:
-        roles: Optional[List[Role]] = (
-            (await session.execute(select(Role))).scalars().all()
+        res = await session.execute(
+            select(Role).options(selectinload(Role.auth_permission))
         )
-        if roles:
-            for role in roles:
-                permissions: Optional[List[Permission]] = await role.auth_permission
-                if permissions:
-                    result.update(
-                        {
-                            role.name: {
-                                permission.url: permission.action
-                                for permission in permissions
-                            }
-                        }
-                    )
+        for role in res.scalars():
+            permissions = role.auth_permission
+            result.update(
+                {
+                    role.name: {
+                        permission.url: permission.action for permission in permissions
+                    }
+                }
+            )
     return result

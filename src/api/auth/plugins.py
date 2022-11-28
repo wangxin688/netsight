@@ -53,11 +53,11 @@ def auth_plugins(plugins: Literal["Lark", "Simple"] = "Simple"):
     if plugins == "Lark":
         lark_oauth2_schema = CustomOAuth2AuthorizationCodeBearer(
             authorizationUrl=settings.REDIRECT_URI,
-            tokenUrl="/auth/jwt/lark-login",
-            refreshUrl="/auth/jwt/refresh-token",
+            tokenUrl="/auth/lark-login",
+            refreshUrl="/auth/refresh-token",
         )
         auth_choices.update({"Lark": lark_oauth2_schema})
     if plugins == "Simple":
-        password_oauth2_schema = OAuth2PasswordBearer(tokenUrl="/auth/jwt/login")
+        password_oauth2_schema = OAuth2PasswordBearer(tokenUrl="/auth/login")
         auth_choices.update({"Simple": password_oauth2_schema})
     return auth_choices[plugins]

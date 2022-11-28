@@ -1,5 +1,4 @@
 import multiprocessing
-from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
@@ -52,6 +51,7 @@ class Settings(BaseSettings):
     # RESULT_BACKEND: RedisDsn
 
     # FIRST SUPERUSER
+    FIRST_SUPERUSER_NAME: str
     FIRST_SUPERUSER_EMAIL: EmailStr
     FIRST_SUPERUSER_PASSWORD: str
 
@@ -73,9 +73,4 @@ class Settings(BaseSettings):
         case_sensitive = True
 
 
-@lru_cache(maxsize=100)
-def get_settings():
-    return Settings()
-
-
-settings: Settings = get_settings()
+settings = Settings()
