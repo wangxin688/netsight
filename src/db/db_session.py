@@ -10,7 +10,7 @@ from src.utils.loggers import logger
 async_sqlalchemy_database_uri = settings.SQLALCHEMY_DATABASE_URI
 
 async_engine = create_async_engine(
-    async_sqlalchemy_database_uri, pool_pre_ping=True, future=True, echo=True
+    async_sqlalchemy_database_uri, pool_pre_ping=True, future=True
 )
 async_session: AsyncSession = sessionmaker(
     async_engine, expire_on_commit=False, class_=AsyncSession

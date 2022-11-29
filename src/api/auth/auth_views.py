@@ -21,13 +21,12 @@ from src.core.security import (
     get_password_hash,
     verify_password,
 )
-from src.register.middleware import AuditRoute
 from src.utils.error_code import ERR_NUM_0, ERR_NUM_10001, ERR_NUM_10002, ERR_NUM_10003
 from src.utils.exceptions import TokenInvalidForRefreshError
 from src.utils.external.lark_api import LarkClient
 from src.utils.loggers import logger
 
-router = APIRouter(route_class=AuditRoute)
+router = APIRouter()
 
 
 @router.get("/item", response_model=BaseResponse[int])
@@ -49,7 +48,7 @@ async def log_test(
     return {"code": 0, "data": res, "msg": "success"}
 
 
-@router.post("/register", response_model=BaseResponse[schemas.AuthUser])
+@router.post("/register", response_model=BaseResponse[int])
 async def register_new_user(
     auth_user: schemas.AuthUserCreate,
     session: AsyncSession = Depends(get_session),
@@ -65,7 +64,7 @@ async def register_new_user(
     session.add(user)
     await session.commit()
     return_info = ERR_NUM_0.dict()
-    return_info["data"] = user
+    return_info["data"] = user.id
     return return_info
 
 

@@ -53,7 +53,7 @@ class UserCBV:
                     await self.session.execute(
                         select(User)
                         .slice(
-                            common_params.limit,
+                            common_params.offset,
                             common_params.limit + common_params.offset,
                         )
                         .options(selectinload(User.auth_role))
