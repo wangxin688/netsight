@@ -81,7 +81,7 @@ async def login(
     if not user:
         return ERR_NUM_10002.dict()
     if not verify_password(form_data.password, user.hashed_password):
-        raise ERR_NUM_10003.dict()
+        return ERR_NUM_10003.dict()
     return_info = ERR_NUM_0.dict()
     token = generate_access_token_response(str(user.id))
     return_info["data"] = token

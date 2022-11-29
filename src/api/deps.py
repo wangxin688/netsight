@@ -5,6 +5,7 @@ import jwt
 from fastapi import Depends, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from src.api.auth.constrants import USER_WHITE_LIST
 from src.api.auth.models import User
@@ -67,19 +68,22 @@ async def get_current_user(
     now = int(time.time())
     if now < token_data.issued_at or now > token_data.expires_at:
         raise TokenExpiredError
-    result = await session.execute(select(User).where(User.id == int(token_data.sub)))
+    result = await session.execute(
+        select(User)
+        .where(User.id == int(token_data.sub))
+        .options(selectinload(User.auth_role))
+    )
     user: User | None = result.scalars().first()
 
     if not user:
         raise ResourceNotFoundError
     request.state.current_user = user
-
     path = request.url.path
     method = request.method
     if url_match(path, method, USER_WHITE_LIST):
         return user
-    user_role = user.role
-    if user.role == "superuser":
+    user_role = user.auth_role.name
+    if user_role == "superuser":
         return user
     if user_role == "admin":
         if url_match(path, method, USER_WHITE_LIST):

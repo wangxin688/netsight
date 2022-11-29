@@ -5,6 +5,7 @@ from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncResult, AsyncSession
+from sqlalchemy.orm import selectinload
 
 from src.api.auth import schemas
 from src.api.auth.models import User
@@ -19,8 +20,6 @@ from src.api.deps import (
 from src.register.middleware import AuditRoute
 from src.utils.error_code import ERR_NUM_0, ERR_NUM_10004, ERR_NUM_10005
 
-# router = APIRouter(route_class=AuditRoute)
-
 router = InferringRouter(route_class=AuditRoute)
 
 
@@ -33,7 +32,7 @@ class UserCBV:
     @router.get("/users/{id}")
     async def get_user(self, id: int) -> BaseResponse[schemas.AuthUser]:
         result: AsyncResult = await self.session.execute(
-            select(User).where(User.id == id)
+            select(User).where(User.id == id).options(selectinload(User.auth_role))
         )
         local_user: User | None = result.scalars().first()
         if not local_user:
@@ -52,13 +51,18 @@ class UserCBV:
             result = (
                 (
                     await self.session.execute(
-                        select(User).slice(common_params.limit + common_params.offset)
+                        select(User)
+                        .slice(
+                            common_params.limit,
+                            common_params.limit + common_params.offset,
+                        )
+                        .options(selectinload(User.auth_role))
                     )
                 )
                 .scalars()
                 .all()
             )
-            count = (await self.session.execute(select(func.count(User)))).scalar()
+            count = (await self.session.execute(select(func.count(User.id)))).scalar()
             return_info = ERR_NUM_0.dict()
             return_info.update({"data": {"count": count, "results": result}})
             return return_info

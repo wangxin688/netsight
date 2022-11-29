@@ -12,7 +12,7 @@ def url_match(path: str, method: str, permissions: dict) -> bool:
         return True
     for key, value in permissions.items():
         reg = "^%s$" % key
-        if all(re.match(reg, path), method == value):
+        if re.match(reg, path) and method == value:
             return True
     return False
 
