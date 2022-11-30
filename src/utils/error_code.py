@@ -10,8 +10,9 @@ Error_code is designed with four fields: code, en_msg, ch_msg, scope
 * service netisht:              0-10000(reserved)
 * service auth:                 10001-11000
 """
-from dataclasses import asdict, dataclass
-from typing import Any, List
+from typing import Any, List, Optional
+
+from pydantic import BaseModel
 
 __all__ = (
     "ERR_NUM_0",
@@ -27,17 +28,18 @@ __all__ = (
     "ERR_NUM_10003",
     "ERR_NUM_10004",
     "ERR_NUM_10005",
+    "ERR_NUM_10006",
+    "ERR_NUM_10007",
 )
 
 
-@dataclass(frozen=True)
-class ErrCode:
+class ErrCode(BaseModel):
     code: int
     msg: str
-    data: Any = None
+    data: Optional[Any] = None
 
-    def dict(self):
-        return asdict(self)
+    def __init__(self, code, msg, data=None) -> None:
+        super().__init__(code=code, msg=msg, data=data)
 
 
 ERR_NUM_0 = ErrCode(0, "success")
@@ -58,6 +60,8 @@ ERR_NUM_10002 = ErrCode(10002, "Incorrect email for user, not found")
 ERR_NUM_10003 = ErrCode(10003, "Incorrect password")
 ERR_NUM_10004 = ErrCode(10004, "User not found")
 ERR_NUM_10005 = ErrCode(10005, "User email was already used")
+ERR_NUM_10006 = ErrCode(10006, "Group with same name already existed")
+ERR_NUM_10007 = ErrCode(10007, "Group not found")
 
 
 def __getattr__(name: str) -> ErrCode:

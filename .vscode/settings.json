@@ -6,6 +6,7 @@
         "fastapi",
         "gunicorn",
         "redoc",
+        "selectinload",
         "sqlalchemy",
         "uvicorn"
     ]

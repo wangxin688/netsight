@@ -32,3 +32,4 @@ For following features, they are only my personal ideas and not related to curre
 4. set up one of python virtual environment: venv or poetry env as you prefer
 5. install requirements.txt 
 6. execute `python3 src/init_app.py` to create superuser 
+7. execute app: `python3 main.py` or install supervisor on linux, the demo of config file are already in project.

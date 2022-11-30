@@ -3,6 +3,7 @@ from typing import List, Optional
 from pydantic import EmailStr, Field, validator
 
 from src.api.base import BaseModel
+from src.utils.validators import items_to_list
 
 
 class AccessToken(BaseModel):
@@ -95,6 +96,7 @@ class AuthUserUpdate(BaseModel):
     email: EmailStr | None
     password: str | None
     password2: str | None
+    auth_group_ids: int | List[int] | None
 
     @validator("password2")
     def passwords_match(cls, v, values, **kwargs):
@@ -102,6 +104,47 @@ class AuthUserUpdate(BaseModel):
             raise ValueError("passwords do not match")
         return v
 
+    @validator("auth_group_ids")
+    def auth_user_id_trans(cls, v):
+        v = items_to_list(v)
+        return v
+
 
 class AuthUserQuery(BaseModel):
-    id: Optional[List[int]] = Field(description="list auth user ids", ge=1)
+    id: int | List[int] | None = Field(description="list auth user ids", ge=1)
+
+    @validator("id")
+    def auth_user_id_trans(cls, v):
+        v = items_to_list(v)
+        return v
+
+
+class AuthGroupCreate(BaseModel):
+    name: str
+    description: str | None
+    auth_user_ids: int | List[int] | None
+
+    @validator("auth_user_ids")
+    def auth_user_id_trans(cls, v):
+        v = items_to_list(v)
+        return v
+
+
+class AuthGroupUpdate(BaseModel):
+    name: str | None
+    description: str | None
+    auth_user_ids: int | List[int] | None
+
+    @validator("auth_user_ids")
+    def auth_user_id_trans(cls, v):
+        v = items_to_list(v)
+        return v
+
+
+class AuthGroupQuery(BaseModel):
+    id: int | List[int] | None = Field(description="list auth user ids", ge=1)
+
+    @validator("id")
+    def auth_user_id_trans(cls, v):
+        v = items_to_list(v)
+        return v
