@@ -11,7 +11,7 @@ For following features, they are only my personal ideas and not related to curre
 2. remove virtual-chassis support, there are so many virtualization tec for different vendor,
    like stackwise, virtual-chassis, IRF, stack, CSS, regard all tec as a cluster for members.
 3. remove device components object like slot, console port, out-of-band port, power, fans and etc, only keep interface with device. you can extend this table with LLDP table and neo4j orm to generate network topology, but it will not include in this project.
-4. remove site_group, as a network operation architecture, I personally refuse to design an nested or      combine couple sites within a group. It will make a huge challenge for operation, monitoring, automation and data analysis. My suggestions is that make a very clear and standard, highly unified network architecture for a dedicated site, somethings like Campus network v1.0, v2.0, DataCenter v1.0, v2.0 with and following the rule to build network.
+4. remove site_group, \I personally refuse to design an nested or combine couple sites within a group. It will make a huge challenge for operation, monitoring, automation and data analysis. My suggestions is that make a very clear and standard, highly unified network architecture for a dedicated site, somethings like Campus network v1.0, v2.0, DataCenter v1.0, v2.0 with and following the rule to build network.
 ### More feature 
 1. add department to dcim devices and  classification to dcim site natively without extra custom fields
 2. use ENUM type for constraints without id-mapping, which will be more efficient and simple
