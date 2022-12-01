@@ -1,10 +1,12 @@
 from celery.result import AsyncResult
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 from loguru import logger
 
 from src.api import deps
 from src.api.auth.models import User
+from src.api.base import BaseResponse
+from src.api.netsight import schemas
 from src.utils.error_code import ERR_NUM_0, ERR_NUM_500, ERR_NUM_2002
 
 router = APIRouter()
@@ -32,3 +34,14 @@ async def get_task_result(
         "data": {"task_id": str(task_id), "results": result},
         "msg": ERR_NUM_0.msg,
     }
+
+
+@router.get("/netsight/endpoints", response_class=BaseResponse[schemas.Endpoint])
+def inspect_endpoints(request: Request):
+    endpoints = [
+        {"name": route.name, "url": route.path, "action": route.method}
+        for route in request.app.routes
+    ]
+    return_info = ERR_NUM_0
+    return_info.data = endpoints
+    return return_info

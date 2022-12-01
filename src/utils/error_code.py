@@ -18,6 +18,7 @@ __all__ = (
     "ERR_NUM_0",
     "ERR_NUM_1",
     "ERR_NUM_500",
+    "ERR_NUM_2002",
     "ERR_NUM_4001",
     "ERR_NUM_4002",
     "ERR_NUM_4011",
@@ -47,6 +48,7 @@ class ErrCode(BaseModel):
 ERR_NUM_0 = ErrCode(0, "success")
 ERR_NUM_1 = ErrCode(0, "Validation Error, please check requested params or body format")
 ERR_NUM_500 = ErrCode(500, "Internal Server Error")
+ERR_NUM_2002 = ErrCode(2002, "Request not completed, in processing")
 ERR_NUM_4001 = ErrCode(
     4001, "Authenticated failed: Bearer token invalid or not provide"
 )
