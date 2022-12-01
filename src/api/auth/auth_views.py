@@ -55,7 +55,7 @@ async def register_new_user(
 ):
     result = await session.execute(select(User).where(User.email == auth_user.email))
     if result.scalars().first() is not None:
-        return ERR_NUM_10001.dict()
+        return ERR_NUM_10001
     user = User(
         username=auth_user.username,
         hashed_password=get_password_hash(auth_user.password),
@@ -63,8 +63,8 @@ async def register_new_user(
     )
     session.add(user)
     await session.commit()
-    return_info = ERR_NUM_0.dict()
-    return_info["data"] = user.id
+    return_info = ERR_NUM_0
+    return_info.data = user.id
     return return_info
 
 
@@ -114,8 +114,8 @@ async def token(
     if now < token_data.issued_at or now > token_data.expires_at:
         raise TokenInvalidForRefreshError
 
-    result = await session.execute(select(User).where(User.id == token_data.sub))
-    user: User | None = result.scalars().first()
+    result = session.execute(select(User).where(User.id == token_data.sub))
+    user: User | None = await result.scalars().first()
 
     if user is None:
         return ERR_NUM_10001.dict()

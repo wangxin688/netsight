@@ -30,6 +30,8 @@ __all__ = (
     "ERR_NUM_10005",
     "ERR_NUM_10006",
     "ERR_NUM_10007",
+    "ERR_NUM_10008",
+    "ERR_NUM_10009",
 )
 
 
@@ -59,9 +61,11 @@ ERR_NUM_10001 = ErrCode(10001, "Cannot use this email, already exists")
 ERR_NUM_10002 = ErrCode(10002, "Incorrect email for user, not found")
 ERR_NUM_10003 = ErrCode(10003, "Incorrect password")
 ERR_NUM_10004 = ErrCode(10004, "User not found")
-ERR_NUM_10005 = ErrCode(10005, "User email was already used")
+ERR_NUM_10005 = ErrCode(10005, "User with same email already existed")
 ERR_NUM_10006 = ErrCode(10006, "Group with same name already existed")
 ERR_NUM_10007 = ErrCode(10007, "Group not found")
+ERR_NUM_10008 = ErrCode(10008, "Role with same name already existed")
+ERR_NUM_10009 = ErrCode(10009, "Role not found")
 
 
 def __getattr__(name: str) -> ErrCode:

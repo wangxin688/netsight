@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from pydantic import EmailStr, Field, validator
 
@@ -142,9 +142,63 @@ class AuthGroupUpdate(BaseModel):
 
 
 class AuthGroupQuery(BaseModel):
-    id: int | List[int] | None = Field(description="list auth user ids", ge=1)
+    id: int | List[int] | None = Field(description="list auth user ids")
 
     @validator("id")
     def auth_user_id_trans(cls, v):
+        v = items_to_list(v)
+        return v
+
+
+class AuthRoleCreate(BaseModel):
+    name: str
+    description: str | None
+    auth_permission_ids: int | List[int] | None
+
+    @validator("auth_permission_ids")
+    def id_trans(cls, v):
+        v = items_to_list(v)
+        return v
+
+
+class AuthRoleUpdate(BaseModel):
+    name: str | None
+    description: str | None
+    auth_permission_ids: int | List[int] | None
+
+    @validator("auth_permission_ids")
+    def id_trans(cls, v):
+        v = items_to_list(v)
+        return v
+
+
+class AuthRoleQuery(BaseModel):
+    id: int | List[int] | None = Field(description="list auth role ids")
+
+    @validator("id")
+    def id_trans(cls, v):
+        v = items_to_list(v)
+        return v
+
+
+class AuthPermissionCreate(BaseModel):
+    name: str
+    url: str
+    action: Literal["GET", "PUT", "POST", "DELETE"]
+    auth_role_ids: int | List[int] | None
+
+
+class AuthPermissionUpdate(BaseModel):
+    name: str | None
+    url: str | None
+    action: Literal["GET", "PUT", "POST", "DELETE"]
+    auth_role_ids: int | List[int] | None
+
+
+class AuthPermissionQuery(BaseModel):
+    id: int | List[int] | None = Field(description="list auth role ids")
+
+    @validator("id")
+    def id_trans(cls, v):
         v = items_to_list(v)
         return v
