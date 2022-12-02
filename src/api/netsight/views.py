@@ -36,10 +36,10 @@ async def get_task_result(
     }
 
 
-@router.get("/netsight/endpoints", response_class=BaseResponse[schemas.Endpoint])
+@router.get("/netsight/endpoints", response_model=BaseResponse[schemas.Endpoint])
 def inspect_endpoints(request: Request):
     endpoints = [
-        {"name": route.name, "url": route.path, "action": route.method}
+        {"name": route.name, "url": route.path, "action": route.methods}
         for route in request.app.routes
     ]
     return_info = ERR_NUM_0

@@ -91,7 +91,7 @@ async def login(
 
 
 @router.post("/refresh-token", response_model=BaseResponse[schemas.AccessToken])
-async def token(
+async def refresh_token(
     refresh_token: str,
     session: AsyncSession = Depends(get_session),
 ):
