@@ -111,12 +111,8 @@ class AuthUserUpdate(BaseModel):
 
 
 class AuthUserQuery(BaseModel):
-    id: int | List[int] | None = Field(description="list auth user ids", ge=1)
-
-    @validator("id")
-    def auth_user_id_trans(cls, v):
-        v = items_to_list(v)
-        return v
+    id: int | None = Field(description="list auth user ids")
+    name: str | None
 
 
 class AuthGroupCreate(BaseModel):
@@ -142,7 +138,7 @@ class AuthGroupUpdate(BaseModel):
 
 
 class AuthGroupQuery(BaseModel):
-    id: int | List[int] | None = Field(description="list auth user ids")
+    id: List[int] | None = Field(description="list auth user ids")
 
     @validator("id")
     def auth_user_id_trans(cls, v):
@@ -173,12 +169,8 @@ class AuthRoleUpdate(BaseModel):
 
 
 class AuthRoleQuery(BaseModel):
-    id: int | List[int] | None = Field(description="list auth role ids")
-
-    @validator("id")
-    def id_trans(cls, v):
-        v = items_to_list(v)
-        return v
+    id: int | None = Field(description="list auth role ids")
+    name: str | None
 
 
 class AuthPermissionCreate(BaseModel):

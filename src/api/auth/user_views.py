@@ -9,14 +9,8 @@ from sqlalchemy.orm import selectinload
 
 from src.api.auth import schemas
 from src.api.auth.models import Group, Permission, Role, User
-from src.api.base import BaseListResponse, BaseResponse
-from src.api.deps import (
-    CommonParams,
-    audit_without_data,
-    common_params,
-    get_current_user,
-    get_session,
-)
+from src.api.base import BaseListResponse, BaseResponse, CommonQueryParams
+from src.api.deps import audit_without_data, get_current_user, get_session
 from src.register.middleware import AuditRoute
 from src.utils.error_code import (
     ERR_NUM_0,
@@ -37,9 +31,7 @@ class AuthUserCBV:
     current_user: User = Depends(get_current_user)
     audit = Depends(audit_without_data)
 
-    @router.get(
-        "/users/{id}",
-    )
+    @router.get("/users/{id}")
     async def get_user(self, id: int) -> BaseResponse[schemas.AuthUser]:
         result: AsyncResult = await self.session.execute(
             select(User).where(User.id == id).options(selectinload(User.auth_role))
@@ -54,8 +46,8 @@ class AuthUserCBV:
     @router.get("/users")
     async def get_users(
         self,
-        users: schemas.AuthUserQuery | None,
-        common_params: CommonParams = Depends(common_params),
+        users: schemas.AuthUserQuery = Depends(schemas.AuthUserQuery),
+        common_params: CommonQueryParams = Depends(CommonQueryParams),
     ) -> BaseListResponse[List[schemas.AuthUser]]:
         # TODO: confirm query_params
         if not common_params.q:
@@ -220,8 +212,8 @@ class AuthGroupCBV:
     @router.get("/groups")
     async def get_groups(
         self,
-        groups: schemas.AuthGroupQuery | None,
-        common_params: CommonParams = Depends(common_params),
+        groups: schemas.AuthGroupQuery = Depends(),
+        common_params: CommonQueryParams = Depends(CommonQueryParams),
     ) -> BaseListResponse[List[schemas.AuthGroup]]:
         stm = select(Group)  # noqa
         cnt_stmt = select(func.count(Group.id))  # noqa
@@ -343,8 +335,8 @@ class AuthRoleCBV:
     @router.get("/roles")
     async def get_roles(
         self,
-        roles: schemas.AuthRoleQuery | None,
-        common_params: CommonParams = Depends(common_params),
+        roles: schemas.AuthRoleQuery = Depends(),
+        common_params: CommonQueryParams = Depends(CommonQueryParams),
     ) -> BaseListResponse[List[schemas.AuthRole]]:
         stm = select(Group)  # noqa
         cnt_stmt = select(func.count(Group.id))  # noqa

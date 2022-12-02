@@ -1,8 +1,8 @@
 """init db
 
-Revision ID: 62671b38197d
+Revision ID: 06d01e0807b3
 Revises: 
-Create Date: 2022-11-28 23:05:36.201344
+Create Date: 2022-12-02 22:18:50.587482
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '62671b38197d'
+revision = '06d01e0807b3'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -348,9 +348,11 @@ def upgrade() -> None:
     )
     op.create_table('circuit_termination',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('term_side', sa.String(), nullable=False),
+    sa.Column('term_side', postgresql.ENUM('Termination_Side_A', 'Termination_Side_Z', name='termination'), nullable=True),
     sa.Column('circuit_id', sa.Integer(), nullable=True),
+    sa.Column('site_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['circuit_id'], ['circuit.id'], ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['site_id'], ['dcim_site.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('circuit_id', 'term_side')
     )

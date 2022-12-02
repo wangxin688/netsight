@@ -75,7 +75,14 @@ class CircuitTermination(Base):
     __tablename__ = "circuit_termination"
     __table_args__ = (UniqueConstraint("circuit_id", "term_side"),)
     id = Column(Integer, primary_key=True)
-    term_side = Column(String, nullable=False)
+    term_side = Column(
+        ENUM(
+            "Termination_Side_A",
+            "Termination_Side_Z",
+            name="termination",
+            create_type=False,
+        )
+    )
     circuit_id = Column(
         Integer, ForeignKey("circuit.id", ondelete="SET NULL"), nullable=True
     )
@@ -84,8 +91,10 @@ class CircuitTermination(Base):
         back_populates="circuit_termination",
         overlaps="circuit_termination",
     )
-    # interface_id
-    # interfaces
+    site_id = Column(Integer, ForeignKey("dcim_site.id", ondelete="CASCADE"))
+    dcim_site = relationship(
+        "Site", back_populates="circuit_termination", overlaps="circuit_termination"
+    )
 
 
 class Provider(Base, NameMixin):

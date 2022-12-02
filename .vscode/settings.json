@@ -3,6 +3,7 @@
         "accesslog",
         "aiofiles",
         "asgi",
+        "dcim",
         "fastapi",
         "gunicorn",
         "redoc",

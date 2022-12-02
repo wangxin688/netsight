@@ -50,3 +50,15 @@ class BaseListResponse(GenericModel, Generic[DataT]):
         json_encoders = {
             datetime: lambda v: int(v.timestamp())
         }  # method for customer JSON encoding of datetime fields
+
+
+class CommonQueryParams:
+    def __init__(
+        self,
+        limit: int = 20,
+        offset: int | None = 0,
+        q: str | None = None,
+    ):
+        self.limit = limit
+        self.offset = offset
+        self.q = q

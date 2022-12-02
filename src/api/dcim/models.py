@@ -120,6 +120,10 @@ class Site(Base, NameMixin, TimestampMixin):
     )
     ipam_vlan = relationship("VLAN", back_populates="dcim_site", passive_deletes=True)
 
+    circuit_termination = relationship(
+        "CircuitTermination", back_populates="dcim_site", passive_deletes=True
+    )
+
 
 class Location(Base, NameMixin):
     """a sub location of site, like building, floor, idf, mdf and etc"""
