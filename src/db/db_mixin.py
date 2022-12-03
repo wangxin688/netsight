@@ -1,15 +1,14 @@
 import sqlalchemy.types as types
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, event
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from src.register.context import correlation_id_filter
-from src.utils.slugify import slugify
 
 
 class TimestampMixin:
-    created_at = Column(DateTime(timezone=True), default=func.now())
+    created_at = Column(DateTime(timezone=True), default=func.now(), index=True)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
 
@@ -18,18 +17,18 @@ class TimestampSingleMixin:
 
 
 class NameMixin:
-    name = Column(String, nullable=False)
-    slug = Column(String, nullable=False)
+    name = Column(String, nullable=False, unique=True, index=True)
+    # slug = Column(String, nullable=False, unique=True)
     description = Column(String, nullable=True)
 
-    @staticmethod
-    def _slug(mapper, connection, target):
-        if target.slug is not None:
-            target.slug = slugify(target.name)
+    # @staticmethod
+    # def _slug(mapper, connection, target):
+    #     if target.slug is not None:
+    #         target.slug = slugify(target.name)
 
-    @classmethod
-    def __declare_last__(cls):
-        event.listen(cls, "before_insert", cls._slug, propagate=True)
+    # @classmethod
+    # def __declare_last__(cls):
+    #     event.listen(cls, "before_insert", cls._slug, propagate=True)
 
 
 class FileColumn(types.TypeDecorator):

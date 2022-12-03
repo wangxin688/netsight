@@ -1,6 +1,6 @@
 from pydantic.dataclasses import dataclass
 
-from api.base import BaseModel, BaseQuery
+from src.api.base import BaseModel, BaseQuery
 
 
 class RegionBase(BaseModel):
@@ -248,7 +248,7 @@ class CableUpdate(BaseModel):
     pass
 
 
-@dataclass(BaseQuery)
+@dataclass()
 class CableQuery(BaseModel):
     pass
 

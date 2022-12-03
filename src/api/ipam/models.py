@@ -29,9 +29,11 @@ class SiteASN(Base):
     asn_id = Column(Integer, ForeignKey("ipam_asn.id"), primary_key=True)
 
 
-class RIR(Base, NameMixin, TimestampMixin):
+class RIR(Base, TimestampMixin):
     __tablename__ = "ipam_rir"
     id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False, unique=True)
+    description = Column(String, nullable=True)
     is_private = Column(Boolean, server_default=expression.false())
     ipam_block = relationship("Block", back_populates="ipam_rir", passive_deletes=True)
 
@@ -47,9 +49,11 @@ class Block(Base, TimestampMixin):
     description = Column(String, nullable=True)
 
 
-class IPRole(Base, NameMixin):
+class IPRole(Base):
     __tablename__ = "ipam_role"
     id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False, unique=True)
+    description = Column(String, nullable=True)
     ipam_prefix = relationship(
         "Prefix", back_populates="ipam_role", passive_deletes=True
     )

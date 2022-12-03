@@ -97,9 +97,11 @@ class CircuitTermination(Base):
     )
 
 
-class Provider(Base, NameMixin):
+class Provider(Base):
     __tablename__ = "circuit_provider"
     id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False, unique=True)
+    description = Column(String, nullable=True)
     asn = Column(Integer, nullable=True)
     account = Column(String, nullable=True)
     portal = Column(String, nullable=True)

@@ -1,5 +1,4 @@
 import re
-from typing import Mapping
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncResult
@@ -19,7 +18,7 @@ def url_match(path: str, method: str, permissions: dict) -> bool:
     return False
 
 
-async def permission_dict_generate() -> Mapping[str:str]:
+async def permission_dict_generate():
     result = {}
     async with async_session() as session:
         res: AsyncResult = await session.execute(

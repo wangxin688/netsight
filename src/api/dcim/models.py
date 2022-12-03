@@ -125,7 +125,7 @@ class Site(Base, NameMixin, TimestampMixin):
     )
 
 
-class Location(Base, NameMixin):
+class Location(Base, NameMixin, TimestampMixin):
     """a sub location of site, like building, floor, idf, mdf and etc"""
 
     __tablename__ = "dcim_location"
@@ -340,7 +340,7 @@ class Device(Base, TimestampMixin):
     )
 
 
-class Interface(Base):
+class Interface(Base, TimestampMixin):
     __tablename__ = "dcim_interface"
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
@@ -359,7 +359,7 @@ class Interface(Base):
     # TODO: add support for vrf, vlan, ip address linking
 
 
-class Cable(Base, NameMixin):
+class Cable(Base, NameMixin, TimestampMixin):
     __tablename__ = "dcim_cable"
     id = Column(Integer, primary_key=True)
     cable_type = Column(String, nullable=True)

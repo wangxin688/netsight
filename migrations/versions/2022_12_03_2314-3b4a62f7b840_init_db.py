@@ -1,8 +1,8 @@
 """init db
 
-Revision ID: 06d01e0807b3
+Revision ID: 3b4a62f7b840
 Revises: 
-Create Date: 2022-12-02 22:18:50.587482
+Create Date: 2022-12-03 23:14:27.401394
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '06d01e0807b3'
+revision = '3b4a62f7b840'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -41,34 +41,35 @@ def upgrade() -> None:
     sa.UniqueConstraint('name')
     )
     op.create_table('circuit_provider',
-    sa.Column('name', sa.String(), nullable=False),
-    sa.Column('slug', sa.String(), nullable=False),
-    sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(), nullable=False),
+    sa.Column('description', sa.String(), nullable=True),
     sa.Column('asn', sa.Integer(), nullable=True),
     sa.Column('account', sa.String(), nullable=True),
     sa.Column('portal', sa.String(), nullable=True),
     sa.Column('noc_contact', postgresql.ARRAY(sa.String()), nullable=True),
     sa.Column('admin_contact', postgresql.ARRAY(sa.String()), nullable=True),
     sa.Column('comments', sa.TEXT(), nullable=True),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
     )
     op.create_table('circuit_type',
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('slug', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_circuit_type_name'), 'circuit_type', ['name'], unique=True)
     op.create_table('cluster',
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('slug', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_cluster_created_at'), 'cluster', ['created_at'], unique=False)
+    op.create_index(op.f('ix_cluster_name'), 'cluster', ['name'], unique=True)
     op.create_table('contact',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
@@ -78,61 +79,64 @@ def upgrade() -> None:
     sa.UniqueConstraint('email')
     )
     op.create_table('dcim_cable',
+    sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('slug', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('cable_type', sa.String(), nullable=True),
     sa.Column('status', sa.String(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_dcim_cable_created_at'), 'dcim_cable', ['created_at'], unique=False)
+    op.create_index(op.f('ix_dcim_cable_name'), 'dcim_cable', ['name'], unique=True)
     op.create_table('dcim_device_role',
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('slug', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('vm_role', sa.Boolean(), server_default=sa.text('false'), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_dcim_device_role_name'), 'dcim_device_role', ['name'], unique=True)
     op.create_table('dcim_manufacturer',
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('slug', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_dcim_manufacturer_name'), 'dcim_manufacturer', ['name'], unique=True)
     op.create_table('dcim_platform',
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('slug', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('napalm_driver', sa.String(), nullable=True),
     sa.Column('napalm_args', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_dcim_platform_name'), 'dcim_platform', ['name'], unique=True)
     op.create_table('dcim_rack_role',
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('slug', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_dcim_rack_role_name'), 'dcim_rack_role', ['name'], unique=True)
     op.create_table('dcim_region',
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('slug', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('parent_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['parent_id'], ['dcim_region.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_dcim_region_name'), 'dcim_region', ['name'], unique=True)
     op.create_table('department',
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('slug', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_department_name'), 'department', ['name'], unique=True)
     op.create_table('ipam_asn',
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
@@ -142,40 +146,41 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('asn')
     )
+    op.create_index(op.f('ix_ipam_asn_created_at'), 'ipam_asn', ['created_at'], unique=False)
     op.create_table('ipam_rir',
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('name', sa.String(), nullable=False),
-    sa.Column('slug', sa.String(), nullable=False),
-    sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(), nullable=False),
+    sa.Column('description', sa.String(), nullable=True),
     sa.Column('is_private', sa.Boolean(), server_default=sa.text('false'), nullable=True),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
     )
+    op.create_index(op.f('ix_ipam_rir_created_at'), 'ipam_rir', ['created_at'], unique=False)
     op.create_table('ipam_role',
-    sa.Column('name', sa.String(), nullable=False),
-    sa.Column('slug', sa.String(), nullable=False),
-    sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.PrimaryKeyConstraint('id')
+    sa.Column('name', sa.String(), nullable=False),
+    sa.Column('description', sa.String(), nullable=True),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
     )
     op.create_table('ipam_route_target',
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('slug', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_ipam_route_target_name'), 'ipam_route_target', ['name'], unique=True)
     op.create_table('ipam_vlan_group',
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('slug', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_ipam_vlan_group_name'), 'ipam_vlan_group', ['name'], unique=True)
     op.create_table('ipam_vrf',
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('slug', sa.String(), nullable=False),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('rd', sa.String(), nullable=True),
     sa.Column('enforce_unique', sa.Boolean(), server_default=sa.text('true'), nullable=True, comment='Enforce unique space, prevent duplicate IP/prefix'),
@@ -183,6 +188,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('rd')
     )
+    op.create_index(op.f('ix_ipam_vrf_name'), 'ipam_vrf', ['name'], unique=True)
     op.create_table('auth_role_permission_link',
     sa.Column('role_id', sa.Integer(), nullable=False),
     sa.Column('permission_id', sa.Integer(), nullable=False),
@@ -203,11 +209,11 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email')
     )
+    op.create_index(op.f('ix_auth_user_created_at'), 'auth_user', ['created_at'], unique=False)
     op.create_table('circuit',
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('slug', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('cid', sa.String(), nullable=True),
@@ -225,6 +231,8 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('cid')
     )
+    op.create_index(op.f('ix_circuit_created_at'), 'circuit', ['created_at'], unique=False)
+    op.create_index(op.f('ix_circuit_name'), 'circuit', ['name'], unique=True)
     op.create_table('dcim_cable_termination',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('cable_id', sa.Integer(), nullable=True),
@@ -245,7 +253,6 @@ def upgrade() -> None:
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('slug', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('site_code', sa.String(), nullable=False),
@@ -260,6 +267,8 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['region_id'], ['dcim_region.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_dcim_site_created_at'), 'dcim_site', ['created_at'], unique=False)
+    op.create_index(op.f('ix_dcim_site_name'), 'dcim_site', ['name'], unique=True)
     op.create_index(op.f('ix_dcim_site_site_code'), 'dcim_site', ['site_code'], unique=True)
     op.create_table('ipam_block',
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
@@ -271,6 +280,7 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['rir_id'], ['ipam_rir.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_ipam_block_created_at'), 'ipam_block', ['created_at'], unique=False)
     op.create_table('ipam_ip_address',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('address', postgresql.INET(), nullable=False),
@@ -308,7 +318,6 @@ def upgrade() -> None:
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('slug', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('status', sa.String(), nullable=False),
@@ -332,6 +341,8 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['role_id'], ['dcim_device_role.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_server_created_at'), 'server', ['created_at'], unique=False)
+    op.create_index(op.f('ix_server_name'), 'server', ['name'], unique=True)
     op.create_table('auth_user_group_link',
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('group_id', sa.Integer(), nullable=False),
@@ -357,8 +368,9 @@ def upgrade() -> None:
     sa.UniqueConstraint('circuit_id', 'term_side')
     )
     op.create_table('dcim_location',
+    sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('slug', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('status', sa.String(), nullable=False),
@@ -368,6 +380,8 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['site_id'], ['dcim_site.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_dcim_location_created_at'), 'dcim_location', ['created_at'], unique=False)
+    op.create_index(op.f('ix_dcim_location_name'), 'dcim_location', ['name'], unique=True)
     op.create_table('dcim_site_asn_link',
     sa.Column('site_id', sa.Integer(), nullable=False),
     sa.Column('asn_id', sa.Integer(), nullable=False),
@@ -395,6 +409,7 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['site_id'], ['dcim_site.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_ipam_prefix_created_at'), 'ipam_prefix', ['created_at'], unique=False)
     op.create_table('ipam_vlan',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
@@ -414,7 +429,6 @@ def upgrade() -> None:
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('slug', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('facility_id', sa.String(), nullable=True),
@@ -436,6 +450,8 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('asset_tag')
     )
+    op.create_index(op.f('ix_dcim_rack_created_at'), 'dcim_rack', ['created_at'], unique=False)
+    op.create_index(op.f('ix_dcim_rack_name'), 'dcim_rack', ['name'], unique=True)
     op.create_table('dcim_device',
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
@@ -470,9 +486,12 @@ def upgrade() -> None:
     sa.UniqueConstraint('rack_id', 'position'),
     sa.UniqueConstraint('serial_num')
     )
+    op.create_index(op.f('ix_dcim_device_created_at'), 'dcim_device', ['created_at'], unique=False)
     op.create_index(op.f('ix_dcim_device_name'), 'dcim_device', ['name'], unique=False)
     op.create_index(op.f('ix_dcim_device_primary_ipv4'), 'dcim_device', ['primary_ipv4'], unique=False)
     op.create_table('dcim_interface',
+    sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
@@ -485,52 +504,84 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['device_id'], ['dcim_device.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_dcim_interface_created_at'), 'dcim_interface', ['created_at'], unique=False)
     # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_index(op.f('ix_dcim_interface_created_at'), table_name='dcim_interface')
     op.drop_table('dcim_interface')
     op.drop_index(op.f('ix_dcim_device_primary_ipv4'), table_name='dcim_device')
     op.drop_index(op.f('ix_dcim_device_name'), table_name='dcim_device')
+    op.drop_index(op.f('ix_dcim_device_created_at'), table_name='dcim_device')
     op.drop_table('dcim_device')
+    op.drop_index(op.f('ix_dcim_rack_name'), table_name='dcim_rack')
+    op.drop_index(op.f('ix_dcim_rack_created_at'), table_name='dcim_rack')
     op.drop_table('dcim_rack')
     op.drop_table('ipam_vlan')
+    op.drop_index(op.f('ix_ipam_prefix_created_at'), table_name='ipam_prefix')
     op.drop_table('ipam_prefix')
     op.drop_table('dcim_site_contact_link')
     op.drop_table('dcim_site_asn_link')
+    op.drop_index(op.f('ix_dcim_location_name'), table_name='dcim_location')
+    op.drop_index(op.f('ix_dcim_location_created_at'), table_name='dcim_location')
     op.drop_table('dcim_location')
     op.drop_table('circuit_termination')
     op.drop_table('circuit_contact_link')
     op.drop_table('auth_user_group_link')
+    op.drop_index(op.f('ix_server_name'), table_name='server')
+    op.drop_index(op.f('ix_server_created_at'), table_name='server')
     op.drop_table('server')
     op.drop_table('ipam_vrf_route_target_link')
     op.drop_table('ipam_ip_range')
     op.drop_index(op.f('ix_ipam_ip_address_address'), table_name='ipam_ip_address')
     op.drop_table('ipam_ip_address')
+    op.drop_index(op.f('ix_ipam_block_created_at'), table_name='ipam_block')
     op.drop_table('ipam_block')
     op.drop_index(op.f('ix_dcim_site_site_code'), table_name='dcim_site')
+    op.drop_index(op.f('ix_dcim_site_name'), table_name='dcim_site')
+    op.drop_index(op.f('ix_dcim_site_created_at'), table_name='dcim_site')
     op.drop_table('dcim_site')
     op.drop_table('dcim_device_type')
     op.drop_table('dcim_cable_termination')
+    op.drop_index(op.f('ix_circuit_name'), table_name='circuit')
+    op.drop_index(op.f('ix_circuit_created_at'), table_name='circuit')
     op.drop_table('circuit')
+    op.drop_index(op.f('ix_auth_user_created_at'), table_name='auth_user')
     op.drop_table('auth_user')
     op.drop_table('auth_role_permission_link')
+    op.drop_index(op.f('ix_ipam_vrf_name'), table_name='ipam_vrf')
     op.drop_table('ipam_vrf')
+    op.drop_index(op.f('ix_ipam_vlan_group_name'), table_name='ipam_vlan_group')
     op.drop_table('ipam_vlan_group')
+    op.drop_index(op.f('ix_ipam_route_target_name'), table_name='ipam_route_target')
     op.drop_table('ipam_route_target')
     op.drop_table('ipam_role')
+    op.drop_index(op.f('ix_ipam_rir_created_at'), table_name='ipam_rir')
     op.drop_table('ipam_rir')
+    op.drop_index(op.f('ix_ipam_asn_created_at'), table_name='ipam_asn')
     op.drop_table('ipam_asn')
+    op.drop_index(op.f('ix_department_name'), table_name='department')
     op.drop_table('department')
+    op.drop_index(op.f('ix_dcim_region_name'), table_name='dcim_region')
     op.drop_table('dcim_region')
+    op.drop_index(op.f('ix_dcim_rack_role_name'), table_name='dcim_rack_role')
     op.drop_table('dcim_rack_role')
+    op.drop_index(op.f('ix_dcim_platform_name'), table_name='dcim_platform')
     op.drop_table('dcim_platform')
+    op.drop_index(op.f('ix_dcim_manufacturer_name'), table_name='dcim_manufacturer')
     op.drop_table('dcim_manufacturer')
+    op.drop_index(op.f('ix_dcim_device_role_name'), table_name='dcim_device_role')
     op.drop_table('dcim_device_role')
+    op.drop_index(op.f('ix_dcim_cable_name'), table_name='dcim_cable')
+    op.drop_index(op.f('ix_dcim_cable_created_at'), table_name='dcim_cable')
     op.drop_table('dcim_cable')
     op.drop_table('contact')
+    op.drop_index(op.f('ix_cluster_name'), table_name='cluster')
+    op.drop_index(op.f('ix_cluster_created_at'), table_name='cluster')
     op.drop_table('cluster')
+    op.drop_index(op.f('ix_circuit_type_name'), table_name='circuit_type')
     op.drop_table('circuit_type')
     op.drop_table('circuit_provider')
     op.drop_table('auth_role')

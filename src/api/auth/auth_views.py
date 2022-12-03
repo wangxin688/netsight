@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncResult, AsyncSession
 from src.api.auth import schemas
 from src.api.auth.models import User
 from src.api.base import BaseResponse
-from src.api.deps import audit_with_data, get_current_user, get_session
+from src.api.deps import get_session
 from src.core.config import settings
 from src.core.security import (
     JWT_ALGORITHM,
@@ -24,28 +24,8 @@ from src.core.security import (
 from src.utils.error_code import ERR_NUM_0, ERR_NUM_10001, ERR_NUM_10002, ERR_NUM_10003
 from src.utils.exceptions import TokenInvalidForRefreshError
 from src.utils.external.lark_api import LarkClient
-from src.utils.loggers import logger
 
 router = APIRouter()
-
-
-@router.get("/item", response_model=BaseResponse[int])
-async def get_abc(a: int, b: int, audit=Depends(audit_with_data)):
-    assert isinstance(a, int), "bad type"
-    logger.info(f"receive: {a}, {b}")
-    return {"code": 0, "data": a + b, "msg": "success"}
-
-
-@router.get("/test", response_model=BaseResponse[int])
-async def log_test(
-    a: int,
-    b: int,
-    audit=Depends(audit_with_data),
-    user: User = Depends(get_current_user),
-):
-    logger.info(f"receive {a} {b}")
-    res = a / b
-    return {"code": 0, "data": res, "msg": "success"}
 
 
 @router.post("/register", response_model=BaseResponse[int])
