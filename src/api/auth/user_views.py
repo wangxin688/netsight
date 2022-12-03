@@ -49,7 +49,11 @@ class AuthUserCBV:
         users: schemas.AuthUserQuery = Depends(schemas.AuthUserQuery),
         common_params: CommonQueryParams = Depends(CommonQueryParams),
     ) -> BaseListResponse[List[schemas.AuthUser]]:
-        # TODO: confirm query_params
+        print(users.dict())
+        # stmt = select(User)
+        # count_stmt = select(func.count(User.id))
+        # if users:
+        #     for key, values in users.dict()
         if not common_params.q:
             result = (
                 (
@@ -200,10 +204,10 @@ class AuthGroupCBV:
 
     @router.get("/groups/{id}")
     async def get_group(self, id: int) -> BaseResponse[schemas.AuthGroup]:
-        results: AsyncResult = self.session.execute(
+        results: AsyncResult = await self.session.execute(
             select(Group).where(Group.id == id).options(selectinload(Group.auth_user))
         )
-        group: Group | None = await results.scalars().first()
+        group: Group | None = results.scalars().first()
         if not group:
             return ERR_NUM_10007
         return_info = ERR_NUM_0(data=group)
@@ -224,7 +228,7 @@ class AuthGroupCBV:
         id: int,
         group: schemas.AuthGroupUpdate,
     ) -> BaseResponse[int]:
-        result: AsyncResult = self.session.execute(
+        result: AsyncResult = await self.session.execute(
             select(
                 select(Group)
                 .where(Group.id == id)
@@ -266,8 +270,10 @@ class AuthGroupCBV:
 
     @router.delete("/groups/{id}")
     async def delete_group(self, id: int) -> BaseResponse[int]:
-        result: AsyncResult = self.session.execute(select(Group).where(Group.id == id))
-        local_group: Group | None = await result.scalars().first()
+        result: AsyncResult = await self.session.execute(
+            select(Group).where(Group.id == id)
+        )
+        local_group: Group | None = result.scalars().first()
         if not local_group:
             return ERR_NUM_10007
         self.session.delete(local_group)
@@ -321,12 +327,12 @@ class AuthRoleCBV:
 
     @router.get("/roles/{id}")
     async def get_role(self, id: int) -> BaseResponse[schemas.AuthRole]:
-        results: AsyncResult = self.session.execute(
+        results: AsyncResult = await self.session.execute(
             select(Role)
             .where(Role.id == id)
             .options(selectinload(Role.auth_permission))
         )
-        role: Role | None = await results.scalars().first()
+        role: Role | None = results.scalars().first()
         if not role:
             return ERR_NUM_10009
         return_info = ERR_NUM_0(data=role)
@@ -347,7 +353,7 @@ class AuthRoleCBV:
         id: int,
         role: schemas.AuthRoleUpdate,
     ) -> BaseResponse[int]:
-        result: AsyncResult = self.session.execute(
+        result: AsyncResult = await self.session.execute(
             select(
                 select(Role)
                 .where(Role.id == id)
@@ -391,8 +397,10 @@ class AuthRoleCBV:
 
     @router.delete("/roles/{id}")
     async def delete_role(self, id: int) -> BaseResponse[int]:
-        result: AsyncResult = self.session.execute(select(Role).where(Role.id == id))
-        local_role: Role | None = await result.scalars().first()
+        result: AsyncResult = await self.session.execute(
+            select(Role).where(Role.id == id)
+        )
+        local_role: Role | None = result.scalars().first()
         if not local_role:
             return ERR_NUM_10007
         self.session.delete(local_role)

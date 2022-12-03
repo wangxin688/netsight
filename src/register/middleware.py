@@ -32,7 +32,7 @@ class AuditRoute(APIRoute):
                 "body": body_,
                 "path": request.url.path,
                 "path_params": request.path_params,
-                "query_params": request.query_params._dict,
+                "query_params": str(request.query_params),
                 "code": response.status_code,
                 "x-request-id": correlation_id.get(),
             }

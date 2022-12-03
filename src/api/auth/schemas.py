@@ -1,6 +1,10 @@
+from dataclasses import asdict
+from datetime import datetime
 from typing import List, Literal, Optional
 
-from pydantic import EmailStr, Field, validator
+from fastapi import Query
+from pydantic import EmailStr, validator
+from pydantic.dataclasses import dataclass
 
 from src.api.base import BaseModel
 from src.utils.validators import items_to_list
@@ -51,6 +55,8 @@ class AuthUserBase(BaseModel):
     email: EmailStr
     avatar: str | None
     is_active: bool
+    created_at: datetime
+    updated_at: Optional[datetime]
 
     class Config:
         orm_mode = True
@@ -62,6 +68,8 @@ class AuthUser(BaseModel):
     email: EmailStr
     avatar: str | None
     is_active: bool
+    created_at: datetime
+    updated_at: Optional[datetime]
     auth_role: Optional[AuthRole]
 
     class Config:
@@ -110,9 +118,13 @@ class AuthUserUpdate(BaseModel):
         return v
 
 
-class AuthUserQuery(BaseModel):
-    id: int | None = Field(description="list auth user ids")
-    name: str | None
+@dataclass
+class AuthUserQuery:
+    id: List[int] = Query(default=None, description="user ids")
+    name: List[str] = Query(default=None, description="user name")
+
+    def dict(self):
+        return asdict(self)
 
 
 class AuthGroupCreate(BaseModel):
@@ -137,13 +149,13 @@ class AuthGroupUpdate(BaseModel):
         return v
 
 
-class AuthGroupQuery(BaseModel):
-    id: List[int] | None = Field(description="list auth user ids")
+@dataclass
+class AuthGroupQuery:
+    id: List[int] = Query(None)
+    name: List[str] = Query(None)
 
-    @validator("id")
-    def auth_user_id_trans(cls, v):
-        v = items_to_list(v)
-        return v
+    def dict(self):
+        return asdict(self)
 
 
 class AuthRoleCreate(BaseModel):
@@ -168,9 +180,13 @@ class AuthRoleUpdate(BaseModel):
         return v
 
 
-class AuthRoleQuery(BaseModel):
-    id: int | None = Field(description="list auth role ids")
-    name: str | None
+@dataclass
+class AuthRoleQuery:
+    id: List[int] = Query(None)
+    name: List[str] = Query(None)
+
+    def dict(self):
+        return asdict(self)
 
 
 class AuthPermissionCreate(BaseModel):
@@ -187,10 +203,9 @@ class AuthPermissionUpdate(BaseModel):
     auth_role_ids: int | List[int] | None
 
 
-class AuthPermissionQuery(BaseModel):
-    id: int | List[int] | None = Field(description="list auth role ids")
+@dataclass
+class AuthPermissionQuery:
+    id: List[int] = Query(None)
 
-    @validator("id")
-    def id_trans(cls, v):
-        v = items_to_list(v)
-        return v
+    def dict(self):
+        return asdict(self)

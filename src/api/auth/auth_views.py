@@ -114,8 +114,10 @@ async def refresh_token(
     if now < token_data.issued_at or now > token_data.expires_at:
         raise TokenInvalidForRefreshError
 
-    result = session.execute(select(User).where(User.id == token_data.sub))
-    user: User | None = await result.scalars().first()
+    result: AsyncResult = await session.execute(
+        select(User).where(User.id == token_data.sub)
+    )
+    user: User | None = result.scalars().first()
 
     if user is None:
         return ERR_NUM_10001.dict()

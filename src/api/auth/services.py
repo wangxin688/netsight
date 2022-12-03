@@ -1,6 +1,7 @@
 import re
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncResult
 from sqlalchemy.orm import selectinload
 
 from src.api.auth.models import Role
@@ -20,9 +21,10 @@ def url_match(path: str, method: str, permissions: dict) -> bool:
 async def permission_dict_generate():
     result = {}
     async with async_session() as session:
-        res = await session.execute(
+        res: AsyncResult = session.execute(
             select(Role).options(selectinload(Role.auth_permission))
         )
+        await res.scalars()
         for role in res.scalars():
             permissions = role.auth_permission
             result.update(

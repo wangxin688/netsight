@@ -23,6 +23,7 @@ For following features, they are only my personal ideas and not related to curre
 7. unified log management with correlation-id for gunicorn and hole project.
 8. audit log with json format, very easy to integrate with filebeat and elasticsearch for metrics, tracing and analysis.
 9. x-request-id, x-process-time in header
+10. python 3.10+ support, with full type-hint and pydantic validation control
 
 
 ### How to start?
