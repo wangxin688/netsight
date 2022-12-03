@@ -1,8 +1,10 @@
+from dataclasses import asdict
 from datetime import datetime
 from typing import Generic, Optional, TypeVar
 
 import pydantic
 from fastapi.encoders import jsonable_encoder
+from pydantic.dataclasses import dataclass
 from pydantic.generics import GenericModel
 
 
@@ -62,3 +64,9 @@ class CommonQueryParams:
         self.limit = limit
         self.offset = offset
         self.q = q
+
+
+@dataclass
+class BaseQuery:
+    def dict(self):
+        return asdict(self)

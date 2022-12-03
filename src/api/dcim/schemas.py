@@ -1,4 +1,6 @@
-from api.base import BaseModel
+from pydantic.dataclasses import dataclass
+
+from api.base import BaseModel, BaseQuery
 
 
 class RegionBase(BaseModel):
@@ -23,11 +25,22 @@ class Region(BaseModel):
 
 
 class SiteBase(BaseModel):
-    pass
+    id: int
+    name: str
+    site_code: str
+    status: str
+
+    class Config:
+        orm_mode = True
 
 
 class Site(BaseModel):
-    pass
+    id: int
+    name: str
+    site_code: str
+    status: str
+    dcim_region: RegionBase | None
+    facility: str | None
 
 
 class Location(BaseModel):
@@ -118,7 +131,8 @@ class RegionUpdate(BaseModel):
     pass
 
 
-class RegionQuery(BaseModel):
+@dataclass()
+class RegionQuery(BaseQuery):
     pass
 
 
@@ -130,7 +144,8 @@ class SiteUpdate(BaseModel):
     pass
 
 
-class SiteQuery(BaseModel):
+@dataclass()
+class SiteQuery(BaseQuery):
     pass
 
 
@@ -142,7 +157,8 @@ class LocationUpdate(BaseModel):
     pass
 
 
-class LocationQuery(BaseModel):
+@dataclass()
+class LocationQuery(BaseQuery):
     pass
 
 
@@ -154,7 +170,8 @@ class RackRoleUpdate(BaseModel):
     pass
 
 
-class RackRoleQuery(BaseModel):
+@dataclass()
+class RackRoleQuery(BaseQuery):
     pass
 
 
@@ -166,7 +183,8 @@ class RackUpdate(BaseModel):
     pass
 
 
-class RackQuery(BaseModel):
+@dataclass()
+class RackQuery(BaseQuery):
     pass
 
 
@@ -178,7 +196,8 @@ class ManufacturerUpdate(BaseModel):
     pass
 
 
-class ManufacturerQuery(BaseModel):
+@dataclass()
+class ManufacturerQuery(BaseQuery):
     pass
 
 
@@ -190,7 +209,8 @@ class DeviceTypeUpdate(BaseModel):
     pass
 
 
-class DeviceTypeQuery(BaseModel):
+@dataclass()
+class DeviceTypeQuery(BaseQuery):
     pass
 
 
@@ -202,7 +222,8 @@ class DeviceRoleUpdate(BaseModel):
     pass
 
 
-class DeviceRoleQuery(BaseModel):
+@dataclass()
+class DeviceRoleQuery(BaseQuery):
     pass
 
 
@@ -214,7 +235,8 @@ class InterfaceUpdate(BaseModel):
     pass
 
 
-class InterfaceQuery(BaseModel):
+@dataclass
+class InterfaceQuery(BaseQuery):
     pass
 
 
@@ -226,6 +248,7 @@ class CableUpdate(BaseModel):
     pass
 
 
+@dataclass(BaseQuery)
 class CableQuery(BaseModel):
     pass
 
@@ -238,7 +261,8 @@ class CablePathUpdate(BaseModel):
     pass
 
 
-class CablePathQuery(BaseModel):
+@dataclass()
+class CablePathQuery(BaseQuery):
     pass
 
 
@@ -250,5 +274,6 @@ class CableTerminationUpdate(BaseModel):
     pass
 
 
-class CableTerminationQuery(BaseModel):
+@dataclass()
+class CableTerminationQuery(BaseQuery):
     pass
