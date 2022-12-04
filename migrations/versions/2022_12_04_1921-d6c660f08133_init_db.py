@@ -1,8 +1,8 @@
 """init db
 
-Revision ID: 3b4a62f7b840
+Revision ID: d6c660f08133
 Revises: 
-Create Date: 2022-12-03 23:14:27.401394
+Create Date: 2022-12-04 19:21:44.041787
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '3b4a62f7b840'
+revision = 'd6c660f08133'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -75,6 +75,7 @@ def upgrade() -> None:
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('email', sa.String(), nullable=False),
     sa.Column('phone', sa.String(), nullable=True),
+    sa.Column('categories', sa.String(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email')
     )
@@ -127,7 +128,8 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('parent_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['parent_id'], ['dcim_region.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('parent_id', 'name')
     )
     op.create_index(op.f('ix_dcim_region_name'), 'dcim_region', ['name'], unique=True)
     op.create_table('department',
@@ -264,6 +266,8 @@ def upgrade() -> None:
     sa.Column('shipping_address', sa.String(), nullable=True),
     sa.Column('latitude', sa.Float(), nullable=True),
     sa.Column('longitude', sa.Float(), nullable=True),
+    sa.Column('classification', sa.String(), nullable=True),
+    sa.Column('functions', postgresql.ARRAY(sa.String(), dimensions=1), nullable=True),
     sa.ForeignKeyConstraint(['region_id'], ['dcim_region.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )

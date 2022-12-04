@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from src.api.auth.constrants import USER_WHITE_LIST
+from api.auth.constraints import USER_WHITE_LIST
 from src.api.auth.models import User
 from src.api.auth.plugins import auth_plugins
 from src.api.auth.services import url_match

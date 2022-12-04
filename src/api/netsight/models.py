@@ -38,6 +38,7 @@ class Contact(Base):
     name = Column(String, nullable=False)
     email = Column(String, nullable=False, unique=True)
     phone = Column(String, nullable=True)
+    categories = Column(String, nullable=False)
     dcim_site = relationship(
         "Site",
         secondary="dcim_site_contact_link",

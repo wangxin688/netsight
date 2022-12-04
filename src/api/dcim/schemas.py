@@ -1,5 +1,10 @@
+from typing import List
+
+from fastapi import Query
+from pydantic import Field
 from pydantic.dataclasses import dataclass
 
+from api.dcim import constraints
 from src.api.base import BaseModel, BaseQuery
 
 
@@ -124,20 +129,41 @@ class CableTerminationBase(BaseModel):
 
 
 class RegionCreate(BaseModel):
-    pass
+    name: str
+    description: str | None
+    parent_id: int | None
 
 
 class RegionUpdate(BaseModel):
-    pass
+    name: str | None
+    description: str | None
+    parent_id: int | None
 
 
 @dataclass()
 class RegionQuery(BaseQuery):
-    pass
+    id: List[int] = Query(default=None)
+    name: List[str] | None = Query(default=None)
 
 
 class SiteCreate(BaseModel):
-    pass
+    name: str = Field(description="Unique name of the site")
+    site_code: str = Field(
+        description="Recommended use airport code of the city as prefix and auto-increment number as suffix, e.g. `CNCTU01`, `CNPEK01"
+    )
+    status: constraints.SITE_STATUS
+    region_id: int = Field(
+        description="cannot be empty, aims to build standard network"
+    )
+    facility: str | None
+    ipam_asn_ids: List[int] | None
+    time_zone: constraints.ALL_TIME_ZONES
+    physical_address: str
+    shipping_address: str | None
+    latitude: float | None
+    longitude: float | None
+    classification: constraints.SITE_CLASSIFICATIONS
+    contact_ids: List[int] | None
 
 
 class SiteUpdate(BaseModel):

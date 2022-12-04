@@ -1,4 +1,6 @@
-ALL_TIME_ZONES = (
+from typing import Literal
+
+ALL_TIME_ZONES = Literal[
     "Africa/Abidjan",
     "Africa/Accra",
     "Africa/Addis_Ababa",
@@ -594,8 +596,21 @@ ALL_TIME_ZONES = (
     "W-SU",
     "WET",
     "Zulu",
-)
+]
 
-SITE_STATUS = ("Active", "Retired", "Planning", "Staged", "Canceled", "Validated")
-DEVICE_STATUS = ("Active", "Offline", "Staged", "Planning")
-GENERAL_STATUS = ("Enabled", "Disabled")
+# life cycle: planning->staged->validated->active->retired
+SITE_STATUS = Literal[
+    "Active", "Retired", "Planning", "Staged", "Canceled", "Validated"
+]
+DEVICE_STATUS = Literal["Active", "Offline", "Staged", "Planning"]
+GENERAL_STATUS = Literal["Enabled", "Disabled"]
+
+# every classification represents a unique network architecture
+SITE_CLASSIFICATIONS = Literal[
+    "StandardBranchOffice",
+    "LightWeightBranchOffice",
+    "RemoteSmallOffice" "Headquarters",
+    "DataCenter",
+    "POP",
+    "CouldDataCenter",
+]

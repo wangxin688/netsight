@@ -3,17 +3,19 @@ from typing import List
 from fastapi import Depends
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
-from sqlalchemy import select
+from sqlalchemy import delete, func, select, update
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncResult, AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src.api.auth.models import User
-from src.api.base import BaseListResponse, BaseResponse
+from src.api.base import BaseListResponse, BaseResponse, CommonQueryParams
 from src.api.dcim import schemas
-from src.api.dcim.models import Site
-from src.api.deps import audit_without_data, get_current_user, get_session
+from src.api.dcim.models import Region, Site
+from src.api.deps import get_current_user, get_session
 from src.register.middleware import AuditRoute
-from src.utils.error_code import ERR_NUM_0, ERR_NUM_4004
+from src.utils.error_code import ERR_NUM_0, ERR_NUM_4004, ERR_NUM_4009
+from src.utils.loggers import logger
 
 router = InferringRouter(route_class=AuditRoute)
 
@@ -22,38 +24,117 @@ router = InferringRouter(route_class=AuditRoute)
 class RegionCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
-    audit: bool = Depends(audit_without_data)
 
     @router.post("/regions")
     async def create_region(self, region: schemas.RegionCreate) -> BaseResponse[int]:
-        pass
+        try:
+            new_region = Region(**region.dict(exclude_none=True))
+            self.session.add(new_region)
+            await self.session.commit()
+            await self.session.flush()
+        except SQLAlchemyError:
+            return {
+                "code": ERR_NUM_4009.code,
+                "data": None,
+                "msg": f"Region with name: {region.name} already exists",
+            }
+        finally:
+            return_info = ERR_NUM_0
+            return_info.data = new_region.id
+            return return_info
 
     @router.get("/regions/{id}")
     async def get_region(self, id: int) -> BaseResponse[schemas.Region]:
-        pass
+        results = (
+            (await self.session.execute(select(Region).where(Region.id == id)))
+            .scalars()
+            .first()
+        )
+        return_info = ERR_NUM_0
+        return_info.data = results
+        return return_info
 
     @router.get("/regions")
     async def get_regions(
-        self, region: schemas.RegionQuery
+        self,
+        region: schemas.RegionQuery = Depends(),
+        common_params: CommonQueryParams = Depends(CommonQueryParams),
     ) -> BaseListResponse[List[schemas.Region]]:
-        pass
+        stmt = select(Region)
+        count_stmt = select(func.count(Region.id))
+        if not common_params.q:
+            if region is not None:
+                if region.id:
+                    stmt = stmt.where(Region.id.in_(region.id))
+                    count_stmt = count_stmt.where(Region.id.in_(region.id))
+                if region.name:
+                    stmt = stmt.where(Region.name == region.name)
+                    count_stmt = count_stmt.where(Region.name == region.name)
+        else:
+            stmt = stmt.where(Region.name.ilike(f"%{common_params.q}%"))
+            count_stmt = count_stmt.where(Region.name.ilike(f"%{common_params.q}%"))
+        stmt = stmt.slice(
+            common_params.offset, common_params.offset + common_params.limit
+        )
+        results = (await self.session.execute(stmt)).scalars().all()
+        count = (await self.session.execute(count_stmt)).scalar()
+        return_info = ERR_NUM_0
+        return_info.data = {"count": count, "results": results}
+        return return_info
 
     @router.put("/regions/{id}")
     async def update_region(
         self, id: int, region: schemas.RegionUpdate
     ) -> BaseResponse[int]:
-        pass
+        local_result: Region | None = (
+            (await self.session.execute(select(Region).where(Region.id == id)))
+            .scalars()
+            .first()
+        )
+        if not local_result:
+            return ERR_NUM_4004
+        try:
+            stmt = (
+                update(Region)
+                .where(Region.id == id)
+                .values(**region.dict(exclude_none=True))
+                .execute_options(synchronize_session="fetch")
+            )
+            await self.session.execute(stmt)
+            await self.session.commit()
+            return_info = ERR_NUM_0
+            return_info.data = id
+            return return_info
+        except SQLAlchemyError as e:
+            logger.error(e)
+            return {
+                "code": ERR_NUM_4009.code,
+                "data": None,
+                "msg": f"Region with name '{region.name}' already exists",
+            }
 
     @router.delete("/regions/{id}")
     async def delete_region(self, id: int) -> BaseResponse[int]:
-        pass
+        try:
+            stmt = delete(Region).where(Region.id == id)
+            await self.session.execute(stmt)
+            await self.session.commit()
+            return_info = ERR_NUM_0
+            return_info.data = id
+            return return_info
+        except SQLAlchemyError as e:
+            logger.error(e)
+            return {
+                "code": ERR_NUM_4004.code,
+                "data": None,
+                "msg": f"Region #{id} not existed",
+            }
 
 
 @cbv(router)
 class SiteCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
-    audit: bool = Depends(audit_without_data)
 
     @router.post("/sites")
     async def create_site(
@@ -111,7 +192,6 @@ class SiteCBV:
 class LocationCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
-    audit: bool = Depends(audit_without_data)
 
     @router.post("/locations")
     async def create_location(
@@ -144,7 +224,6 @@ class LocationCBV:
 class RackRoleCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
-    audit: bool = Depends(audit_without_data)
 
     @router.post("/rack-roles")
     async def create_rack_role(
@@ -177,7 +256,6 @@ class RackRoleCBV:
 class RackCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
-    audit: bool = Depends(audit_without_data)
 
     @router.post("/racks")
     async def create_rack(self, rack: schemas.RackCreate) -> BaseResponse[int]:
@@ -193,7 +271,7 @@ class RackCBV:
     ) -> BaseListResponse[List[schemas.Rack]]:
         pass
 
-    @router.put("/racks{id}")
+    @router.put("/racks/{id}")
     async def update_rack(self, rack: schemas.RackUpdate) -> BaseResponse[int]:
         pass
 
@@ -206,7 +284,6 @@ class RackCBV:
 class ManufacturerCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
-    audit: bool = Depends(audit_without_data)
 
     @router.post("/manufacturers")
     async def create_manufacturer(
@@ -239,7 +316,6 @@ class ManufacturerCBV:
 class DeviceTypeCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
-    audit: bool = Depends(audit_without_data)
 
     @router.post("/device-types")
     async def create_device_type(
@@ -272,7 +348,6 @@ class DeviceTypeCBV:
 class DeviceRoleCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
-    audit: bool = Depends(audit_without_data)
 
     @router.post("/device-roles")
     async def create_device_role(
@@ -305,7 +380,6 @@ class DeviceRoleCBV:
 class InterfaceCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
-    audit: bool = Depends(audit_without_data)
 
     @router.post("/interfaces")
     async def create_interface(

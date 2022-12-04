@@ -59,6 +59,7 @@ ERR_NUM_4003 = ErrCode(
     4003, "Permission Denied: Privilege limited, Operation not permit"
 )
 ERR_NUM_4004 = ErrCode(4004, "Resource not found: Requested data not existed")
+ERR_NUM_4009 = ErrCode(4009, "Resource already exists")
 ERR_NUM_10001 = ErrCode(10001, "Cannot use this email, already exists")
 ERR_NUM_10002 = ErrCode(10002, "Incorrect email for user, not found")
 ERR_NUM_10003 = ErrCode(10003, "Incorrect password")

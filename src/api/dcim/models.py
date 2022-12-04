@@ -8,7 +8,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import ENUM, INET, JSONB
+from sqlalchemy.dialects.postgresql import ARRAY, ENUM, INET, JSONB
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy.sql import expression
@@ -34,6 +34,7 @@ __all__ = (
 
 class Region(Base, NameMixin):
     __tablename__ = "dcim_region"
+    __table_args__ = (UniqueConstraint("parent_id", "name"),)
     id = Column(Integer, primary_key=True)
     parent_id = Column(Integer, ForeignKey(id))
     dcim_site = relationship(
@@ -91,6 +92,8 @@ class Site(Base, NameMixin, TimestampMixin):
     shipping_address = Column(String, nullable=True)
     latitude = Column(Float, nullable=True)
     longitude = Column(Float, nullable=True)
+    classification = Column(String, nullable=True)
+    functions = Column(ARRAY(String, dimensions=1), nullable=True)
     contact = relationship(
         "Contact",
         secondary="dcim_site_contact_link",
