@@ -11,7 +11,6 @@ from src.api.dcim import constraints
 class RegionBase(BaseModel):
     id: int
     name: str
-    slug: str
     description: str | None
 
     class Config:
@@ -21,7 +20,6 @@ class RegionBase(BaseModel):
 class Region(BaseModel):
     id: int
     name: str
-    slug: str
     description: str | None
     parent_id: int | None
 
