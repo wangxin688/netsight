@@ -49,11 +49,6 @@ class AuthUserCBV:
         users: schemas.AuthUserQuery = Depends(schemas.AuthUserQuery),
         common_params: CommonQueryParams = Depends(CommonQueryParams),
     ) -> BaseListResponse[List[schemas.AuthUser]]:
-        print(users.dict())
-        # stmt = select(User)
-        # count_stmt = select(func.count(User.id))
-        # if users:
-        #     for key, values in users.dict()
         if not common_params.q:
             result = (
                 (
@@ -242,7 +237,7 @@ class AuthGroupCBV:
             users: List[User] = local_group.auth_user
             user_ids = [user.id for user in users]
             for user in users:
-                if user.id not in user_ids:
+                if user.id not in group.user_ids:
                     local_group.auth_user.remove(user)
             for auth_user_id in group.auth_user_ids:
                 if auth_user_id not in user_ids:
@@ -367,7 +362,7 @@ class AuthRoleCBV:
             permissions: List[Permission] = local_role.auth_permission
             permission_ids = [permission.id for permission in permissions]
             for permission in permissions:
-                if permission.id not in permission_ids:
+                if permission.id not in role.auth_permission_ids:
                     local_role.auth_permission.remove(permission)
             for auth_permission_id in role.auth_permission_ids:
                 if auth_permission_id not in permission_ids:

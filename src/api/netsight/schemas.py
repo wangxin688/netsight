@@ -2,7 +2,7 @@ from typing import Set
 
 from pydantic import validator
 
-from api.auth.constraints import METHOD
+from src.api.auth.constraints import METHOD
 from src.api.base import BaseModel
 
 

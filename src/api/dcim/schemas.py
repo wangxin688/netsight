@@ -4,8 +4,8 @@ from fastapi import Query
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
-from api.dcim import constraints
 from src.api.base import BaseModel, BaseQuery
+from src.api.dcim import constraints
 
 
 class RegionBase(BaseModel):
@@ -148,6 +148,7 @@ class RegionQuery(BaseQuery):
 
 class SiteCreate(BaseModel):
     name: str = Field(description="Unique name of the site")
+    description: str | None
     site_code: str = Field(
         description="Recommended use airport code of the city as prefix and auto-increment number as suffix, e.g. `CNCTU01`, `CNPEK01"
     )
@@ -163,16 +164,42 @@ class SiteCreate(BaseModel):
     latitude: float | None
     longitude: float | None
     classification: constraints.SITE_CLASSIFICATIONS
+    functions: List[str] | None = Field(
+        description="a set of tags to mark the function of the sites, e.g.`RD`, `Sales`, `Mixed`"
+    )
     contact_ids: List[int] | None
 
 
 class SiteUpdate(BaseModel):
-    pass
+    name: str | None = Field(description="Unique name of the site")
+    description: str | None
+    site_code: str | None = Field(
+        description="Recommended use airport code of the city as prefix and auto-increment number as suffix, e.g. `CNCTU01`, `CNPEK01"
+    )
+    status: constraints.SITE_STATUS | None
+    region_id: int | None = Field(
+        description="cannot be empty, aims to build standard network"
+    )
+    facility: str | None
+    ipam_asn_ids: List[int] | None
+    time_zone: constraints.ALL_TIME_ZONES
+    physical_address: str | None
+    shipping_address: str | None
+    latitude: float | None
+    longitude: float | None
+    classification: constraints.SITE_CLASSIFICATIONS | None
+    functions: List[str] | None = Field(
+        description="a set of tags to mark the function of the sites, e.g.`RD`, `Sales`, `Mixed`"
+    )
+    contact_ids: List[int] | None
 
 
 @dataclass()
 class SiteQuery(BaseQuery):
-    pass
+    id: List[int] = Query(None)
+    name: str = Query(None)
+    site_code: str = Query(None)
+    status: constraints.SITE_STATUS = Query(None)
 
 
 class LocationCreate(BaseModel):

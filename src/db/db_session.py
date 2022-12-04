@@ -15,7 +15,7 @@ async_engine = create_async_engine(
     future=True,  # poolclass=NullPool
 )
 async_session: AsyncSession = sessionmaker(
-    async_engine, expire_on_commit=False, class_=AsyncSession
+    async_engine, autoflush=False, expire_on_commit=False, class_=AsyncSession
 )
 
 

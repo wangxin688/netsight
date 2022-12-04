@@ -13,6 +13,8 @@ from src.api.base import BaseListResponse, BaseResponse, CommonQueryParams
 from src.api.dcim import schemas
 from src.api.dcim.models import Region, Site
 from src.api.deps import get_current_user, get_session
+from src.api.ipam.models import ASN
+from src.api.netsight.models import Contact
 from src.register.middleware import AuditRoute
 from src.utils.error_code import ERR_NUM_0, ERR_NUM_4004, ERR_NUM_4009
 from src.utils.loggers import logger
@@ -116,6 +118,7 @@ class RegionCBV:
     @router.delete("/regions/{id}")
     async def delete_region(self, id: int) -> BaseResponse[int]:
         try:
+
             stmt = delete(Region).where(Region.id == id)
             await self.session.execute(stmt)
             await self.session.commit()
@@ -140,7 +143,34 @@ class SiteCBV:
     async def create_site(
         self, site: schemas.SiteCreate
     ) -> BaseListResponse[List[schemas.Region]]:
-        pass
+        try:
+            new_site = Site(**site.dict(exclude={"contact_ids"}))
+            await self.session.add(new_site)
+            await self.session.flush()
+            if site.contact_ids:
+                contacts: List[Contact] = (
+                    (
+                        await self.session.execute(
+                            select(Contact).where(Contact.id.in_(site.contact_ids))
+                        )
+                    )
+                    .scalars()
+                    .all()
+                )
+                if len(contacts) > 0:
+                    for contact in contacts:
+                        new_site.contact.append(contact)
+            await self.session.commit()
+            return_info = ERR_NUM_0
+            return_info.data = new_site.id
+            return return_info
+        except SQLAlchemyError as e:
+            logger.error(e)
+            return {
+                "code": ERR_NUM_4009.code,
+                "data": None,
+                "msg": f"Site with `{site.name}` or `{site.site_code}` already exists",
+            }
 
     @router.get("/sites/{id}")
     async def get_site(
@@ -178,14 +208,93 @@ class SiteCBV:
         id: int,
         site: schemas.SiteUpdate,
     ) -> BaseResponse[int]:
-        pass
+        local_site: Site | None = (
+            (
+                await self.session.execute(select(Site).where(Site.id == id)).options(
+                    selectinload(Site.ipam_asn, Site.contact)
+                )
+            )
+            .scalars()
+            .first()
+        )
+        if not local_site:
+            return {
+                "code": ERR_NUM_4004.code,
+                "data": None,
+                "msg": f"Site #{id} not found",
+            }
+        update_data = site.dict(exclude={"ipam_asn_ids", "contact_ids"})
+        if update_data:
+            await self.session.execute(
+                update(Site)
+                .where(Site.id == id)
+                .values(**update_data)
+                .execute_options(synchronize_session="fetch")
+            )
+        if site.ipam_asn_ids:
+            asns: List[ASN] | None = local_site.ipam_asn
+            asn_ids = [asn.id for asn in asns]
+            for asn in asns:
+                if asn.id not in site.ipam_asn_ids:
+                    local_site.ipam_asn.remove(asn)
+            for ipam_asn_id in site.ipam_asn_ids:
+                if ipam_asn_id not in asn_ids:
+                    _asn: ASN | None = (
+                        (
+                            await self.session.execute(
+                                select(ASN).where(ASN.id == ipam_asn_id)
+                            )
+                        )
+                        .scalars()
+                        .one_or_none()
+                    )
+                if _asn:
+                    local_site.ipam_asn.append(_asn)
+
+        if site.contact_ids:
+            contacts: List[Contact] | None = local_site.contact
+            contact_ids = [contact.id for contact in contacts]
+            for contact in contacts:
+                if contact.id not in site.contact_ids:
+                    local_site.contact.remove(contact)
+            for contact_id in site.contact_ids:
+                if contact_id not in contact_ids:
+                    _contact: Contact = (
+                        (
+                            await self.session.execute(
+                                select(Contact).where(Contact.id == contact_id)
+                            )
+                        )
+                        .scalars()
+                        .one_or_none()
+                    )
+                    if _contact:
+                        local_site.contact.append(contact)
+        await self.session.commit()
+        return_info = ERR_NUM_0
+        return_info.data = id
+        return return_info
 
     @router.delete("/sites/{id}")
     async def delete_site(
         self,
         id: int,
     ) -> BaseResponse[int]:
-        pass
+
+        local_site: Site | None = (
+            (await self.session.execute(select(Site).where(Site.id == id)))
+            .scalars()
+            .first()
+        )
+        if not local_site:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Site #{id} not found"
+            return return_info
+        await self.session.delete(local_site)
+        await self.session.commit()
+        return_info = ERR_NUM_0
+        return_info.data = id
+        return return_info
 
 
 @cbv(router)
