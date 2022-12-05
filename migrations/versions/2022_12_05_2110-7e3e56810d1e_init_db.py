@@ -1,8 +1,8 @@
 """init db
 
-Revision ID: d6c660f08133
+Revision ID: 7e3e56810d1e
 Revises: 
-Create Date: 2022-12-04 19:21:44.041787
+Create Date: 2022-12-05 21:10:29.843040
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = 'd6c660f08133'
+revision = '7e3e56810d1e'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -374,18 +374,17 @@ def upgrade() -> None:
     op.create_table('dcim_location',
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('name', sa.String(), nullable=False),
-    sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('status', sa.String(), nullable=False),
+    sa.Column('name', sa.String(), nullable=False),
+    sa.Column('status', postgresql.ENUM('Active', 'Retired', 'Planning', 'Staged', 'Canceled', 'Validated', name='location_status'), nullable=True),
     sa.Column('site_id', sa.Integer(), nullable=True),
     sa.Column('parent_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['parent_id'], ['dcim_location.id'], ),
     sa.ForeignKeyConstraint(['site_id'], ['dcim_site.id'], ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('site_id', 'name')
     )
     op.create_index(op.f('ix_dcim_location_created_at'), 'dcim_location', ['created_at'], unique=False)
-    op.create_index(op.f('ix_dcim_location_name'), 'dcim_location', ['name'], unique=True)
     op.create_table('dcim_site_asn_link',
     sa.Column('site_id', sa.Integer(), nullable=False),
     sa.Column('asn_id', sa.Integer(), nullable=False),
@@ -528,7 +527,6 @@ def downgrade() -> None:
     op.drop_table('ipam_prefix')
     op.drop_table('dcim_site_contact_link')
     op.drop_table('dcim_site_asn_link')
-    op.drop_index(op.f('ix_dcim_location_name'), table_name='dcim_location')
     op.drop_index(op.f('ix_dcim_location_created_at'), table_name='dcim_location')
     op.drop_table('dcim_location')
     op.drop_table('circuit_termination')

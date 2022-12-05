@@ -602,6 +602,9 @@ ALL_TIME_ZONES = Literal[
 SITE_STATUS = Literal[
     "Active", "Retired", "Planning", "Staged", "Canceled", "Validated"
 ]
+LOCATION_STATUS = Literal[
+    "Active", "Retired", "Planning", "Staged", "Canceled", "Validated"
+]
 DEVICE_STATUS = Literal["Active", "Offline", "Staged", "Planning"]
 GENERAL_STATUS = Literal["Enabled", "Disabled"]
 
@@ -614,3 +617,5 @@ SITE_CLASSIFICATIONS = Literal[
     "POP",
     "CouldDataCenter",
 ]
+
+INTERFACE_MODE = Literal["access", "trunk", "layer-3"]

@@ -19,10 +19,6 @@ class BaseModel(pydantic.BaseModel):
             datetime: lambda v: int(v.timestamp())
         }  # method for customer JSON encoding of datetime fields
 
-    def serializable_dict(self, **kwargs):
-        default_dict = super().dict(**kwargs)
-        return jsonable_encoder(default_dict)
-
 
 DataT = TypeVar("DataT", bound=BaseModel)
 

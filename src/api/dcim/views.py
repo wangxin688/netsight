@@ -11,7 +11,7 @@ from sqlalchemy.orm import selectinload
 from src.api.auth.models import User
 from src.api.base import BaseListResponse, BaseResponse, CommonQueryParams
 from src.api.dcim import schemas
-from src.api.dcim.models import Region, Site
+from src.api.dcim.models import Location, Region, Site
 from src.api.deps import get_current_user, get_session
 from src.api.ipam.models import ASN
 from src.api.netsight.models import Contact
@@ -304,9 +304,36 @@ class LocationCBV:
 
     @router.post("/locations")
     async def create_location(
-        self, region: schemas.LocationCreate
+        self, location: schemas.LocationCreate
     ) -> BaseResponse[int]:
-        pass
+        site: Site = (
+            (
+                await self.session.execute(
+                    select(Site).where(Site.id == location.site_id)
+                )
+            )
+            .scalars()
+            .first()
+        )
+        if not site:
+            return_info = ERR_NUM_4004
+            return_info.msg = (
+                f"Create Location failed, Site #{location.site_id} not found"
+            )
+            return return_info
+        try:
+            new_location = Location(**location.dict(exclude_none=True))
+            await self.session.add(new_location)
+            await self.session.commit()
+            await self.session.flush()
+            return_info = ERR_NUM_0
+            return_info.data = new_location.id
+            return return_info
+        except SQLAlchemyError as e:
+            logger.error(e)
+            return_info = ERR_NUM_4009
+            return_info.msg = f"Create Location failed, Location with same name `{location.name}` already exists"
+            return return_info
 
     @router.get("/locations/{id}")
     async def get_location(self, id: int) -> BaseResponse[schemas.Location]:
@@ -320,13 +347,58 @@ class LocationCBV:
 
     @router.put("/locations/{id}")
     async def update_location(
-        self, id: int, region: schemas.LocationUpdate
+        self, id: int, location: schemas.LocationUpdate
     ) -> BaseResponse[int]:
-        pass
+        local_location: Location | None = (
+            (await self.session.execute(select(Location).where(Location.id == id)))
+            .scalars()
+            .first()
+        )
+        if not local_location:
+            return_info = ERR_NUM_4009
+            return_info.msg = f"Update location failed, location #{id} not found"
+            return return_info
+        if local_location.site_id:
+            local_site = (
+                (
+                    await self.session.execute(
+                        select(Site).where(Site.id == local_location.site_id)
+                    )
+                )
+                .scalars()
+                .first()
+            )
+            if not local_site:
+                return_info = ERR_NUM_4009
+                return_info.msg = f"Update location failed, site #{id} not found"
+                return return_info
+        await self.session.execute(
+            update(Location)
+            .where(Location.id == id)
+            .values(**location(exclude_none=True))
+            .execute_options(synchronize_session="fetch")
+        )
+        await self.session.commit()
+        return_info = ERR_NUM_0
+        return_info.data = id
+        return return_info
 
     @router.delete("/locations/{id}")
     async def delete_location(self, id: int) -> BaseResponse[int]:
-        pass
+        local_location: Location | None = (
+            (await self.session.execute(select(Location).where(Location.id == id)))
+            .scalars()
+            .first()
+        )
+        if not local_location:
+            return_info = ERR_NUM_4009
+            return_info.msg = f"Update location failed, location #{id} not found"
+            return return_info
+        await self.session.delete(local_location)
+        await self.session.commit()
+        return_info = ERR_NUM_0
+        return_info.data = id
+        return return_info
 
 
 @cbv(router)

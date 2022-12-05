@@ -1,56 +1,37 @@
 from typing import List
 
 from fastapi import Query
-from pydantic import Field
+from pydantic import Field, validator
 from pydantic.dataclasses import dataclass
 
 from src.api.base import BaseModel, BaseQuery
 from src.api.dcim import constraints
-
-
-class RegionBase(BaseModel):
-    id: int
-    name: str
-    description: str | None
-
-    class Config:
-        orm_mode = True
-
-
-class Region(BaseModel):
-    id: int
-    name: str
-    description: str | None
-    parent_id: int | None
-
-    class Config:
-        orm_mode = True
-
-
-class SiteBase(BaseModel):
-    id: int
-    name: str
-    site_code: str
-    status: str
-
-    class Config:
-        orm_mode = True
-
-
-class Site(BaseModel):
-    id: int
-    name: str
-    site_code: str
-    status: str
-    dcim_region: RegionBase | None
-    facility: str | None
+from src.utils.validators import items_to_list
 
 
 class Location(BaseModel):
-    pass
+    id: int
+    name: str
+    description: str | None
+    parent_id: int
+    # dcim_rack: List[Rack] | None
+    # dcim_device: List[Device] | None
 
 
 class LocationBase(BaseModel):
+    id: int
+    name: str
+    description: str | None
+    parent_id: int
+
+
+class RackRole(BaseModel):
+    id: int
+    name: str
+    description: str | None
+
+
+class RackRoleBase(BaseModel):
     pass
 
 
@@ -59,14 +40,6 @@ class Rack(BaseModel):
 
 
 class RackBase(BaseModel):
-    pass
-
-
-class RackRole(BaseModel):
-    pass
-
-
-class RackRoleBase(BaseModel):
     pass
 
 
@@ -124,6 +97,61 @@ class CableTermination(BaseModel):
 
 class CableTerminationBase(BaseModel):
     pass
+
+
+class RegionBase(BaseModel):
+    id: int
+    name: str
+    description: str | None
+
+    class Config:
+        orm_mode = True
+
+
+class Region(BaseModel):
+    id: int
+    name: str
+    description: str | None
+    parent_id: int | None
+
+    class Config:
+        orm_mode = True
+
+
+class SiteBase(BaseModel):
+    id: int
+    name: str
+    site_code: str
+    status: str
+    classification: str | None
+
+    class Config:
+        orm_mode = True
+
+
+class Site(BaseModel):
+    id: int
+    name: str
+    site_code: str
+    status: str
+    dcim_region: RegionBase | None
+    facility: str | None
+    # ipam_asn: List[ASN] | None
+    time_zone: str | None
+    physical_address: str | None
+    shipping_address: str | None
+    latitude: float | None
+    longitude: float | None
+    classification: str | None
+    functions: List[str] | None
+    # contact: List[Contact] | None
+    # dcim_location: List[Location] | None
+    # dcim_rack: List[Rack] | None
+    # dcim_device: List[Device] | None
+    # ipam_prefix: List[Prefix] | None
+    # ipam_vlan: List[Vlan] | None
+    # circuit_termination: List[CircuitTermination] | None
+    # dcim_region: List[RegionBase] | None
 
 
 class RegionCreate(BaseModel):
@@ -201,29 +229,41 @@ class SiteQuery(BaseQuery):
 
 
 class LocationCreate(BaseModel):
-    pass
+    name: str
+    description: str | None
+    status: constraints.LOCATION_STATUS
+    parent_id: int | None
+    site_id: int
 
 
 class LocationUpdate(BaseModel):
-    pass
+    name: str | None
+    description: str | None
+    parent_id: int | None
+    dcim_site_id: int | None
 
 
 @dataclass()
 class LocationQuery(BaseQuery):
-    pass
+    id: List[int] = Query(None)
+    name: str = Query(None)
+    site_id: int = Query(None)
 
 
 class RackRoleCreate(BaseModel):
-    pass
+    name: str
+    description: str | None
 
 
 class RackRoleUpdate(BaseModel):
-    pass
+    name: str | None
+    description: str | None
 
 
 @dataclass()
 class RackRoleQuery(BaseQuery):
-    pass
+    id: List[int] = Query(None)
+    name: str = Query(None)
 
 
 class RackCreate(BaseModel):
@@ -240,11 +280,25 @@ class RackQuery(BaseQuery):
 
 
 class ManufacturerCreate(BaseModel):
-    pass
+    name: str
+    description: str | None
+    device_type_ids: int | List[int] | None
+
+    @validator("device_type_ids")
+    def id_trans(cls, v):
+        v = items_to_list(v)
+        return v
 
 
 class ManufacturerUpdate(BaseModel):
-    pass
+    name: str | None
+    description: str | None
+    device_type_ids: int | List[int] | None
+
+    @validator("device_type_ids")
+    def id_trans(cls, v):
+        v = items_to_list(v)
+        return v
 
 
 @dataclass()
@@ -253,11 +307,21 @@ class ManufacturerQuery(BaseQuery):
 
 
 class DeviceTypeCreate(BaseModel):
-    pass
+    name: str | None
+    description: str | None
+    manufacturer_id: int | None
+    model: str
+    u_height: float = Field(default=1.0)
+    is_full_depth: bool = True
 
 
 class DeviceTypeUpdate(BaseModel):
-    pass
+    name: str | None
+    description: str | None
+    manufacturer_id: int | None
+    model: str | None
+    u_height: float | None
+    is_full_depth: bool | None
 
 
 @dataclass()
@@ -266,11 +330,15 @@ class DeviceTypeQuery(BaseQuery):
 
 
 class DeviceRoleCreate(BaseModel):
-    pass
+    name: str | None
+    description: str | None
+    vm_role: bool = False
 
 
 class DeviceRoleUpdate(BaseModel):
-    pass
+    name: str | None
+    description: str | None
+    vm_role: bool | None
 
 
 @dataclass()
@@ -278,15 +346,48 @@ class DeviceRoleQuery(BaseQuery):
     pass
 
 
-class InterfaceCreate(BaseModel):
+class PlatformCreate(BaseModel):
+    name: str
+    description: str | None
+    napalm_driver: str | None
+    napalm_args: dict | None
+
+
+class PlatformUpdate(BaseModel):
+    name: str | None
+    description: str | None
+    napalm_driver: str | None
+    napalm_args: dict | None
+
+
+@dataclass()
+class PlatformQuery(BaseQuery):
     pass
+
+
+class InterfaceCreate(BaseModel):
+    name: str
+    description: str | None
+    if_index: int | None
+    speed: int | None
+    model: constraints.INTERFACE_MODE = Field(default="access")
+    mtu: int | None = Field(default=1500)
+    enabled: bool | None = Field(default=True)
+    device_id: int
 
 
 class InterfaceUpdate(BaseModel):
-    pass
+    name: str | None
+    description: str | None
+    if_index: int | None
+    speed: int | None
+    model: constraints.INTERFACE_MODE = Field(default="access")
+    mtu: int | None = Field(default=1500)
+    enabled: bool | None = Field(default=True)
+    device_id: int | None
 
 
-@dataclass
+@dataclass()
 class InterfaceQuery(BaseQuery):
     pass
 

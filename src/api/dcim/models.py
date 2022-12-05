@@ -128,12 +128,25 @@ class Site(Base, NameMixin, TimestampMixin):
     )
 
 
-class Location(Base, NameMixin, TimestampMixin):
+class Location(Base, TimestampMixin):
     """a sub location of site, like building, floor, idf, mdf and etc"""
 
     __tablename__ = "dcim_location"
+    __table_args__ = (UniqueConstraint("site_id", "name"),)
     id = Column(Integer, primary_key=True)
-    status = Column(String, nullable=False)
+    name = Column(String, nullable=False)
+    status = Column(
+        ENUM(
+            "Active",
+            "Retired",
+            "Planning",
+            "Staged",
+            "Canceled",
+            "Validated",
+            name="location_status",
+            create_type=False,
+        )
+    )
     site_id = Column(Integer, ForeignKey("dcim_site.id", ondelete="CASCADE"))
     dcim_site = relationship(
         "Site", back_populates="dcim_location", overlaps="dcim_location"
@@ -156,13 +169,6 @@ class Location(Base, NameMixin, TimestampMixin):
         backref=backref("parent", remote_side=id),
         collection_class=attribute_mapped_collection("name"),
     )
-
-    def __init__(self, name, status, site_id, parent_id=None, description=None):
-        self.name = name
-        self.site_id = site_id
-        self.parent = parent_id
-        self.description = description
-        self.status = status
 
 
 class RackRole(Base, NameMixin):
