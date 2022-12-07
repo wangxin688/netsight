@@ -1,5 +1,4 @@
 import logging
-import sys
 import traceback
 import uuid
 
@@ -7,21 +6,35 @@ from asgi_correlation_id import CorrelationIdMiddleware
 from asgi_correlation_id.middleware import is_valid_uuid4
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from gunicorn.app.base import BaseApplication
+from loguru import logger
 
 from src.api.auth.services import permission_dict_generate
 from src.core.config import settings
 from src.register.exception_handler import exception_handlers
 from src.register.router import router
-from src.utils.loggers import (
-    JSON_LOGS,
-    LOG_LEVEL,
-    WORKERS,
-    InterceptHandler,
-    StandaloneApplication,
-    StubbedGunicornLogger,
-    correlation_id_filter,
-    logger,
-)
+from src.utils.loggers import GunicornLogger, configure_logger
+
+
+class StandaloneApplication(BaseApplication):
+    """Our Gunicorn application."""
+
+    def __init__(self, app, options=None):
+        self.options = options or {}
+        self.application = app
+        super().__init__()
+
+    def load_config(self):
+        config = {
+            key: value
+            for key, value in self.options.items()
+            if key in self.cfg.settings and value is not None
+        }
+        for key, value in config.items():
+            self.cfg.set(key.lower(), value)
+
+    def load(self):
+        return self.application
 
 
 def create_app():
@@ -68,8 +81,11 @@ def create_app():
 
     @app.on_event("startup")
     async def startup_event():
+        logger.info("execute on startup event ")
         permissions = await permission_dict_generate()
         app.state.permissions = permissions
+        configure_logger()
+        logger.info("execute on startup event done")
 
     app.include_router(router, prefix="/api/v1")
 
@@ -77,38 +93,11 @@ def create_app():
 
 
 if __name__ == "__main__":
-    intercept_handler = InterceptHandler()
-    logging.root.setLevel(LOG_LEVEL)
-    fmt = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <blue>{correlation_id}</blue> | <level>{level: <2}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
-
-    seen = set()
-    for name in [
-        *logging.root.manager.loggerDict.keys(),
-        "gunicorn",
-        "gunicorn.access",
-        "gunicorn.error",
-        "uvicorn",
-        "uvicorn.access",
-        "uvicorn.error",
-    ]:
-        if name not in seen:
-            seen.add(name.split(".")[0])
-            logging.getLogger(name).handlers = [intercept_handler]
-
-    logger.configure(
-        handlers=[
-            {
-                "sink": sys.stdout,
-                "serialize": JSON_LOGS,
-                "format": fmt,
-                "filter": correlation_id_filter,
-            }
-        ]
-    )
-
+    # gunicorn version
+    app = create_app()
     options = {
         "bind": "0.0.0.0:8000",
-        "workers": WORKERS,
+        "workers": 8,
         "timeout": 30,
         "max-requests": 200,
         "max-requests-jitter": 20,
@@ -117,10 +106,16 @@ if __name__ == "__main__":
         "accesslog": "-",
         "errorlog": "-",
         "worker_class": "uvicorn.workers.UvicornWorker",
-        "logger_class": StubbedGunicornLogger,
+        "logger_class": GunicornLogger,
     }
-    app = create_app()
+
+    logging.info("create app now")
     try:
         StandaloneApplication(app, options).run()
     except Exception:
         print(traceback.format_exc())
+
+    # # uvicorn version
+    # app = create_app()
+    # import uvicorn
+    # uvicorn.run(app)

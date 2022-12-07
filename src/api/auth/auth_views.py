@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 import jwt
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
@@ -21,18 +21,29 @@ from src.core.security import (
     get_password_hash,
     verify_password,
 )
+from src.register.middleware import AuditRoute
 from src.utils.error_code import ERR_NUM_0, ERR_NUM_10001, ERR_NUM_10002, ERR_NUM_10003
 from src.utils.exceptions import TokenInvalidForRefreshError
 from src.utils.external.lark_api import LarkClient
+from src.utils.loggers import logger
 
-router = APIRouter()
+router = APIRouter(route_class=AuditRoute)
+
+
+# demo bg_task1 and exceptions show
+def bg_task1():
+    logger.info("recive bg task...")
+    # a = 1 / 0
+    # logger.info(a)
 
 
 @router.post("/register", response_model=BaseResponse[int])
 async def register_new_user(
+    bg_task: BackgroundTasks,
     auth_user: schemas.AuthUserCreate,
     session: AsyncSession = Depends(get_session),
 ):
+    logger.info("recived new_role")
     result = await session.execute(select(User).where(User.email == auth_user.email))
     if result.scalars().first() is not None:
         return ERR_NUM_10001
@@ -45,6 +56,7 @@ async def register_new_user(
     await session.commit()
     return_info = ERR_NUM_0
     return_info.data = user.id
+    bg_task.add_task(bg_task1)
     return return_info
 
 
@@ -53,6 +65,7 @@ async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(get_session),
 ):
+    logger.info("Login start")
     result: AsyncResult = await session.execute(
         select(User).where(User.email == form_data.username)
     )

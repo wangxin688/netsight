@@ -1,3 +1,6 @@
+import sys
+import traceback
+
 from fastapi import status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
@@ -6,6 +9,7 @@ from fastapi.responses import JSONResponse
 
 from src.utils.error_code import (
     ERR_NUM_1,
+    ERR_NUM_500,
     ERR_NUM_4001,
     ERR_NUM_4002,
     ERR_NUM_4003,
@@ -84,6 +88,16 @@ async def assert_exception_handler(
     return JSONResponse(status_code=status.HTTP_200_OK, content=return_info)
 
 
+async def base_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    ex_type, _, ex_traceback = sys.exc_info()
+    trace_back = traceback.format_list(traceback.extract_tb(ex_traceback)[-1:])[-1]
+
+    logger.error("Exception type : %s " % ex_type.__name__)
+    logger.error("Stack trace : %s" % trace_back)
+    return_info = ERR_NUM_500
+    return_info.data = jsonable_encoder(str(exc))
+
+
 exception_handlers = [
     {
         "name": TokenNotProvidedError,
@@ -116,5 +130,9 @@ exception_handlers = [
     {
         "name": AssertionError,
         "handler": assert_exception_handler,
+    },
+    {
+        "name": Exception,
+        "handler": base_exception_handler,
     },
 ]

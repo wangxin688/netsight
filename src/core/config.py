@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = PYPROJECT_CONTENT["name"]
     VERSION: str = PYPROJECT_CONTENT["version"]
     DESCRIPTION: str = PYPROJECT_CONTENT["description"]
-    LOG_DIR: str = f"{PROJECT_DIR}/log/netsight.log"
+    LOG_DIR: str = f"{PROJECT_DIR}/log"
     MAJAR_VERSION: int = 1
     AUTH: Literal["Simple", "Lark"] = "Simple"
 

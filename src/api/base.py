@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import Generic, Optional, TypeVar
 
 import pydantic
-from fastapi.encoders import jsonable_encoder
 from pydantic.dataclasses import dataclass
 from pydantic.generics import GenericModel
 

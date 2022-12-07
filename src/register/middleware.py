@@ -19,10 +19,9 @@ class AuditRoute(APIRoute):
             response: Response = await original_route_handler(request)
             body_ = None
             try:
-                body_ = await request.body()
+                body_ = await request.json()
             except Exception:
                 pass
-            body_ = json.loads(body_) if body_ else None
             process_time = time.time() - start_time
             response.headers["X-Response-Time"] = str(process_time)
             data = {
