@@ -1,8 +1,7 @@
 from typing import Literal
 
 import httpx
-
-from src.utils.loggers import logger
+from loguru import logger
 
 
 async def async_http_req(

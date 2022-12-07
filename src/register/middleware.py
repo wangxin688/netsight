@@ -6,8 +6,7 @@ import aiofiles
 from asgi_correlation_id import correlation_id
 from fastapi import Request, Response
 from fastapi.routing import APIRoute
-
-from src.utils.loggers import logger
+from loguru import logger
 
 
 class AuditRoute(APIRoute):

@@ -1,11 +1,11 @@
 from collections.abc import AsyncGenerator
 
+from loguru import logger
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm.session import sessionmaker
 
 from src.core.config import settings
-from src.utils.loggers import logger
 
 async_sqlalchemy_database_uri = settings.SQLALCHEMY_DATABASE_URI
 

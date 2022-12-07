@@ -3,6 +3,7 @@ from typing import List
 from fastapi import Depends
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
+from loguru import logger
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncResult, AsyncSession
@@ -17,7 +18,6 @@ from src.api.ipam.models import ASN
 from src.api.netsight.models import Contact
 from src.register.middleware import AuditRoute
 from src.utils.error_code import ERR_NUM_0, ERR_NUM_4004, ERR_NUM_4009
-from src.utils.loggers import logger
 
 router = InferringRouter(route_class=AuditRoute)
 

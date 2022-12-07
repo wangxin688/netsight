@@ -6,6 +6,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
+from loguru import logger
 
 from src.utils.error_code import (
     ERR_NUM_1,
@@ -24,7 +25,6 @@ from src.utils.exceptions import (
     TokenInvalidForRefreshError,
     TokenNotProvidedError,
 )
-from src.utils.loggers import logger
 
 
 async def token_not_provided_handler(

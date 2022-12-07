@@ -6,6 +6,7 @@ import jwt
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.security import OAuth2PasswordRequestForm
+from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncResult, AsyncSession
 
@@ -25,7 +26,6 @@ from src.register.middleware import AuditRoute
 from src.utils.error_code import ERR_NUM_0, ERR_NUM_10001, ERR_NUM_10002, ERR_NUM_10003
 from src.utils.exceptions import TokenInvalidForRefreshError
 from src.utils.external.lark_api import LarkClient
-from src.utils.loggers import logger
 
 router = APIRouter(route_class=AuditRoute)
 
