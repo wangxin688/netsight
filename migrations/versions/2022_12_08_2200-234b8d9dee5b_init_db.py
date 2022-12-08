@@ -1,8 +1,8 @@
 """init db
 
-Revision ID: 7e3e56810d1e
+Revision ID: 234b8d9dee5b
 Revises: 
-Create Date: 2022-12-05 21:10:29.843040
+Create Date: 2022-12-08 22:00:22.072615
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '7e3e56810d1e'
+revision = '234b8d9dee5b'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -79,42 +79,30 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email')
     )
-    op.create_table('dcim_cable',
-    sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('name', sa.String(), nullable=False),
-    sa.Column('description', sa.String(), nullable=True),
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('cable_type', sa.String(), nullable=True),
-    sa.Column('status', sa.String(), nullable=False),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_dcim_cable_created_at'), 'dcim_cable', ['created_at'], unique=False)
-    op.create_index(op.f('ix_dcim_cable_name'), 'dcim_cable', ['name'], unique=True)
     op.create_table('dcim_device_role',
+    sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
-    sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('vm_role', sa.Boolean(), server_default=sa.text('false'), nullable=True),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
     )
-    op.create_index(op.f('ix_dcim_device_role_name'), 'dcim_device_role', ['name'], unique=True)
     op.create_table('dcim_manufacturer',
+    sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
     )
-    op.create_index(op.f('ix_dcim_manufacturer_name'), 'dcim_manufacturer', ['name'], unique=True)
     op.create_table('dcim_platform',
+    sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
-    sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('napalm_driver', sa.String(), nullable=True),
     sa.Column('napalm_args', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
     )
-    op.create_index(op.f('ix_dcim_platform_name'), 'dcim_platform', ['name'], unique=True)
     op.create_table('dcim_rack_role',
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
@@ -235,21 +223,18 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_circuit_created_at'), 'circuit', ['created_at'], unique=False)
     op.create_index(op.f('ix_circuit_name'), 'circuit', ['name'], unique=True)
-    op.create_table('dcim_cable_termination',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('cable_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['cable_id'], ['dcim_cable.id'], ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id')
-    )
     op.create_table('dcim_device_type',
     sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(), nullable=False),
+    sa.Column('description', sa.String(), nullable=True),
     sa.Column('manufacturer_id', sa.Integer(), nullable=True),
     sa.Column('model', sa.String(), nullable=False),
     sa.Column('u_height', sa.Float(), server_default='1.0', nullable=True),
     sa.Column('is_full_depth', sa.Boolean(), server_default=sa.text('true'), nullable=True),
     sa.ForeignKeyConstraint(['manufacturer_id'], ['dcim_manufacturer.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('manufacturer_id', 'model')
+    sa.UniqueConstraint('manufacturer_id', 'model'),
+    sa.UniqueConstraint('name')
     )
     op.create_table('dcim_site',
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
@@ -361,16 +346,6 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['contact_id'], ['contact.id'], ),
     sa.PrimaryKeyConstraint('circuit_id', 'contact_id')
     )
-    op.create_table('circuit_termination',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('term_side', postgresql.ENUM('Termination_Side_A', 'Termination_Side_Z', name='termination'), nullable=True),
-    sa.Column('circuit_id', sa.Integer(), nullable=True),
-    sa.Column('site_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['circuit_id'], ['circuit.id'], ondelete='SET NULL'),
-    sa.ForeignKeyConstraint(['site_id'], ['dcim_site.id'], ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('circuit_id', 'term_side')
-    )
     op.create_table('dcim_location',
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
@@ -382,6 +357,7 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['parent_id'], ['dcim_location.id'], ),
     sa.ForeignKeyConstraint(['site_id'], ['dcim_site.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name'),
     sa.UniqueConstraint('site_id', 'name')
     )
     op.create_index(op.f('ix_dcim_location_created_at'), 'dcim_location', ['created_at'], unique=False)
@@ -485,7 +461,6 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['site_id'], ['dcim_site.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('asset_tag'),
-    sa.UniqueConstraint('cluster_id', 'name'),
     sa.UniqueConstraint('rack_id', 'position'),
     sa.UniqueConstraint('serial_num')
     )
@@ -508,11 +483,27 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_dcim_interface_created_at'), 'dcim_interface', ['created_at'], unique=False)
+    op.create_table('circuit_termination',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('term_side', postgresql.ENUM('Termination_Side_A', 'Termination_Side_Z', name='termination'), nullable=True),
+    sa.Column('circuit_id', sa.Integer(), nullable=True),
+    sa.Column('connection_type', postgresql.ENUM('Site', 'ProviderNetwork', name='termination_connection_type'), nullable=True),
+    sa.Column('site_id', sa.Integer(), nullable=True),
+    sa.Column('device_id', sa.Integer(), nullable=True),
+    sa.Column('interface_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['circuit_id'], ['circuit.id'], ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['device_id'], ['dcim_device.id'], ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['interface_id'], ['dcim_interface.id'], ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['site_id'], ['dcim_site.id'], ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('circuit_id', 'term_side')
+    )
     # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_table('circuit_termination')
     op.drop_index(op.f('ix_dcim_interface_created_at'), table_name='dcim_interface')
     op.drop_table('dcim_interface')
     op.drop_index(op.f('ix_dcim_device_primary_ipv4'), table_name='dcim_device')
@@ -529,7 +520,6 @@ def downgrade() -> None:
     op.drop_table('dcim_site_asn_link')
     op.drop_index(op.f('ix_dcim_location_created_at'), table_name='dcim_location')
     op.drop_table('dcim_location')
-    op.drop_table('circuit_termination')
     op.drop_table('circuit_contact_link')
     op.drop_table('auth_user_group_link')
     op.drop_index(op.f('ix_server_name'), table_name='server')
@@ -546,7 +536,6 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_dcim_site_created_at'), table_name='dcim_site')
     op.drop_table('dcim_site')
     op.drop_table('dcim_device_type')
-    op.drop_table('dcim_cable_termination')
     op.drop_index(op.f('ix_circuit_name'), table_name='circuit')
     op.drop_index(op.f('ix_circuit_created_at'), table_name='circuit')
     op.drop_table('circuit')
@@ -570,15 +559,9 @@ def downgrade() -> None:
     op.drop_table('dcim_region')
     op.drop_index(op.f('ix_dcim_rack_role_name'), table_name='dcim_rack_role')
     op.drop_table('dcim_rack_role')
-    op.drop_index(op.f('ix_dcim_platform_name'), table_name='dcim_platform')
     op.drop_table('dcim_platform')
-    op.drop_index(op.f('ix_dcim_manufacturer_name'), table_name='dcim_manufacturer')
     op.drop_table('dcim_manufacturer')
-    op.drop_index(op.f('ix_dcim_device_role_name'), table_name='dcim_device_role')
     op.drop_table('dcim_device_role')
-    op.drop_index(op.f('ix_dcim_cable_name'), table_name='dcim_cable')
-    op.drop_index(op.f('ix_dcim_cable_created_at'), table_name='dcim_cable')
-    op.drop_table('dcim_cable')
     op.drop_table('contact')
     op.drop_index(op.f('ix_cluster_name'), table_name='cluster')
     op.drop_index(op.f('ix_cluster_created_at'), table_name='cluster')

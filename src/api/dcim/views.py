@@ -12,7 +12,7 @@ from sqlalchemy.orm import selectinload
 from src.api.auth.models import User
 from src.api.base import BaseListResponse, BaseResponse, CommonQueryParams
 from src.api.dcim import schemas
-from src.api.dcim.models import Location, Region, Site
+from src.api.dcim.models import DeviceType, Location, Manufacturer, Region, Site
 from src.api.deps import get_current_user, get_session
 from src.api.ipam.models import ASN
 from src.api.netsight.models import Contact
@@ -470,7 +470,47 @@ class ManufacturerCBV:
     async def create_manufacturer(
         self, manufacturer: schemas.ManufacturerCreate
     ) -> BaseResponse[int]:
-        pass
+        local_manufacturer: Manufacturer | None = (
+            (
+                await self.session.execute(
+                    select(Manufacturer).where(Manufacturer.name == manufacturer.name)
+                )
+            )
+            .scalars()
+            .first()
+        )
+        if local_manufacturer is not None:
+            return {
+                "code": ERR_NUM_4009.code,
+                "data": None,
+                "msg": f"Manufacturer with name {manufacturer.name} already exists",
+            }
+        new_manufacturer = Manufacturer(
+            **manufacturer.dict(exclude={"device_type_ids"})
+        )
+        await self.session.add(new_manufacturer)
+        await self.session.flush()
+        if manufacturer.device_type_ids:
+            device_types: List[DeviceType] | None = (
+                (
+                    await self.session.execute(
+                        select(DeviceType).where(
+                            DeviceType.id.in_(manufacturer.device_type_ids)
+                        )
+                    )
+                )
+                .scalar()
+                .all()
+            )
+            if len(device_types) > 0:
+                for device_type in device_types:
+                    if device_type.manufacturer_id != new_manufacturer.id:
+                        device_type.manufacturer_id = new_manufacturer.id
+                        await self.session.add(device_type)
+        await self.session.commit()
+        return_info = ERR_NUM_0
+        return_info.data = new_manufacturer.id
+        return return_info
 
     @router.get("/manufacturers/{id}")
     async def get_manufacturer(self, id: int) -> BaseResponse[schemas.Manufacturer]:
@@ -486,11 +526,69 @@ class ManufacturerCBV:
     async def update_manufacturer(
         self, id: int, manufacturer: schemas.ManufacturerUpdate
     ) -> BaseResponse[int]:
-        pass
+        local_manufacturer: Manufacturer | None = (
+            (
+                await self.session.execute(
+                    select(Manufacturer).where(Manufacturer.id == id)
+                )
+            )
+            .scalars()
+            .first()
+        )
+        if not local_manufacturer:
+            return {
+                "code": ERR_NUM_4004.code,
+                "data": None,
+                "msg": "Manufacturer #id not found",
+            }
+        await self.session.execute(
+            update(Manufacturer)
+            .where(manufacturer.id == id)
+            .values(**manufacturer.dict(exclude={"device_type_ids"}))
+            .execute_options(synchronize_session="fetch")
+        )
+        if manufacturer.device_type_ids is not None:
+            device_types: List[DeviceType] | None = (
+                (
+                    await self.session.execute(
+                        select(DeviceType).where(
+                            DeviceType.id.in_(manufacturer.device_type_ids)
+                        )
+                    )
+                )
+                .scalar()
+                .all()
+            )
+            if len(device_types) > 0:
+                for device_type in device_types:
+                    if device_type.manufacturer_id != id:
+                        device_type.manufacturer_id = id
+                        await self.session.add(device_type)
+        await self.session.commit()
+        return_info = ERR_NUM_0
+        return_info.data = id
+        return return_info
 
     @router.delete("/manufacturers/{id}")
     async def delete_manufacturer(self, id: int) -> BaseResponse[int]:
-        pass
+        local_manufacturer: Manufacturer | None = (
+            (
+                await self.session.execute(
+                    select(Manufacturer).where(Manufacturer.id == id)
+                )
+            )
+            .scalars()
+            .first()
+        )
+        if not local_manufacturer:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Manufacturer #{id} not found"
+            return return_info
+        await self.session.delete(local_manufacturer)
+        await self.session.commit()
+        return_info = ERR_NUM_0
+        return_info.data = id
+        return return_info
 
 
 @cbv(router)

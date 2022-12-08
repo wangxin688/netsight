@@ -75,30 +75,6 @@ class InterfaceBase(BaseModel):
     pass
 
 
-class Cable(BaseModel):
-    pass
-
-
-class CableBase(BaseModel):
-    pass
-
-
-class CablePath(BaseModel):
-    pass
-
-
-class CablePathBase(BaseModel):
-    pass
-
-
-class CableTermination(BaseModel):
-    pass
-
-
-class CableTerminationBase(BaseModel):
-    pass
-
-
 class RegionBase(BaseModel):
     id: int
     name: str
@@ -389,43 +365,4 @@ class InterfaceUpdate(BaseModel):
 
 @dataclass()
 class InterfaceQuery(BaseQuery):
-    pass
-
-
-class CableCreate(BaseModel):
-    pass
-
-
-class CableUpdate(BaseModel):
-    pass
-
-
-@dataclass()
-class CableQuery(BaseModel):
-    pass
-
-
-class CablePathCreate(BaseModel):
-    pass
-
-
-class CablePathUpdate(BaseModel):
-    pass
-
-
-@dataclass()
-class CablePathQuery(BaseQuery):
-    pass
-
-
-class CableTerminationCreate(BaseModel):
-    pass
-
-
-class CableTerminationUpdate(BaseModel):
-    pass
-
-
-@dataclass()
-class CableTerminationQuery(BaseQuery):
     pass

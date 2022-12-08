@@ -1,10 +1,9 @@
 import sqlalchemy.types as types
+from fastapi import Request
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-
-from src.register.context import correlation_id_filter
 
 
 class TimestampMixin:
@@ -54,7 +53,6 @@ class ImageColumn(types.TypeDecorator):
 
 class AuditLogMixin:
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=False)
 
     @declared_attr
     def created_by_fk(cls):
@@ -89,8 +87,8 @@ class AuditLogMixin:
         )
 
     @classmethod
-    def get_user_id(cls):
+    def get_user_id(cls, request: Request):
         try:
-            return correlation_id_filter.user.id
+            return request.state.current_user.id
         except Exception:
             return None

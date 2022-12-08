@@ -26,9 +26,6 @@ __all__ = (
     "DeviceType",
     "DeviceRole",
     "Interface",
-    "Cable",
-    "CablePath",
-    "CableTermination",
 )
 
 
@@ -134,7 +131,7 @@ class Location(Base, TimestampMixin):
     __tablename__ = "dcim_location"
     __table_args__ = (UniqueConstraint("site_id", "name"),)
     id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
+    name = Column(String, nullable=False, unique=True)
     status = Column(
         ENUM(
             "Active",
@@ -172,6 +169,7 @@ class Location(Base, TimestampMixin):
 
 
 class RackRole(Base, NameMixin):
+    # TODO: keep rack_role?
     __tablename__ = "dcim_rack_role"
     id = Column(Integer, primary_key=True)
 
@@ -215,9 +213,11 @@ class Rack(Base, NameMixin, TimestampMixin):
     comments = Column(Text, nullable=True)
 
 
-class Manufacturer(Base, NameMixin):
+class Manufacturer(Base):
     __tablename__ = "dcim_manufacturer"
     id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False, unique=True)
+    description = Column(String, nullable=True)
     dcim_device_type = relationship(
         "DeviceType",
         back_populates="dcim_manufacturer",
@@ -230,6 +230,8 @@ class DeviceType(Base):
     __tablename__ = "dcim_device_type"
     __table_args__ = (UniqueConstraint("manufacturer_id", "model"),)
     id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False, unique=True)
+    description = Column(String, nullable=True)
     manufacturer_id = Column(
         Integer, ForeignKey("dcim_manufacturer.id", ondelete="CASCADE")
     )
@@ -244,9 +246,11 @@ class DeviceType(Base):
     )
 
 
-class DeviceRole(Base, NameMixin):
-    id = Column(Integer, primary_key=True)
+class DeviceRole(Base):
     __tablename__ = "dcim_device_role"
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False, unique=True)
+    description = Column(String, nullable=True)
     vm_role = Column(Boolean, server_default=expression.false())
     dcim_device = relationship(
         "Device", back_populates="dcim_device_role", passive_deletes=True
@@ -256,9 +260,11 @@ class DeviceRole(Base, NameMixin):
     )
 
 
-class Platform(Base, NameMixin):
+class Platform(Base):
     __tablename__ = "dcim_platform"
     id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False, unique=True)
+    description = Column(String, nullable=True)
     napalm_driver = Column(String, nullable=True)
     napalm_args = Column(JSONB, nullable=True)
     dcim_device = relationship(
@@ -271,10 +277,7 @@ class Platform(Base, NameMixin):
 
 class Device(Base, TimestampMixin):
     __tablename__ = "dcim_device"
-    __table_args__ = (
-        UniqueConstraint("rack_id", "position"),
-        UniqueConstraint("cluster_id", "name"),
-    )
+    __table_args__ = (UniqueConstraint("rack_id", "position"),)
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, index=True)
     primary_ipv4 = Column(INET, nullable=False, index=True)
@@ -347,6 +350,9 @@ class Device(Base, TimestampMixin):
     department = relationship(
         "Department", back_populates="dcim_device", overlaps="=dcim_device"
     )
+    circuit_termination = relationship(
+        "CircuitTermination", back_populates="dcim_device", passive_deletes=True
+    )
 
 
 class Interface(Base, TimestampMixin):
@@ -365,29 +371,7 @@ class Interface(Base, TimestampMixin):
     dcim_device = relationship(
         "Device", back_populates="dcim_interface", overlaps="dcim_interface"
     )
+    circuit_termination = relationship(
+        "CircuitTermination", back_populates="dcim_interface", passive_deletes=True
+    )
     # TODO: add support for vrf, vlan, ip address linking
-
-
-class Cable(Base, NameMixin, TimestampMixin):
-    __tablename__ = "dcim_cable"
-    id = Column(Integer, primary_key=True)
-    cable_type = Column(String, nullable=True)
-    status = Column(String, nullable=False)
-    dcim_cable_termination = relationship(
-        "CableTermination", back_populates="dcim_cable", passive_deletes=True
-    )
-
-
-class CablePath:
-    pass
-
-
-class CableTermination(Base):
-    __tablename__ = "dcim_cable_termination"
-    id = Column(Integer, primary_key=True)
-    cable_id = Column(Integer, ForeignKey("dcim_cable.id", ondelete="CASCADE"))
-    dcim_cable = relationship(
-        "Cable",
-        back_populates="dcim_cable_termination",
-        overlaps="dcim_cable_termination",
-    )

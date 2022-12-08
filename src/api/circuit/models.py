@@ -91,9 +91,31 @@ class CircuitTermination(Base):
         back_populates="circuit_termination",
         overlaps="circuit_termination",
     )
+    connection_type = Column(
+        ENUM(
+            "Site",
+            "ProviderNetwork",
+            name="termination_connection_type",
+            create_type=False,
+        )
+    )
     site_id = Column(Integer, ForeignKey("dcim_site.id", ondelete="CASCADE"))
     dcim_site = relationship(
         "Site", back_populates="circuit_termination", overlaps="circuit_termination"
+    )
+    device_id = Column(
+        Integer, ForeignKey("dcim_device.id", ondelete="SET NULL"), nullable=True
+    )
+    dcim_device = relationship(
+        "Device", back_populates="circuit_termination", overlaps="circuit_termination"
+    )
+    interface_id = Column(
+        Integer, ForeignKey("dcim_interface.id", ondelete="SET NULL"), nullable=True
+    )
+    dcim_interface = relationship(
+        "Interface",
+        back_populates="circuit_termination",
+        overlaps="circuit_termination",
     )
 
 

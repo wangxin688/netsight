@@ -7,6 +7,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from loguru import logger
+from pydantic import ValidationError
 
 from src.utils.error_code import (
     ERR_NUM_1,
@@ -70,14 +71,28 @@ async def request_validation_exception_handler(
     request: Request, exc: RequestValidationError
 ) -> JSONResponse:
     logger.error("Request validation error", exc)
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={
-            "code": 1,
-            "data": jsonable_encoder(exc.errors()),
-            "msg": "validation error, please check input",
-        },
-    )
+    ex_type, _, ex_traceback = sys.exc_info()
+    trace_back = traceback.format_list(traceback.extract_tb(ex_traceback)[-1:])[-1]
+    logger.error("Exception type : %s " % ex_type.__name__)
+    logger.error("Stack trace : %s" % trace_back)
+    return_info = ERR_NUM_1
+    return_info.data = jsonable_encoder(str(exc))
+    return JSONResponse(status_code=status.HTTP_200_OK, content=return_info)
+
+
+async def validation_exception_handler(
+    request: Request, exc: ValidationError
+) -> JSONResponse:
+    logger.error("Data validation error with pydantic", exc)
+    ex_type, _, ex_traceback = sys.exc_info()
+    trace_back = traceback.format_list(traceback.extract_tb(ex_traceback)[-1:])[-1]
+
+    logger.error("Exception type : %s " % ex_type.__name__)
+    logger.error("Stack trace : %s" % trace_back)
+
+    return_info = ERR_NUM_1
+    return_info.data = jsonable_encoder(str(exc))
+    return JSONResponse(status_code=status.HTTP_200_OK, content=return_info)
 
 
 async def assert_exception_handler(
@@ -96,6 +111,7 @@ async def base_exception_handler(request: Request, exc: Exception) -> JSONRespon
     logger.error("Stack trace : %s" % trace_back)
     return_info = ERR_NUM_500
     return_info.data = jsonable_encoder(str(exc))
+    return JSONResponse(status_code=status.HTTP_200_OK, content=return_info)
 
 
 exception_handlers = [
@@ -122,6 +138,10 @@ exception_handlers = [
     {
         "name": ResourceNotFoundError,
         "handler": resource_not_found_handler,
+    },
+    {
+        "name": ValidationError,
+        "handler": validation_exception_handler,
     },
     {
         "name": RequestValidationError,
