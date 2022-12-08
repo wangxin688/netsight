@@ -12,7 +12,14 @@ from sqlalchemy.orm import selectinload
 from src.api.auth.models import User
 from src.api.base import BaseListResponse, BaseResponse, CommonQueryParams
 from src.api.dcim import schemas
-from src.api.dcim.models import DeviceType, Location, Manufacturer, Region, Site
+from src.api.dcim.models import (
+    DeviceRole,
+    DeviceType,
+    Location,
+    Manufacturer,
+    Region,
+    Site,
+)
 from src.api.deps import get_current_user, get_session
 from src.api.ipam.models import ASN
 from src.api.netsight.models import Contact
@@ -38,7 +45,7 @@ class RegionCBV:
             return {
                 "code": ERR_NUM_4009.code,
                 "data": None,
-                "msg": f"Region with name: {region.name} already exists",
+                "msg": f"Region with name: `{region.name}` already exists in the same level",
             }
         finally:
             return_info = ERR_NUM_0
@@ -117,6 +124,7 @@ class RegionCBV:
 
     @router.delete("/regions/{id}")
     async def delete_region(self, id: int) -> BaseResponse[int]:
+        # TODO: BUYAOTOULAN!!!!!
         try:
 
             stmt = delete(Region).where(Region.id == id)
@@ -132,6 +140,35 @@ class RegionCBV:
                 "data": None,
                 "msg": f"Region #{id} not existed",
             }
+
+    @router.post("/regions/bulk-operate")
+    async def bulk_region_operations(
+        self, region: schemas.RegionBulkOperate
+    ) -> BaseResponse[List[int]]:
+        if region.action == "update":
+            await self.session.execute(
+                update(Region)
+                .where(Region.id.in_(region.region_ids))
+                .values(region.dict(exclude={"region_ids"}, exclude_none=True))
+                .execute_options(synchronize_session="fetch")
+            )
+        elif region.action == "delete":
+            regions: List[Region] = (
+                (
+                    await self.session.execute(
+                        select(Region).where(Region.id.in_(region.region_ids))
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            if len(regions) > 0:
+                for _region in regions:
+                    await self.session.delete(_region)
+        await self.session.commit()
+        return_info = ERR_NUM_0
+        return_info.data = region.region_ids
+        return return_info
 
 
 @cbv(router)
@@ -600,7 +637,40 @@ class DeviceTypeCBV:
     async def create_device_type(
         self, device_type: schemas.DeviceTypeCreate
     ) -> BaseResponse[int]:
-        pass
+        local_deive_type: DeviceType | None = (
+            await self.session.execute(
+                select(DeviceType).where(DeviceType.name == device_type.name)
+            )
+            .scalars()
+            .first()
+        )
+        if local_deive_type is not None:
+            return_info = ERR_NUM_4009
+            return_info.msg = (
+                f"Device Type with name `{device_type.name}` already existed"
+            )
+            return return_info
+        if device_type.manufacturer_id is not None:
+            manufacture: Manufacturer | None = (
+                await self.session.execute(
+                    select(Manufacturer).where(
+                        Manufacturer.id == device_type.manufacturer_id
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            if not manufacture:
+                return_info = ERR_NUM_4004
+                return_info.msg = f"Manufacturer #{id} not found"
+                return return_info
+        new_device_type = DeviceType(**device_type.dict(exclude_none=True))
+        await self.session.add(new_device_type)
+        await self.session.commit()
+        # await self.session.flush()
+        return_info = ERR_NUM_0
+        return_info.data = new_device_type.id
+        return return_info
 
     @router.get("/device-types/{id}")
     async def get_device_type(self, id: int) -> BaseResponse[schemas.DeviceType]:
@@ -616,11 +686,57 @@ class DeviceTypeCBV:
     async def update_device_type(
         self, device_type: schemas.DeviceTypeUpdate
     ) -> BaseResponse[int]:
-        pass
+        local_deive_type: DeviceType | None = (
+            await self.session.execute(select(DeviceType).where(DeviceType.id == id))
+            .scalars()
+            .first()
+        )
+        if not local_deive_type:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Device Type #{id} not found"
+            return return_info
+        if device_type.manufacturer_id:
+            manufacture: Manufacturer | None = (
+                await self.session.execute(
+                    select(Manufacturer).where(
+                        Manufacturer.id == device_type.manufacturer_id
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            if not manufacture:
+                return_info = ERR_NUM_4004
+                return_info.msg = f"Manufacturer #{id} not found"
+                return return_info
+        await self.session.execute(
+            update(DeviceType)
+            .where(DeviceType.id == id)
+            .values(**device_type.dict(exclude_none=True))
+            .execute_options(synchronize_session="fetch")
+        )
+        await self.session.commit()
+        return_info = ERR_NUM_0
+        return_info.data = id
+        return return_info
 
     @router.delete("/device-types/{id}")
     async def delete_device_type(self, id: int) -> BaseResponse[int]:
-        pass
+        local_deive_type: DeviceType | None = (
+            await self.session.execute(select(DeviceType).where(DeviceType.id == id))
+            .scalars()
+            .first()
+        )
+        if not local_deive_type:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Device Type #{id} not found"
+            return return_info
+
+        await self.session.delete(local_deive_type)
+        await self.session.commit()
+        return_info = ERR_NUM_0
+        return_info.data = id
+        return return_info
 
 
 @cbv(router)
@@ -632,7 +748,27 @@ class DeviceRoleCBV:
     async def create_device_role(
         self, device_role: schemas.DeviceRoleCreate
     ) -> BaseResponse[int]:
-        pass
+        local_device_role: DeviceRole | None = (
+            (
+                await self.session.execute(
+                    select(DeviceRole).where(DeviceRole.name == device_role.name)
+                )
+            )
+            .scalars()
+            .first()
+        )
+        if local_device_role is not None:
+            return_info = ERR_NUM_4009
+            return_info.msg = (
+                f"Device role with name: `{device_role.name}` already exsits"
+            )
+            return return_info
+        new_device_role = DeviceRole(**device_role.dict(exclude_none=True))
+        await self.session.add(new_device_role)
+        await self.session.commit(new_device_role)
+        return_info = ERR_NUM_0
+        return_info.data = new_device_role.id
+        return return_info
 
     @router.get("/device-roles/{id}")
     async def get_device_role(self, id: int) -> BaseResponse[schemas.DeviceRole]:
@@ -648,11 +784,50 @@ class DeviceRoleCBV:
     async def update_device_role(
         self, device_role: schemas.DeviceRoleUpdate
     ) -> BaseResponse[int]:
-        pass
+        local_device_role: DeviceRole | None = (
+            (await self.session.execute(select(DeviceRole).where(DeviceRole.id == id)))
+            .scalars()
+            .first()
+        )
+        if local_device_role is None:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Device role #{id} not found"
+            return return_info
+        try:
+            await self.session.execute(
+                update(DeviceRole)
+                .where(DeviceRole.id == id)
+                .values(**device_role.dict(exclude_none=True))
+                .execute_options(synchronize_session="fetch")
+            )
+            await self.session.commit()
+        except SQLAlchemyError as e:
+            logger.error(e)
+            return_info = ERR_NUM_4009
+            return_info.msg = (
+                f"Device Role with name `{device_role.name}` already exists"
+            )
+            return return_info
+        return_info = ERR_NUM_0
+        return_info.data = id
+        return return_info
 
     @router.delete("/device-roles/{id}")
     async def delete_device_role(self, id: int) -> BaseResponse[int]:
-        pass
+        local_device_role: DeviceRole | None = (
+            (await self.session.execute(select(DeviceRole).where(DeviceRole.id == id)))
+            .scalars()
+            .first()
+        )
+        if local_device_role is None:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Device role #{id} not found"
+            return return_info
+        await self.session.delete(local_device_role)
+        await self.session.commit()
+        return_info = ERR_NUM_0
+        return_info.data = id
+        return return_info
 
 
 @cbv(router)

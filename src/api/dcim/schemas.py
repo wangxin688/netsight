@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Literal
 
 from fastapi import Query
 from pydantic import Field, validator
@@ -146,6 +146,13 @@ class RegionUpdate(BaseModel):
 class RegionQuery(BaseQuery):
     id: List[int] = Query(default=None)
     name: List[str] | None = Query(default=None)
+
+
+class RegionBulkOperate(BaseModel):
+    action: Literal["update", "delete"]
+    region_ids: List[int]
+    description: str | None
+    parent_id: int | None
 
 
 class SiteCreate(BaseModel):
