@@ -57,7 +57,7 @@ async def register_new_user(
     return_info = ERR_NUM_0
     return_info.data = user.id
     bg_task.add_task(bg_task1)
-    return return_info
+    return return_info.dict()
 
 
 @router.post("/login", response_model=BaseResponse[schemas.AccessToken])
@@ -74,13 +74,13 @@ async def login(
         return ERR_NUM_10002.dict()
     if not verify_password(form_data.password, user.hashed_password):
         return ERR_NUM_10003.dict()
-    return_info = ERR_NUM_0.dict()
+    return_info = ERR_NUM_0
     token = generate_access_token_response(str(user.id))
-    return_info["data"] = token
+    return_info.data = token
     user.updated_at = datetime.now()
     session.add(user)
     await session.commit()
-    return return_info
+    return return_info.dict()
 
 
 @router.post("/refresh-token", response_model=BaseResponse[schemas.AccessToken])

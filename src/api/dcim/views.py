@@ -4,8 +4,8 @@ from fastapi import Depends
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 from loguru import logger
-from sqlalchemy import delete, func, select, update
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import func, select, update
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncResult, AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -36,32 +36,37 @@ class RegionCBV:
 
     @router.post("/regions")
     async def create_region(self, region: schemas.RegionCreate) -> BaseResponse[int]:
+        new_region = Region(**region.dict(exclude_none=True))
+        self.session.add(new_region)
         try:
-            new_region = Region(**region.dict(exclude_none=True))
-            self.session.add(new_region)
             await self.session.commit()
-            await self.session.flush()
-        except SQLAlchemyError:
+        except IntegrityError as e:
+            logger.error(e)
+            await self.session.rollback()
             return {
                 "code": ERR_NUM_4009.code,
                 "data": None,
                 "msg": f"Region with name: `{region.name}` already exists in the same level",
             }
-        finally:
-            return_info = ERR_NUM_0
-            return_info.data = new_region.id
-            return return_info
+        await self.session.flush()
+        return_info = ERR_NUM_0
+        return_info.data = new_region.id
+        return return_info.dict()
 
     @router.get("/regions/{id}")
     async def get_region(self, id: int) -> BaseResponse[schemas.Region]:
-        results = (
+        local_region = (
             (await self.session.execute(select(Region).where(Region.id == id)))
             .scalars()
             .first()
         )
+        if local_region is None:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Region #{id} not found"
+            return return_info.dict()
         return_info = ERR_NUM_0
-        return_info.data = results
-        return return_info
+        return_info.data = local_region
+        return return_info.dict()
 
     @router.get("/regions")
     async def get_regions(
@@ -89,57 +94,60 @@ class RegionCBV:
         count = (await self.session.execute(count_stmt)).scalar()
         return_info = ERR_NUM_0
         return_info.data = {"count": count, "results": results}
-        return return_info
+        return return_info.dict()
 
     @router.put("/regions/{id}")
     async def update_region(
         self, id: int, region: schemas.RegionUpdate
     ) -> BaseResponse[int]:
-        local_result: Region | None = (
+        local_region: Region | None = (
             (await self.session.execute(select(Region).where(Region.id == id)))
             .scalars()
             .first()
         )
-        if not local_result:
-            return ERR_NUM_4004
+        if not local_region:
+            return_info = ERR_NUM_4004
+            return_info.data = local_region
+            return return_info.dict()
+        stmt = (
+            update(Region)
+            .where(Region.id == id)
+            .values(**region.dict(exclude_none=True))
+            .execute_options(synchronize_session="fetch")
+        )
+        await self.session.execute(stmt)
         try:
-            stmt = (
-                update(Region)
-                .where(Region.id == id)
-                .values(**region.dict(exclude_none=True))
-                .execute_options(synchronize_session="fetch")
-            )
-            await self.session.execute(stmt)
             await self.session.commit()
-            return_info = ERR_NUM_0
-            return_info.data = id
-            return return_info
-        except SQLAlchemyError as e:
+        except IntegrityError as e:
             logger.error(e)
+            await self.session.rollback()
             return {
                 "code": ERR_NUM_4009.code,
                 "data": None,
-                "msg": f"Region with name '{region.name}' already exists",
+                "msg": f"Region with name '{region.name}' already exists in the same level",
             }
+        return_info = ERR_NUM_0
+        return_info.data = id
+        return return_info.dict()
 
     @router.delete("/regions/{id}")
     async def delete_region(self, id: int) -> BaseResponse[int]:
-        # TODO: BUYAOTOULAN!!!!!
-        try:
-
-            stmt = delete(Region).where(Region.id == id)
-            await self.session.execute(stmt)
-            await self.session.commit()
-            return_info = ERR_NUM_0
-            return_info.data = id
-            return return_info
-        except SQLAlchemyError as e:
-            logger.error(e)
+        local_region: Region | None = (
+            (await self.session.execute(select(Region).where(Region.id == id)))
+            .scalars()
+            .first()
+        )
+        if local_region is None:
             return {
                 "code": ERR_NUM_4004.code,
                 "data": None,
-                "msg": f"Region #{id} not existed",
+                "msg": f"Region #{id} not found",
             }
+        await self.session.delete(local_region)
+        await self.session.commit()
+        return_info = ERR_NUM_0
+        return_info.data = id
+        return return_info
 
     @router.post("/regions/bulk-operate")
     async def bulk_region_operations(
@@ -197,17 +205,18 @@ class SiteCBV:
                 if len(contacts) > 0:
                     for contact in contacts:
                         new_site.contact.append(contact)
-            await self.session.commit()
-            return_info = ERR_NUM_0
-            return_info.data = new_site.id
-            return return_info
-        except SQLAlchemyError as e:
+        except IntegrityError as e:
             logger.error(e)
+            await self.session.rollback()
             return {
                 "code": ERR_NUM_4009.code,
                 "data": None,
                 "msg": f"Site with `{site.name}` or `{site.site_code}` already exists",
             }
+        await self.session.commit()
+        return_info = ERR_NUM_0
+        return_info.data = new_site.id
+        return return_info
 
     @router.get("/sites/{id}")
     async def get_site(
@@ -260,14 +269,6 @@ class SiteCBV:
                 "data": None,
                 "msg": f"Site #{id} not found",
             }
-        update_data = site.dict(exclude={"ipam_asn_ids", "contact_ids"})
-        if update_data:
-            await self.session.execute(
-                update(Site)
-                .where(Site.id == id)
-                .values(**update_data)
-                .execute_options(synchronize_session="fetch")
-            )
         if site.ipam_asn_ids:
             asns: List[ASN] | None = local_site.ipam_asn
             asn_ids = [asn.id for asn in asns]
@@ -307,6 +308,21 @@ class SiteCBV:
                     )
                     if _contact:
                         local_site.contact.append(contact)
+        update_data = site.dict(exclude={"ipam_asn_ids", "contact_ids"})
+        if update_data:
+            try:
+                await self.session.execute(
+                    update(Site)
+                    .where(Site.id == id)
+                    .values(**update_data)
+                    .execute_options(synchronize_session="fetch")
+                )
+            except IntegrityError as e:
+                logger.error(e)
+                await self.session.rollback()
+                return_info = ERR_NUM_4009
+                return_info.msg = f"Site with name `{site.name}` or site_code `{site.site_code}` already exists"
+                return return_info.dict()
         await self.session.commit()
         return_info = ERR_NUM_0
         return_info.data = id
@@ -526,7 +542,6 @@ class ManufacturerCBV:
             **manufacturer.dict(exclude={"device_type_ids"})
         )
         await self.session.add(new_manufacturer)
-        await self.session.flush()
         if manufacturer.device_type_ids:
             device_types: List[DeviceType] | None = (
                 (
@@ -667,10 +682,9 @@ class DeviceTypeCBV:
         new_device_type = DeviceType(**device_type.dict(exclude_none=True))
         await self.session.add(new_device_type)
         await self.session.commit()
-        # await self.session.flush()
         return_info = ERR_NUM_0
         return_info.data = new_device_type.id
-        return return_info
+        return return_info.dict()
 
     @router.get("/device-types/{id}")
     async def get_device_type(self, id: int) -> BaseResponse[schemas.DeviceType]:
@@ -694,7 +708,7 @@ class DeviceTypeCBV:
         if not local_deive_type:
             return_info = ERR_NUM_4004
             return_info.msg = f"Device Type #{id} not found"
-            return return_info
+            return return_info.dict()
         if device_type.manufacturer_id:
             manufacture: Manufacturer | None = (
                 await self.session.execute(
@@ -708,7 +722,7 @@ class DeviceTypeCBV:
             if not manufacture:
                 return_info = ERR_NUM_4004
                 return_info.msg = f"Manufacturer #{id} not found"
-                return return_info
+                return return_info.dict()
         await self.session.execute(
             update(DeviceType)
             .where(DeviceType.id == id)
@@ -718,7 +732,7 @@ class DeviceTypeCBV:
         await self.session.commit()
         return_info = ERR_NUM_0
         return_info.data = id
-        return return_info
+        return return_info.dict()
 
     @router.delete("/device-types/{id}")
     async def delete_device_type(self, id: int) -> BaseResponse[int]:
@@ -730,13 +744,13 @@ class DeviceTypeCBV:
         if not local_deive_type:
             return_info = ERR_NUM_4004
             return_info.msg = f"Device Type #{id} not found"
-            return return_info
+            return return_info.dict()
 
         await self.session.delete(local_deive_type)
         await self.session.commit()
         return_info = ERR_NUM_0
         return_info.data = id
-        return return_info
+        return return_info.dict()
 
 
 @cbv(router)
@@ -762,13 +776,13 @@ class DeviceRoleCBV:
             return_info.msg = (
                 f"Device role with name: `{device_role.name}` already exsits"
             )
-            return return_info
+            return return_info.dict()
         new_device_role = DeviceRole(**device_role.dict(exclude_none=True))
         await self.session.add(new_device_role)
         await self.session.commit(new_device_role)
         return_info = ERR_NUM_0
         return_info.data = new_device_role.id
-        return return_info
+        return return_info.dict()
 
     @router.get("/device-roles/{id}")
     async def get_device_role(self, id: int) -> BaseResponse[schemas.DeviceRole]:
@@ -792,7 +806,7 @@ class DeviceRoleCBV:
         if local_device_role is None:
             return_info = ERR_NUM_4004
             return_info.msg = f"Device role #{id} not found"
-            return return_info
+            return return_info.dict()
         try:
             await self.session.execute(
                 update(DeviceRole)
@@ -807,7 +821,7 @@ class DeviceRoleCBV:
             return_info.msg = (
                 f"Device Role with name `{device_role.name}` already exists"
             )
-            return return_info
+            return return_info.dict()
         return_info = ERR_NUM_0
         return_info.data = id
         return return_info
@@ -822,12 +836,12 @@ class DeviceRoleCBV:
         if local_device_role is None:
             return_info = ERR_NUM_4004
             return_info.msg = f"Device role #{id} not found"
-            return return_info
+            return return_info.dict()
         await self.session.delete(local_device_role)
         await self.session.commit()
         return_info = ERR_NUM_0
         return_info.data = id
-        return return_info
+        return return_info.dict()
 
 
 @cbv(router)

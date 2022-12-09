@@ -77,7 +77,7 @@ async def request_validation_exception_handler(
     logger.error("Stack trace : %s" % trace_back)
     return_info = ERR_NUM_1
     return_info.data = jsonable_encoder(str(exc))
-    return JSONResponse(status_code=status.HTTP_200_OK, content=return_info)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=return_info.dict())
 
 
 async def validation_exception_handler(
@@ -92,7 +92,7 @@ async def validation_exception_handler(
 
     return_info = ERR_NUM_1
     return_info.data = jsonable_encoder(str(exc))
-    return JSONResponse(status_code=status.HTTP_200_OK, content=return_info)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=return_info.dict())
 
 
 async def assert_exception_handler(
@@ -111,7 +111,7 @@ async def base_exception_handler(request: Request, exc: Exception) -> JSONRespon
     logger.error("Stack trace : %s" % trace_back)
     return_info = ERR_NUM_500
     return_info.data = jsonable_encoder(str(exc))
-    return JSONResponse(status_code=status.HTTP_200_OK, content=return_info)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=return_info.dict())
 
 
 exception_handlers = [
