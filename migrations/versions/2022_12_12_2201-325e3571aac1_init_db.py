@@ -1,8 +1,8 @@
 """init db
 
-Revision ID: 234b8d9dee5b
+Revision ID: 325e3571aac1
 Revises: 
-Create Date: 2022-12-08 22:00:22.072615
+Create Date: 2022-12-12 22:01:47.484995
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '234b8d9dee5b'
+revision = '325e3571aac1'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -54,12 +54,12 @@ def upgrade() -> None:
     sa.UniqueConstraint('name')
     )
     op.create_table('circuit_type',
+    sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
     )
-    op.create_index(op.f('ix_circuit_type_name'), 'circuit_type', ['name'], unique=True)
     op.create_table('cluster',
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
@@ -104,12 +104,12 @@ def upgrade() -> None:
     sa.UniqueConstraint('name')
     )
     op.create_table('dcim_rack_role',
+    sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
     )
-    op.create_index(op.f('ix_dcim_rack_role_name'), 'dcim_rack_role', ['name'], unique=True)
     op.create_table('dcim_region',
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
@@ -243,7 +243,7 @@ def upgrade() -> None:
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('site_code', sa.String(), nullable=False),
-    sa.Column('status', postgresql.ENUM('Active', 'Retired', 'Planning', 'Staged', 'Canceled', 'Validated', name='site_status'), nullable=True),
+    sa.Column('status', postgresql.ENUM('Active', 'Retired', 'Planning', 'Staged', 'Canceled', 'Validated', name='site_status'), nullable=False),
     sa.Column('region_id', sa.Integer(), nullable=True),
     sa.Column('facility', sa.String(), nullable=True),
     sa.Column('time_zone', sa.String(), nullable=True),
@@ -263,7 +263,7 @@ def upgrade() -> None:
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('prefix', postgresql.CIDR(), nullable=False),
+    sa.Column('block', postgresql.CIDR(), nullable=False),
     sa.Column('rir_id', sa.Integer(), nullable=True),
     sa.Column('description', sa.String(), nullable=True),
     sa.ForeignKeyConstraint(['rir_id'], ['ipam_rir.id'], ondelete='SET NULL'),
@@ -277,6 +277,7 @@ def upgrade() -> None:
     sa.Column('status', postgresql.ENUM('Active', 'Reserved', 'Deprecated', 'DHCP', 'Available', name='ip_status'), nullable=False),
     sa.Column('dns_name', sa.String(), nullable=True),
     sa.Column('description', sa.String(), nullable=True),
+    sa.Column('owners', sa.String(), nullable=True),
     sa.ForeignKeyConstraint(['vrf_id'], ['ipam_vrf.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -351,7 +352,8 @@ def upgrade() -> None:
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('status', postgresql.ENUM('Active', 'Retired', 'Planning', 'Staged', 'Canceled', 'Validated', name='location_status'), nullable=True),
+    sa.Column('description', sa.String(), nullable=True),
+    sa.Column('status', postgresql.ENUM('Active', 'Retired', 'Planning', 'Staged', 'Canceled', 'Validated', name='location_status'), nullable=False),
     sa.Column('site_id', sa.Integer(), nullable=True),
     sa.Column('parent_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['parent_id'], ['dcim_location.id'], ),
@@ -384,6 +386,7 @@ def upgrade() -> None:
     sa.Column('site_id', sa.Integer(), nullable=True),
     sa.Column('role_id', sa.Integer(), nullable=True),
     sa.Column('is_pool', sa.Boolean(), server_default=sa.text('false'), nullable=True),
+    sa.Column('is_full', sa.Boolean(), server_default=sa.text('false'), nullable=True),
     sa.ForeignKeyConstraint(['role_id'], ['ipam_role.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['site_id'], ['dcim_site.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
@@ -413,10 +416,10 @@ def upgrade() -> None:
     sa.Column('facility_id', sa.String(), nullable=True),
     sa.Column('site_id', sa.Integer(), nullable=True),
     sa.Column('location_id', sa.Integer(), nullable=True),
-    sa.Column('status', sa.String(), nullable=False),
+    sa.Column('status', postgresql.ENUM('Active', 'Offline', 'Staged', 'Planning', name='rack_status'), nullable=False),
     sa.Column('serial_num', sa.String(), nullable=True),
     sa.Column('asset_tag', sa.String(), nullable=True),
-    sa.Column('rack_type', sa.String(), nullable=True),
+    sa.Column('rack_role_id', sa.Integer(), nullable=True),
     sa.Column('width', sa.Integer(), nullable=False, comment='Rail-to-rail width'),
     sa.Column('u_height', sa.Integer(), nullable=False, comment='Height in rack units'),
     sa.Column('desc_units', sa.Boolean(), server_default=sa.text('false'), nullable=True, comment='Units are numbered top-to-bottom'),
@@ -425,6 +428,7 @@ def upgrade() -> None:
     sa.Column('outer_unit', sa.String(), nullable=True),
     sa.Column('comments', sa.Text(), nullable=True),
     sa.ForeignKeyConstraint(['location_id'], ['dcim_location.id'], ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['rack_role_id'], ['dcim_rack_role.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['site_id'], ['dcim_site.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('asset_tag')
@@ -557,7 +561,6 @@ def downgrade() -> None:
     op.drop_table('department')
     op.drop_index(op.f('ix_dcim_region_name'), table_name='dcim_region')
     op.drop_table('dcim_region')
-    op.drop_index(op.f('ix_dcim_rack_role_name'), table_name='dcim_rack_role')
     op.drop_table('dcim_rack_role')
     op.drop_table('dcim_platform')
     op.drop_table('dcim_manufacturer')
@@ -566,7 +569,6 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_cluster_name'), table_name='cluster')
     op.drop_index(op.f('ix_cluster_created_at'), table_name='cluster')
     op.drop_table('cluster')
-    op.drop_index(op.f('ix_circuit_type_name'), table_name='circuit_type')
     op.drop_table('circuit_type')
     op.drop_table('circuit_provider')
     op.drop_table('auth_role')

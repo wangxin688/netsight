@@ -562,11 +562,25 @@ class ManufacturerCBV:
         await self.session.commit()
         return_info = ERR_NUM_0
         return_info.data = new_manufacturer.id
-        return return_info
+        return return_info.dict()
 
     @router.get("/manufacturers/{id}")
     async def get_manufacturer(self, id: int) -> BaseResponse[schemas.Manufacturer]:
-        pass
+        local_manufacturer: Manufacturer | None = (
+            (
+                await self.session.execute(
+                    select(Manufacturer).where(Manufacturer.id == id)
+                )
+            )
+            .scalars()
+            .first()
+        )
+        if not local_manufacturer:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Manufacturer #{id} not found"
+        return_info = ERR_NUM_0
+        return_info.data = local_manufacturer
+        return return_info.dict()
 
     @router.get("/manufacturers")
     async def get_manufacturers(

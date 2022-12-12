@@ -606,6 +606,7 @@ LOCATION_STATUS = Literal[
     "Active", "Retired", "Planning", "Staged", "Canceled", "Validated"
 ]
 DEVICE_STATUS = Literal["Active", "Offline", "Staged", "Planning"]
+RACK_STATUS = Literal["Active", "Offline", "Staged", "Planning"]
 GENERAL_STATUS = Literal["Enabled", "Disabled"]
 
 # every classification represents a unique network architecture

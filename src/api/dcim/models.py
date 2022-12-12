@@ -69,7 +69,8 @@ class Site(Base, NameMixin, TimestampMixin):
             "Validated",
             name="site_status",
             create_type=False,
-        )
+        ),
+        nullable=False,
     )
     region_id = Column(
         Integer, ForeignKey("dcim_region.id", ondelete="SET NULL"), nullable=True
@@ -132,6 +133,7 @@ class Location(Base, TimestampMixin):
     __table_args__ = (UniqueConstraint("site_id", "name"),)
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, unique=True)
+    description = Column(String, nullable=True)
     status = Column(
         ENUM(
             "Active",
@@ -142,7 +144,8 @@ class Location(Base, TimestampMixin):
             "Validated",
             name="location_status",
             create_type=False,
-        )
+        ),
+        nullable=False,
     )
     site_id = Column(Integer, ForeignKey("dcim_site.id", ondelete="CASCADE"))
     dcim_site = relationship(
@@ -168,10 +171,14 @@ class Location(Base, TimestampMixin):
     )
 
 
-class RackRole(Base, NameMixin):
-    # TODO: keep rack_role?
+class RackRole(Base):
     __tablename__ = "dcim_rack_role"
     id = Column(Integer, primary_key=True)
+    name = Column(String, unique=True, nullable=False)
+    description = Column(String, nullable=True)
+    dcim_rack = relationship(
+        "Rack", back_populates="dcim_rack_role", passive_deletes=True
+    )
 
 
 class Rack(Base, NameMixin, TimestampMixin):
@@ -191,10 +198,25 @@ class Rack(Base, NameMixin, TimestampMixin):
         back_populates="dcim_rack",
         passive_deletes=True,
     )
-    status = Column(String, nullable=False)
+    status = Column(
+        ENUM(
+            "Active",
+            "Offline",
+            "Staged",
+            "Planning",
+            name="rack_status",
+            create_type=False,
+        ),
+        nullable=False,
+    )
     serial_num = Column(String, nullable=True)
     asset_tag = Column(String, nullable=True, unique=True)
-    rack_type = Column(String, nullable=True)
+    rack_role_id = Column(
+        Integer, ForeignKey("dcim_rack_role.id", ondelete="SET NULL"), nullable=True
+    )
+    dcim_rack_role = relationship(
+        "RackRole", back_populates="dcim_rack", passive_deletes=True
+    )
     # TODO: pydantic Rack width and height validator
     width = Column(Integer, nullable=False, comment="Rail-to-rail width")
     u_height = Column(Integer, nullable=False, comment="Height in rack units")

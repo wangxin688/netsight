@@ -41,7 +41,7 @@ class RIR(Base, TimestampMixin):
 class Block(Base, TimestampMixin):
     __tablename__ = "ipam_block"
     id = Column(Integer, primary_key=True)
-    prefix = Column(CIDR, nullable=False)
+    block = Column(CIDR, nullable=False)
     rir_id = Column(
         Integer, ForeignKey("ipam_rir.id", ondelete="SET NULL"), nullable=True
     )
@@ -84,6 +84,7 @@ class Prefix(Base, TimestampMixin):
         "IPRole", back_populates="ipam_prefix", overlaps="ipam_prefix"
     )
     is_pool = Column(Boolean, server_default=expression.false())
+    is_full = Column(Boolean, server_default=expression.false())
 
 
 class ASN(Base, TimestampMixin):
@@ -149,8 +150,9 @@ class IPAddress(Base):
         ),
         nullable=False,
     )
-    dns_name = Column(String)
+    dns_name = Column(String, nullable=True)
     description = Column(String, nullable=True)
+    owners = Column(String, nullable=True)
 
 
 class VLAN(Base):

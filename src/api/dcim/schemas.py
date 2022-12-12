@@ -250,7 +250,15 @@ class RackRoleQuery(BaseQuery):
 
 
 class RackCreate(BaseModel):
-    pass
+    name: str
+    description: str | None
+    facility_id: str | None
+    site_id: int
+    location_id: int | None
+    device_ids: List[int] | None
+    status: constraints.RACK_STATUS
+    serial_num: List[str] | None
+    asset_tag: str | None
 
 
 class RackUpdate(BaseModel):

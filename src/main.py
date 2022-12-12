@@ -1,4 +1,3 @@
-import logging
 import traceback
 import uuid
 
@@ -109,7 +108,6 @@ if __name__ == "__main__":
         "logger_class": GunicornLogger,
     }
 
-    logging.info("create app now")
     try:
         StandaloneApplication(app, options).run()
     except Exception:
@@ -118,4 +116,5 @@ if __name__ == "__main__":
     # # uvicorn version
     # app = create_app()
     # import uvicorn
-    # uvicorn.run(app)
+
+    # uvicorn.run(app, host="0.0.0.0")

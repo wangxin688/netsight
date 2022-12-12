@@ -16,9 +16,11 @@ from src.db.db_mixin import NameMixin, TimestampMixin
 __all__ = ("CircuitType", "Circuit", "CircuitTermination", "Provider")
 
 
-class CircuitType(Base, NameMixin):
+class CircuitType(Base):
     __tablename__ = "circuit_type"
     id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False, unique=True)
+    description = Column(String, nullable=True)
     circuit = relationship(
         "Circuit", back_populates="circuit_type", passive_deletes=True
     )
