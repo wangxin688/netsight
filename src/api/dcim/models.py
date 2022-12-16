@@ -339,6 +339,12 @@ class Device(Base, TimestampMixin):
     dcim_rack = relationship(
         "Rack", back_populates="dcim_device", overlaps="dcim_device"
     )
+    manufacturer_id = Column(
+        Integer, ForeignKey("dcim_manufacturer.id", ondelete="SET NULL"), nullable=True
+    )
+    dcim_manufacturer = relationship(
+        Manufacturer, back_populates="dcim_device", overlaps="dcim_device"
+    )
     position = Column(Float, nullable=True)
     serial_num = Column(String, nullable=True, unique=True)
     asset_tag = Column(String, unique=True, nullable=True)
@@ -385,15 +391,60 @@ class Interface(Base, TimestampMixin):
     if_index = Column(Integer, nullable=True)
     speed = Column(Integer, nullable=True)
     mode = Column(
-        ENUM("access", "trunk", "layer-3", name="mode_enum", create_type=False)
+        ENUM(
+            "access",
+            "hybrid",
+            "trunk",
+            "layer-3",
+            name="interface_mode",
+            create_type=False,
+        )
     )
+    interface_type = Column(String, nullable=False)
     mtu = Column(Integer, nullable=True)
     enabled = Column(Boolean, nullable=False, server_default=expression.true())
-    device_id = Column(Integer, ForeignKey("dcim_device.id"))
+    device_id = Column(Integer, ForeignKey("dcim_device.id", ondelete="CASCADE"))
     dcim_device = relationship(
         "Device", back_populates="dcim_interface", overlaps="dcim_interface"
     )
     circuit_termination = relationship(
         "CircuitTermination", back_populates="dcim_interface", passive_deletes=True
     )
-    # TODO: add support for vrf, vlan, ip address linking
+    lag_interface_id = Column(
+        Integer, ForeignKey(id), nullable=True, comment="port channel or eth-trunk"
+    )
+    lag_children = relationship(
+        "Interface",
+        cascade="all, delete-orphan",
+        backref=backref("parent", remote_side=id),
+        collection_class=attribute_mapped_collection("name"),
+    )
+    parent_interface_id = Column(
+        Integer, ForeignKey(id), nullable=True, comment="child interface, like g0/0/1.0"
+    )
+    interface_children = relationship(
+        "Interface",
+        cascade="all, delete-orphan",
+        backref=backref("parent", remote_side=id),
+        collection_class=attribute_mapped_collection("name"),
+    )
+    vrf_id = Column(
+        Integer, ForeignKey("ipam_vrf.id", ondelete="SET NULL"), nullable=True
+    )
+    ipam_vrf = relationship(
+        "VRF",
+        back_populates="dcim_interface",
+        overlaps="dcim_interface",
+    )
+    vlan_id = Column(
+        Integer, ForeignKey("ipam_vlan.id", ondelete="SET NULL"), nullable=True
+    )
+    ipam_vlan = relationship(
+        "VLAN",
+        back_populates="dcim_interface",
+        overlaps="dcim_interface",
+    )
+    ipam_ip_address = relationship(
+        "IPAddress", back_populates="dcim_interface", overlaps="dcim_interface"
+    )
+

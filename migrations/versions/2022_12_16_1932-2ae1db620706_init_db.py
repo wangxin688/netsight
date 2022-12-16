@@ -1,8 +1,8 @@
 """init db
 
-Revision ID: 325e3571aac1
+Revision ID: 2ae1db620706
 Revises: 
-Create Date: 2022-12-12 22:01:47.484995
+Create Date: 2022-12-16 19:32:56.523568
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '325e3571aac1'
+revision = '2ae1db620706'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -171,10 +171,10 @@ def upgrade() -> None:
     op.create_index(op.f('ix_ipam_vlan_group_name'), 'ipam_vlan_group', ['name'], unique=True)
     op.create_table('ipam_vrf',
     sa.Column('name', sa.String(), nullable=False),
+    sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('rd', sa.String(), nullable=True),
     sa.Column('enforce_unique', sa.Boolean(), server_default=sa.text('true'), nullable=True, comment='Enforce unique space, prevent duplicate IP/prefix'),
-    sa.Column('description', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('rd')
     )
@@ -270,18 +270,6 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_ipam_block_created_at'), 'ipam_block', ['created_at'], unique=False)
-    op.create_table('ipam_ip_address',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('address', postgresql.INET(), nullable=False),
-    sa.Column('vrf_id', sa.Integer(), nullable=True),
-    sa.Column('status', postgresql.ENUM('Active', 'Reserved', 'Deprecated', 'DHCP', 'Available', name='ip_status'), nullable=False),
-    sa.Column('dns_name', sa.String(), nullable=True),
-    sa.Column('description', sa.String(), nullable=True),
-    sa.Column('owners', sa.String(), nullable=True),
-    sa.ForeignKeyConstraint(['vrf_id'], ['ipam_vrf.id'], ondelete='SET NULL'),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_ipam_ip_address_address'), 'ipam_ip_address', ['address'], unique=False)
     op.create_table('ipam_ip_range',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('start_address', postgresql.INET(), nullable=True),
@@ -448,6 +436,7 @@ def upgrade() -> None:
     sa.Column('site_id', sa.Integer(), nullable=True),
     sa.Column('location_id', sa.Integer(), nullable=True),
     sa.Column('rack_id', sa.Integer(), nullable=True),
+    sa.Column('manufacturer_id', sa.Integer(), nullable=True),
     sa.Column('position', sa.Float(), nullable=True),
     sa.Column('serial_num', sa.String(), nullable=True),
     sa.Column('asset_tag', sa.String(), nullable=True),
@@ -460,6 +449,7 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['device_role_id'], ['dcim_device_role.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['device_type_id'], ['dcim_device_type.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['location_id'], ['dcim_location.id'], ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['manufacturer_id'], ['dcim_manufacturer.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['platform_id'], ['dcim_platform.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['rack_id'], ['dcim_rack.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['site_id'], ['dcim_site.id'], ondelete='CASCADE'),
@@ -479,11 +469,20 @@ def upgrade() -> None:
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('if_index', sa.Integer(), nullable=True),
     sa.Column('speed', sa.Integer(), nullable=True),
-    sa.Column('mode', postgresql.ENUM('access', 'trunk', 'layer-3', name='mode_enum'), nullable=True),
+    sa.Column('mode', postgresql.ENUM('access', 'hybrid', 'trunk', 'layer-3', name='interface_mode'), nullable=True),
+    sa.Column('interface_type', sa.String(), nullable=False),
     sa.Column('mtu', sa.Integer(), nullable=True),
     sa.Column('enabled', sa.Boolean(), server_default=sa.text('true'), nullable=False),
     sa.Column('device_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['device_id'], ['dcim_device.id'], ),
+    sa.Column('lag_interface_id', sa.Integer(), nullable=True, comment='port channel or eth-trunk'),
+    sa.Column('parent_interface_id', sa.Integer(), nullable=True, comment='child interface, like g0/0/1.0'),
+    sa.Column('vrf_id', sa.Integer(), nullable=True),
+    sa.Column('vlan_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['device_id'], ['dcim_device.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['lag_interface_id'], ['dcim_interface.id'], ),
+    sa.ForeignKeyConstraint(['parent_interface_id'], ['dcim_interface.id'], ),
+    sa.ForeignKeyConstraint(['vlan_id'], ['ipam_vlan.id'], ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['vrf_id'], ['ipam_vrf.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_dcim_interface_created_at'), 'dcim_interface', ['created_at'], unique=False)
@@ -502,11 +501,27 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('circuit_id', 'term_side')
     )
+    op.create_table('ipam_ip_address',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('address', postgresql.INET(), nullable=False),
+    sa.Column('vrf_id', sa.Integer(), nullable=True),
+    sa.Column('status', postgresql.ENUM('Active', 'Reserved', 'Deprecated', 'DHCP', 'Available', name='ip_status'), nullable=False),
+    sa.Column('dns_name', sa.String(), nullable=True),
+    sa.Column('description', sa.String(), nullable=True),
+    sa.Column('owners', sa.String(), nullable=True),
+    sa.Column('interface_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['interface_id'], ['dcim_interface.id'], ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['vrf_id'], ['ipam_vrf.id'], ondelete='SET NULL'),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_ipam_ip_address_address'), 'ipam_ip_address', ['address'], unique=False)
     # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_index(op.f('ix_ipam_ip_address_address'), table_name='ipam_ip_address')
+    op.drop_table('ipam_ip_address')
     op.drop_table('circuit_termination')
     op.drop_index(op.f('ix_dcim_interface_created_at'), table_name='dcim_interface')
     op.drop_table('dcim_interface')
@@ -531,8 +546,6 @@ def downgrade() -> None:
     op.drop_table('server')
     op.drop_table('ipam_vrf_route_target_link')
     op.drop_table('ipam_ip_range')
-    op.drop_index(op.f('ix_ipam_ip_address_address'), table_name='ipam_ip_address')
-    op.drop_table('ipam_ip_address')
     op.drop_index(op.f('ix_ipam_block_created_at'), table_name='ipam_block')
     op.drop_table('ipam_block')
     op.drop_index(op.f('ix_dcim_site_site_code'), table_name='dcim_site')

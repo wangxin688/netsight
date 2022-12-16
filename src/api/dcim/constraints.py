@@ -619,4 +619,41 @@ SITE_CLASSIFICATIONS = Literal[
     "CouldDataCenter",
 ]
 
-INTERFACE_MODE = Literal["access", "trunk", "layer-3"]
+INTERFACE_MODE = Literal["access", "hybrid", "trunk", "layer-3"]
+
+INTERFACE_TYPE_TREE = [
+    {"id": 1, "name": "Virtual Interfaces", "parent_id": None},
+    {"id": 2, "name": "Ethernet(Electrical)", "parent_id": None},
+    {"id": 3, "name": "Ethernet(Optical)", "parent_id": None},
+    {"id": 4, "name": "Virtual", "parent_id": 1},
+    {"id": 5, "name": "Link Aggregration Group(LAG)", "parent_id": 1},
+    {"id": 6, "name": "1000BASE-T(1GE)", "parent_id": 2},
+    {"id": 7, "name": "2.5GBASE-T(2.5GE)", "parent_id": 2},
+    {"id": 8, "name": "5GBASE-T(5GE)", "parent_id": 2},
+    {"id": 9, "name": "10GBASE-T(10GE)", "parent_id": 2},
+    {"id": 10, "name": "SFP(1GE)", "parent_id": 3},
+    {"id": 11, "name": "SFP+(10GE)", "parent_id": 3},
+    {"id": 12, "name": "XFP(10GE)", "parent_id": 3},
+    {"id": 13, "name": "QSPF+(40GE)", "parent_id": 3},
+    {"id": 14, "name": "QSPF28(100GE)", "parent_id": 3},
+    {"id": 15, "name": "CFP(100GE)", "parent_id": 3},
+    {"id": 16, "name": "CFP2(200GE)", "parent_id": 3},
+    {"id": 17, "name": "CFP4(200GE)", "parent_id": 3},
+]
+
+INTERFACE_TYPE = Literal[
+    "Virtual",
+    "Link Aggregration Group(LAG)",
+    "1000BASE-T(1GE)",
+    "2.5GBASE-T(2.5GE)",
+    "5GBASE-T(5GE)",
+    "10GBASE-T(10GE)",
+    "SFP(1GE)",
+    "SFP+(10GE)",
+    "XFP(10GE)",
+    "QSPF+(40GE)",
+    "QSPF28(100GE)",
+    "CFP(100GE)",
+    "CFP2(200GE)",
+    "CFP4(200GE)",
+]

@@ -153,6 +153,12 @@ class IPAddress(Base):
     dns_name = Column(String, nullable=True)
     description = Column(String, nullable=True)
     owners = Column(String, nullable=True)
+    interface_id = Column(
+        Integer, ForeignKey("dcim_interface.id", ondelete="SET NULL"), nullable=True
+    )
+    dcim_interface = relationship(
+        "Interface", back_populates="ipam_ip_address", overlaps="ipam_ip_address"
+    )
 
 
 class VLAN(Base):
@@ -181,6 +187,9 @@ class VLAN(Base):
         Integer, ForeignKey("ipam_role.id", ondelete="SET NULL"), nullable=True
     )
     ipam_role = relationship("IPRole", back_populates="ipam_vlan", overlaps="ipam_vlan")
+    dcim_interface = relationship(
+        "Interface", back_populates="ipam_vlan", passive_deletes=True
+    )
 
 
 class VLANGroup(Base, NameMixin):
@@ -210,7 +219,6 @@ class VRF(Base, NameMixin):
         server_default=expression.true(),
         comment="Enforce unique space, prevent duplicate IP/prefix",
     )
-    description = Column(String, nullable=True)
     ipam_route_target = relationship(
         "RouteTarget",
         secondary="ipam_vrf_route_target_link",
@@ -222,6 +230,9 @@ class VRF(Base, NameMixin):
     )
     ipam_ip_address = relationship(
         "IPAddress", back_populates="ipam_vrf", passive_deletes=True
+    )
+    dcim_interface = relationship(
+        "Interface", back_populates="ipam_vrf", passive_deletes=True
     )
 
 
