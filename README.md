@@ -1,6 +1,14 @@
 ## Network Infrastrucure Management System
 > This project is inspired by Netbox, in order to separate backend and frontend development, built backend with FastAPI&Sqlalchemy and full async support for database, http and etc.
 
+## Notice
+This project is still in development and not release beta version. Changes will be made without
+any notifications, especially for database E-R. It's most depends on my spare time to update the
+project, but any ideas or suggestions are welcome, you can create a git issue or contact with me
+with wangxin.jeffry@gmail.com to discuss the project.
+As soon as I complete the beta version of project, PR is welcome.
+
+
 ### More Lightweight
 For our current env, we management more than 50K+ network devices and vms. it's hard to maintain with
 such complex object relationship, also with bad performance.

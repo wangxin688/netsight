@@ -1,7 +1,7 @@
-from typing import List, Literal
+from typing import List
 
 from fastapi import Query
-from pydantic import Field, validator
+from pydantic import UUID4, Field, validator
 from pydantic.dataclasses import dataclass
 
 from src.api.base import BaseModel, BaseQuery
@@ -136,23 +136,26 @@ class RegionCreate(BaseModel):
     parent_id: int | None
 
 
-class RegionUpdate(BaseModel):
-    name: str | None
-    description: str | None
-    parent_id: int | None
-
-
 @dataclass()
 class RegionQuery(BaseQuery):
     id: List[int] = Query(default=None)
     name: List[str] | None = Query(default=None)
 
 
-class RegionBulkOperate(BaseModel):
-    action: Literal["update", "delete"]
+class RegionUpdate(BaseModel):
+    name: str | None
+    description: str | None
+    parent_id: int | None
+
+
+class RegionBulkUpdate(BaseModel):
     region_ids: List[int]
     description: str | None
     parent_id: int | None
+
+
+class RegionBulkDelete(BaseModel):
+    region_ids: List[int]
 
 
 class SiteCreate(BaseModel):
@@ -179,6 +182,14 @@ class SiteCreate(BaseModel):
     contact_ids: List[int] | None
 
 
+@dataclass()
+class SiteQuery(BaseQuery):
+    id: List[int] = Query(None)
+    name: str = Query(None)
+    site_code: str = Query(None)
+    status: constraints.SITE_STATUS = Query(None)
+
+
 class SiteUpdate(BaseModel):
     name: str | None = Field(description="Unique name of the site")
     description: str | None
@@ -191,7 +202,7 @@ class SiteUpdate(BaseModel):
     )
     facility: str | None
     ipam_asn_ids: List[int] | None
-    time_zone: constraints.ALL_TIME_ZONES
+    time_zone: constraints.ALL_TIME_ZONES | None
     physical_address: str | None
     shipping_address: str | None
     latitude: float | None
@@ -203,12 +214,19 @@ class SiteUpdate(BaseModel):
     contact_ids: List[int] | None
 
 
-@dataclass()
-class SiteQuery(BaseQuery):
-    id: List[int] = Query(None)
-    name: str = Query(None)
-    site_code: str = Query(None)
-    status: constraints.SITE_STATUS = Query(None)
+class SiteBulkUpdate(BaseModel):
+    site_ids: List[int]
+    region_id: int | None
+    time_zone: constraints.ALL_TIME_ZONES | None
+    classification: constraints.SITE_CLASSIFICATIONS | None
+    functions: List[str] | None = Field(
+        description="a set of tags to mark the function of the sites, e.g.`RD`, `Sales`, `Mixed`"
+    )
+    contact_ids: List[int] | None
+
+
+class SiteBulkDelete(BaseModel):
+    site_ids: List[int]
 
 
 class LocationCreate(BaseModel):
@@ -219,13 +237,6 @@ class LocationCreate(BaseModel):
     site_id: int
 
 
-class LocationUpdate(BaseModel):
-    name: str | None
-    description: str | None
-    parent_id: int | None
-    dcim_site_id: int | None
-
-
 @dataclass()
 class LocationQuery(BaseQuery):
     id: List[int] = Query(None)
@@ -233,13 +244,27 @@ class LocationQuery(BaseQuery):
     site_id: int = Query(None)
 
 
+class LocationUpdate(BaseModel):
+    name: str | None
+    description: str | None
+    status: constraints.LOCATION_STATUS | None
+    parent_id: int | None
+    dcim_site_id: int | None
+
+
+class LocationBulkUpdate(BaseModel):
+    location_ids: List[int]
+    status: constraints.LOCATION_STATUS | None
+    parent_id: int | None
+    dcim_site_id: int | None
+
+
+class LocationBulkDelete(BaseModel):
+    location_ids: List[int]
+
+
 class RackRoleCreate(BaseModel):
     name: str
-    description: str | None
-
-
-class RackRoleUpdate(BaseModel):
-    name: str | None
     description: str | None
 
 
@@ -247,6 +272,15 @@ class RackRoleUpdate(BaseModel):
 class RackRoleQuery(BaseQuery):
     id: List[int] = Query(None)
     name: str = Query(None)
+
+
+class RackRoleUpdate(BaseModel):
+    name: str | None
+    description: str | None
+
+
+class RackRoleBulkDelete(BaseModel):
+    rack_role_ids: List[int]
 
 
 class RackCreate(BaseModel):
@@ -261,28 +295,37 @@ class RackCreate(BaseModel):
     asset_tag: str | None
 
 
-class RackUpdate(BaseModel):
-    pass
-
-
 @dataclass()
 class RackQuery(BaseQuery):
     pass
 
 
+class RackUpdate(BaseModel):
+    name: str | None
+    description: str | None
+    facility_id: str | None
+    site_id: int | None
+    location_id: int | None
+    device_ids: List[int] | None
+    status: constraints.RACK_STATUS | None
+    serial_num: List[str] | None
+    asset_tag: str | None
+
+
+class RackBulkUpdate(BaseModel):
+    rack_ids: List[str]
+    description: str | None
+    site_id: int | None
+    location_id: int | None
+    status: constraints.RACK_STATUS | None
+
+
+class RackBulkDelete(BaseModel):
+    rack_ids: List[int]
+
+
 class ManufacturerCreate(BaseModel):
     name: str
-    description: str | None
-    device_type_ids: int | List[int] | None
-
-    @validator("device_type_ids")
-    def id_trans(cls, v):
-        v = items_to_list(v)
-        return v
-
-
-class ManufacturerUpdate(BaseModel):
-    name: str | None
     description: str | None
     device_type_ids: int | List[int] | None
 
@@ -297,27 +340,60 @@ class ManufacturerQuery(BaseQuery):
     pass
 
 
+class ManufacturerUpdate(BaseModel):
+    name: str | None
+    description: str | None
+    device_type_ids: int | List[int] | None
+
+    @validator("device_type_ids")
+    def id_trans(cls, v):
+        v = items_to_list(v)
+        return v
+
+
+class ManufacturerBulkUpdate(BaseModel):
+    manufacturer_ids: List[int]
+    description: str | None
+
+
+class ManufacturerBulkDelete(BaseModel):
+    manufacturer_ids: List[int]
+
+
 class DeviceTypeCreate(BaseModel):
     name: str | None
     description: str | None
     manufacturer_id: int | None
-    model: str
     u_height: float = Field(default=1.0)
     is_full_depth: bool = True
+    front_image: UUID4 | None
+    rear_image: UUID4 | None
+
+
+@dataclass()
+class DeviceTypeQuery(BaseQuery):
+    pass
 
 
 class DeviceTypeUpdate(BaseModel):
     name: str | None
     description: str | None
     manufacturer_id: int | None
-    model: str | None
+    u_height: float | None
+    is_full_depth: bool | None
+    front_image: UUID4 | None
+    rear_image: UUID4 | None
+
+
+class DeviceTypeBulkUpdate(BaseModel):
+    device_type_ids: list[int]
+    manufacturer_id: int | None
     u_height: float | None
     is_full_depth: bool | None
 
 
-@dataclass()
-class DeviceTypeQuery(BaseQuery):
-    pass
+class DeviceTypeBulkDelete(BaseModel):
+    device_type_ids: list[int]
 
 
 class DeviceRoleCreate(BaseModel):
@@ -326,34 +402,51 @@ class DeviceRoleCreate(BaseModel):
     vm_role: bool = False
 
 
+@dataclass()
+class DeviceRoleQuery(BaseQuery):
+    pass
+
+
 class DeviceRoleUpdate(BaseModel):
     name: str | None
     description: str | None
     vm_role: bool | None
 
 
-@dataclass()
-class DeviceRoleQuery(BaseQuery):
-    pass
+class DeviceRoleBulkUpdate(BaseModel):
+    device_role_ids: list[int]
+    vm_role: bool
+    description: str | None
+
+
+class DeviceRoleBulkDelete(BaseModel):
+    device_role_ids: list[int]
 
 
 class PlatformCreate(BaseModel):
     name: str
     description: str | None
-    napalm_driver: str | None
-    napalm_args: dict | None
-
-
-class PlatformUpdate(BaseModel):
-    name: str | None
-    description: str | None
-    napalm_driver: str | None
-    napalm_args: dict | None
+    netdev_platform: constraints.NETDEV_PLATFORM | None
 
 
 @dataclass()
 class PlatformQuery(BaseQuery):
     pass
+
+
+class PlatformUpdate(BaseModel):
+    name: str | None
+    description: str | None
+    netdev_platform: constraints.NETDEV_PLATFORM | None
+
+
+class PlatformBulkUpdate(BaseModel):
+    platform_ids: List[int]
+    netdev_platform: constraints.NETDEV_PLATFORM
+
+
+class PlatformBulkDelete(BaseModel):
+    platform_ids: List[int]
 
 
 class InterfaceCreate(BaseModel):
@@ -365,6 +458,19 @@ class InterfaceCreate(BaseModel):
     mtu: int | None = Field(default=1500)
     enabled: bool | None = Field(default=True)
     device_id: int
+    lag_interface_id: int | None
+    parent_interface_id: int | None
+    vrf_id: int | None
+    vlan_id: int | None
+
+
+class InterfaceBulkCreate(BaseModel):
+    pass
+
+
+@dataclass()
+class InterfaceQuery(BaseQuery):
+    pass
 
 
 class InterfaceUpdate(BaseModel):
@@ -376,8 +482,24 @@ class InterfaceUpdate(BaseModel):
     mtu: int | None = Field(default=1500)
     enabled: bool | None = Field(default=True)
     device_id: int | None
+    lag_interface_id: int | None
+    parent_interface_id: int | None
+    vrf_id: int | None
+    vlan_id: int | None
 
 
-@dataclass()
-class InterfaceQuery(BaseQuery):
-    pass
+class InterfaceBulkUpdate(BaseModel):
+    interface_ids: List[int]
+    description: str | None
+    speed: int | None
+    model: constraints.INTERFACE_MODE | None
+    mtu: int | None
+    enabled: int | None
+    lag_interface_id: int | None
+    parent_interface_id: int | None
+    vrf_id: int | None
+    vlan_id: int | None
+
+
+class InterfaceBulkDelete(BaseModel):
+    interface_ids: List[int]

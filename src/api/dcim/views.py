@@ -130,6 +130,35 @@ class RegionCBV:
         return_info.data = id
         return return_info.dict()
 
+    @router.put("/regions")
+    async def bulk_update_regions(
+        self, region: schemas.RegionBulkUpdate
+    ) -> BaseResponse[List[int]]:
+        local_regions = (
+            (
+                await self.session.execute(
+                    select(Region.id).where(Region.id.in_(region.region_ids))
+                )
+            )
+            .scalars()
+            .all()
+        )
+        diff_region: set = set(region.region_ids) - set(local_regions)
+        if diff_region:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Region #{list(diff_region)} not found"
+            return return_info.dict()
+        await self.session.execute(
+            update(Region)
+            .where(Region.id.in_(region.region_ids))
+            .values(region.dict(exclude={"region_ids"}, exclude_none=True))
+            .execute_options(synchronize_session="fetch")
+        )
+        await self.session.commit()
+        return_info = ERR_NUM_0
+        return_info.data = region.region_ids
+        return return_info
+
     @router.delete("/regions/{id}")
     async def delete_region(self, id: int) -> BaseResponse[int]:
         local_region: Region | None = (
@@ -149,30 +178,22 @@ class RegionCBV:
         return_info.data = id
         return return_info
 
-    @router.post("/regions/bulk-operate")
-    async def bulk_region_operations(
-        self, region: schemas.RegionBulkOperate
+    @router.delete("/regions")
+    async def bulk_delete_regions(
+        self, region: schemas.RegionBulkDelete
     ) -> BaseResponse[List[int]]:
-        if region.action == "update":
-            await self.session.execute(
-                update(Region)
-                .where(Region.id.in_(region.region_ids))
-                .values(region.dict(exclude={"region_ids"}, exclude_none=True))
-                .execute_options(synchronize_session="fetch")
-            )
-        elif region.action == "delete":
-            regions: List[Region] = (
-                (
-                    await self.session.execute(
-                        select(Region).where(Region.id.in_(region.region_ids))
-                    )
+        regions: List[Region] = (
+            (
+                await self.session.execute(
+                    select(Region).where(Region.id.in_(region.region_ids))
                 )
-                .scalars()
-                .all()
             )
-            if len(regions) > 0:
-                for _region in regions:
-                    await self.session.delete(_region)
+            .scalars()
+            .all()
+        )
+        if len(regions) > 0:
+            for _region in regions:
+                await self.session.delete(_region)
         await self.session.commit()
         return_info = ERR_NUM_0
         return_info.data = region.region_ids

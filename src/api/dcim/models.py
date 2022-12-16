@@ -8,7 +8,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import ARRAY, ENUM, INET, JSONB
+from sqlalchemy.dialects.postgresql import ARRAY, ENUM, INET, UUID
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy.sql import expression
@@ -246,11 +246,14 @@ class Manufacturer(Base):
         cascade="all, delete",
         passive_deletes=True,
     )
+    dcim_device = relationship(
+        "Device", back_populates="dcim_manufacturer", passive_deletes=True
+    )
 
 
 class DeviceType(Base):
     __tablename__ = "dcim_device_type"
-    __table_args__ = (UniqueConstraint("manufacturer_id", "model"),)
+    __table_args__ = (UniqueConstraint("manufacturer_id", "name"),)
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, unique=True)
     description = Column(String, nullable=True)
@@ -260,12 +263,13 @@ class DeviceType(Base):
     dcim_manufacturer = relationship(
         "Manufacturer", back_populates="dcim_device_type", overlaps="dcim_device_type"
     )
-    model = Column(String, nullable=False)
     u_height = Column(Float, server_default="1.0")
     is_full_depth = Column(Boolean, server_default=expression.true())
     dcim_device = relationship(
         "Device", back_populates="dcim_device_type", passive_deletes=True
     )
+    front_image = Column(UUID(as_uuid=True), nullable=True)
+    rear_image = Column(UUID(as_uuid=True), nullable=True)
 
 
 class DeviceRole(Base):
@@ -287,8 +291,7 @@ class Platform(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, unique=True)
     description = Column(String, nullable=True)
-    napalm_driver = Column(String, nullable=True)
-    napalm_args = Column(JSONB, nullable=True)
+    netdev_platform = Column(String, nullable=True)
     dcim_device = relationship(
         "Device", back_populates="dcim_platform", passive_deletes=True
     )
@@ -411,22 +414,22 @@ class Interface(Base, TimestampMixin):
         "CircuitTermination", back_populates="dcim_interface", passive_deletes=True
     )
     lag_interface_id = Column(
-        Integer, ForeignKey(id), nullable=True, comment="port channel or eth-trunk"
+        Integer,
+        ForeignKey("dcim_interface.id"),
+        nullable=True,
+        comment="port channel or eth-trunk",
     )
     lag_children = relationship(
-        "Interface",
-        cascade="all, delete-orphan",
-        backref=backref("parent", remote_side=id),
-        collection_class=attribute_mapped_collection("name"),
+        "Interface", foreign_keys=[lag_interface_id], lazy="joined", join_depth=1
     )
     parent_interface_id = Column(
-        Integer, ForeignKey(id), nullable=True, comment="child interface, like g0/0/1.0"
+        Integer,
+        ForeignKey("dcim_interface.id"),
+        nullable=True,
+        comment="child interface, like g0/0/1.0",
     )
     interface_children = relationship(
-        "Interface",
-        cascade="all, delete-orphan",
-        backref=backref("parent", remote_side=id),
-        collection_class=attribute_mapped_collection("name"),
+        "Interface", foreign_keys=[parent_interface_id], lazy="joined", join_depth=1
     )
     vrf_id = Column(
         Integer, ForeignKey("ipam_vrf.id", ondelete="SET NULL"), nullable=True
@@ -447,4 +450,3 @@ class Interface(Base, TimestampMixin):
     ipam_ip_address = relationship(
         "IPAddress", back_populates="dcim_interface", overlaps="dcim_interface"
     )
-

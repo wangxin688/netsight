@@ -657,3 +657,25 @@ INTERFACE_TYPE = Literal[
     "CFP2(200GE)",
     "CFP4(200GE)",
 ]
+
+NETDEV_PLATFORM = Literal[
+    "alcatel_aos",
+    "arista_eos",
+    "aruba_aos_6",
+    "aruba_aos_8",
+    "cisco_asa",
+    "cisco_ios",
+    "cisco_ios_xe",
+    "cisco_ios_xr",
+    "cisco_nxos",
+    "cisco_sg3xx",
+    "fujitsu_switch",
+    "hp_comware",
+    "hp_comware_limited",
+    "juniper_junos",
+    "mikrotik_routeros",
+    "ubiquity_edge",
+    "terminal",
+    "hw1000",
+    "huawei",
+]

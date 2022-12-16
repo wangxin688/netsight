@@ -1,8 +1,8 @@
 """init db
 
-Revision ID: 2ae1db620706
+Revision ID: 53901696b370
 Revises: 
-Create Date: 2022-12-16 19:32:56.523568
+Create Date: 2022-12-16 23:02:42.990257
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '2ae1db620706'
+revision = '53901696b370'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -98,8 +98,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
-    sa.Column('napalm_driver', sa.String(), nullable=True),
-    sa.Column('napalm_args', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+    sa.Column('netdev_platform', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name')
     )
@@ -228,12 +227,13 @@ def upgrade() -> None:
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('manufacturer_id', sa.Integer(), nullable=True),
-    sa.Column('model', sa.String(), nullable=False),
     sa.Column('u_height', sa.Float(), server_default='1.0', nullable=True),
     sa.Column('is_full_depth', sa.Boolean(), server_default=sa.text('true'), nullable=True),
+    sa.Column('front_image', postgresql.UUID(as_uuid=True), nullable=True),
+    sa.Column('rear_image', postgresql.UUID(as_uuid=True), nullable=True),
     sa.ForeignKeyConstraint(['manufacturer_id'], ['dcim_manufacturer.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('manufacturer_id', 'model'),
+    sa.UniqueConstraint('manufacturer_id', 'name'),
     sa.UniqueConstraint('name')
     )
     op.create_table('dcim_site',
