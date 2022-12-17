@@ -420,7 +420,7 @@ class Interface(Base, TimestampMixin):
         comment="port channel or eth-trunk",
     )
     lag_children = relationship(
-        "Interface", foreign_keys=[lag_interface_id], lazy="joined", join_depth=1
+        "Interface", foreign_keys=[lag_interface_id], lazy="selectin", join_depth=1
     )
     parent_interface_id = Column(
         Integer,
@@ -429,7 +429,7 @@ class Interface(Base, TimestampMixin):
         comment="child interface, like g0/0/1.0",
     )
     interface_children = relationship(
-        "Interface", foreign_keys=[parent_interface_id], lazy="joined", join_depth=1
+        "Interface", foreign_keys=[parent_interface_id], lazy="selectin", join_depth=1
     )
     vrf_id = Column(
         Integer, ForeignKey("ipam_vrf.id", ondelete="SET NULL"), nullable=True

@@ -149,13 +149,13 @@ class RegionUpdate(BaseModel):
 
 
 class RegionBulkUpdate(BaseModel):
-    region_ids: List[int]
+    ids: List[int]
     description: str | None
     parent_id: int | None
 
 
 class RegionBulkDelete(BaseModel):
-    region_ids: List[int]
+    ids: List[int]
 
 
 class SiteCreate(BaseModel):
@@ -215,7 +215,7 @@ class SiteUpdate(BaseModel):
 
 
 class SiteBulkUpdate(BaseModel):
-    site_ids: List[int]
+    ids: List[int]
     region_id: int | None
     time_zone: constraints.ALL_TIME_ZONES | None
     classification: constraints.SITE_CLASSIFICATIONS | None
@@ -226,7 +226,7 @@ class SiteBulkUpdate(BaseModel):
 
 
 class SiteBulkDelete(BaseModel):
-    site_ids: List[int]
+    ids: List[int]
 
 
 class LocationCreate(BaseModel):
@@ -253,14 +253,14 @@ class LocationUpdate(BaseModel):
 
 
 class LocationBulkUpdate(BaseModel):
-    location_ids: List[int]
+    ids: List[int]
     status: constraints.LOCATION_STATUS | None
     parent_id: int | None
     dcim_site_id: int | None
 
 
 class LocationBulkDelete(BaseModel):
-    location_ids: List[int]
+    ids: List[int]
 
 
 class RackRoleCreate(BaseModel):
@@ -280,7 +280,7 @@ class RackRoleUpdate(BaseModel):
 
 
 class RackRoleBulkDelete(BaseModel):
-    rack_role_ids: List[int]
+    ids: List[int]
 
 
 class RackCreate(BaseModel):
@@ -289,10 +289,17 @@ class RackCreate(BaseModel):
     facility_id: str | None
     site_id: int
     location_id: int | None
-    device_ids: List[int] | None
     status: constraints.RACK_STATUS
     serial_num: List[str] | None
     asset_tag: str | None
+    width: int | None
+    u_height: int | None
+    rack_role_id: int
+    desc_units: bool = False
+    outer_width: int | None
+    outer_depth: int | None
+    outer_unit: str | None
+    comments: str | None
 
 
 @dataclass()
@@ -313,7 +320,7 @@ class RackUpdate(BaseModel):
 
 
 class RackBulkUpdate(BaseModel):
-    rack_ids: List[str]
+    ids: List[str]
     description: str | None
     site_id: int | None
     location_id: int | None
@@ -321,7 +328,7 @@ class RackBulkUpdate(BaseModel):
 
 
 class RackBulkDelete(BaseModel):
-    rack_ids: List[int]
+    ids: List[int]
 
 
 class ManufacturerCreate(BaseModel):
@@ -352,12 +359,12 @@ class ManufacturerUpdate(BaseModel):
 
 
 class ManufacturerBulkUpdate(BaseModel):
-    manufacturer_ids: List[int]
+    ids: List[int]
     description: str | None
 
 
 class ManufacturerBulkDelete(BaseModel):
-    manufacturer_ids: List[int]
+    ids: List[int]
 
 
 class DeviceTypeCreate(BaseModel):
@@ -386,14 +393,14 @@ class DeviceTypeUpdate(BaseModel):
 
 
 class DeviceTypeBulkUpdate(BaseModel):
-    device_type_ids: list[int]
+    ids: list[int]
     manufacturer_id: int | None
     u_height: float | None
     is_full_depth: bool | None
 
 
 class DeviceTypeBulkDelete(BaseModel):
-    device_type_ids: list[int]
+    ids: list[int]
 
 
 class DeviceRoleCreate(BaseModel):
@@ -414,13 +421,13 @@ class DeviceRoleUpdate(BaseModel):
 
 
 class DeviceRoleBulkUpdate(BaseModel):
-    device_role_ids: list[int]
+    ids: list[int]
     vm_role: bool
     description: str | None
 
 
 class DeviceRoleBulkDelete(BaseModel):
-    device_role_ids: list[int]
+    ids: list[int]
 
 
 class PlatformCreate(BaseModel):
@@ -441,12 +448,12 @@ class PlatformUpdate(BaseModel):
 
 
 class PlatformBulkUpdate(BaseModel):
-    platform_ids: List[int]
+    ids: List[int]
     netdev_platform: constraints.NETDEV_PLATFORM
 
 
 class PlatformBulkDelete(BaseModel):
-    platform_ids: List[int]
+    ids: List[int]
 
 
 class InterfaceCreate(BaseModel):
@@ -489,7 +496,7 @@ class InterfaceUpdate(BaseModel):
 
 
 class InterfaceBulkUpdate(BaseModel):
-    interface_ids: List[int]
+    ids: List[int]
     description: str | None
     speed: int | None
     model: constraints.INTERFACE_MODE | None
@@ -502,4 +509,4 @@ class InterfaceBulkUpdate(BaseModel):
 
 
 class InterfaceBulkDelete(BaseModel):
-    interface_ids: List[int]
+    ids: List[int]

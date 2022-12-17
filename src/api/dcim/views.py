@@ -17,6 +17,8 @@ from src.api.dcim.models import (
     DeviceType,
     Location,
     Manufacturer,
+    Rack,
+    RackRole,
     Region,
     Site,
 )
@@ -55,11 +57,7 @@ class RegionCBV:
 
     @router.get("/regions/{id}")
     async def get_region(self, id: int) -> BaseResponse[schemas.Region]:
-        local_region = (
-            (await self.session.execute(select(Region).where(Region.id == id)))
-            .scalars()
-            .first()
-        )
+        local_region = await self.session.get(Region, id)
         if local_region is None:
             return_info = ERR_NUM_4004
             return_info.msg = f"Region #{id} not found"
@@ -100,11 +98,7 @@ class RegionCBV:
     async def update_region(
         self, id: int, region: schemas.RegionUpdate
     ) -> BaseResponse[int]:
-        local_region: Region | None = (
-            (await self.session.execute(select(Region).where(Region.id == id)))
-            .scalars()
-            .first()
-        )
+        local_region: Region | None = await self.session.get(Region, id)
         if not local_region:
             return_info = ERR_NUM_4004
             return_info.data = local_region
@@ -137,13 +131,13 @@ class RegionCBV:
         local_regions = (
             (
                 await self.session.execute(
-                    select(Region.id).where(Region.id.in_(region.region_ids))
+                    select(Region.id).where(Region.id.in_(region.ids))
                 )
             )
             .scalars()
             .all()
         )
-        diff_region: set = set(region.region_ids) - set(local_regions)
+        diff_region: set = set(region.ids) - set(local_regions)
         if diff_region:
             return_info = ERR_NUM_4004
             return_info.msg = f"Region #{list(diff_region)} not found"
@@ -151,7 +145,7 @@ class RegionCBV:
         await self.session.execute(
             update(Region)
             .where(Region.id.in_(region.region_ids))
-            .values(region.dict(exclude={"region_ids"}, exclude_none=True))
+            .values(region.dict(exclude={"ids"}, exclude_none=True))
             .execute_options(synchronize_session="fetch")
         )
         await self.session.commit()
@@ -161,19 +155,13 @@ class RegionCBV:
 
     @router.delete("/regions/{id}")
     async def delete_region(self, id: int) -> BaseResponse[int]:
-        local_region: Region | None = (
-            (await self.session.execute(select(Region).where(Region.id == id)))
-            .scalars()
-            .first()
-        )
+        local_region: Region | None = await self.session.get(Region, id)
         if local_region is None:
             return {
                 "code": ERR_NUM_4004.code,
                 "data": None,
                 "msg": f"Region #{id} not found",
             }
-        await self.session.delete(local_region)
-        await self.session.commit()
         return_info = ERR_NUM_0
         return_info.data = id
         return return_info
@@ -185,7 +173,7 @@ class RegionCBV:
         regions: List[Region] = (
             (
                 await self.session.execute(
-                    select(Region).where(Region.id.in_(region.region_ids))
+                    select(Region).where(Region.id.in_(region.ids))
                 )
             )
             .scalars()
@@ -196,7 +184,7 @@ class RegionCBV:
                 await self.session.delete(_region)
         await self.session.commit()
         return_info = ERR_NUM_0
-        return_info.data = region.region_ids
+        return_info.data = region.ids
         return return_info
 
 
@@ -349,25 +337,41 @@ class SiteCBV:
         return_info.data = id
         return return_info
 
+    @router.put("/sites")
+    async def bulk_update_sites(
+        self, site: schemas.SiteBulkUpdate
+    ) -> BaseResponse[List[int]]:
+        pass
+
     @router.delete("/sites/{id}")
     async def delete_site(
         self,
         id: int,
     ) -> BaseResponse[int]:
-
-        local_site: Site | None = (
-            (await self.session.execute(select(Site).where(Site.id == id)))
-            .scalars()
-            .first()
-        )
+        local_site: Site | None = await self.session.get(Site, id)
         if not local_site:
             return_info = ERR_NUM_4004
-            return_info.msg = f"Site #{id} not found"
+            return_info.msg = f"Delete site failed, site #{id} not found"
             return return_info
-        await self.session.delete(local_site)
-        await self.session.commit()
         return_info = ERR_NUM_0
         return_info.data = id
+        return return_info
+
+    @router.delete("/sites")
+    async def bulk_delete_sites(
+        self, site: schemas.SiteBulkDelete
+    ) -> BaseResponse[List[int]]:
+        local_sites: List[Site] | None = (
+            (await self.session.execute(select(Site).where(Site.id.in_(site.ids))))
+            .scalars()
+            .all()
+        )
+        if local_sites is None:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Delete sites failed, sites #{id} not found"
+            return return_info
+        return_info = ERR_NUM_0
+        return_info.data = site.ids
         return return_info
 
 
@@ -380,7 +384,7 @@ class LocationCBV:
     async def create_location(
         self, location: schemas.LocationCreate
     ) -> BaseResponse[int]:
-        site: Site = (
+        site: Site | None = (
             (
                 await self.session.execute(
                     select(Site).where(Site.id == location.site_id)
@@ -411,7 +415,14 @@ class LocationCBV:
 
     @router.get("/locations/{id}")
     async def get_location(self, id: int) -> BaseResponse[schemas.Location]:
-        pass
+        local_location: Location | None = await self.session.get(Location, id)
+        if not local_location:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Location #{id} not found"
+            return return_info.dict()
+        return_info = ERR_NUM_0
+        return_info.data = local_location
+        return return_info.dict()
 
     @router.get("/locations")
     async def get_locations(
@@ -481,14 +492,41 @@ class RackRoleCBV:
     current_user: User = Depends(get_current_user)
 
     @router.post("/rack-roles")
-    async def create_rack_role(
-        self, region: schemas.RackRoleCreate
-    ) -> BaseResponse[int]:
-        pass
+    async def create_rack_role(self, rack: schemas.RackRoleCreate) -> BaseResponse[int]:
+        local_rack_role: RackRole | None = (
+            (
+                await self.session.execute(
+                    select(RackRole).where(RackRole.name == rack.name)
+                )
+            )
+            .scalars()
+            .first()
+        )
+        if local_rack_role is not None:
+            return_info = ERR_NUM_4009
+            return_info.msg = f"Rack role with name {rack.name} already exists"
+            return return_info.dict()
+        new_rack_role = RackRole(**rack.dict())
+        await self.session.add(new_rack_role)
+        await self.session.commit()
+        return_info = ERR_NUM_0
+        return_info.data = new_rack_role.id
+        return return_info.dict()
 
     @router.get("/rack-roles/{id}")
     async def get_rack_role(self, id: int) -> BaseResponse[schemas.RackRole]:
-        pass
+        local_rack_role: RackRole | None = (
+            (await self.session.execute(select(RackRole).where(RackRole.id == id)))
+            .scalars()
+            .first()
+        )
+        if not local_rack_role:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Rack role #{id} not found"
+            return return_info
+        return_info = ERR_NUM_0
+        return_info.data = local_rack_role
+        return return_info
 
     @router.get("/rack-roles")
     async def get_rack_roles(
@@ -500,11 +538,60 @@ class RackRoleCBV:
     async def update_rack_role(
         self, id: int, rack_role: schemas.RackRoleUpdate
     ) -> BaseResponse[int]:
-        pass
+        local_rack_role: RackRole | None = (
+            (await self.session.execute(select(RackRole).where(RackRole.id == id)))
+            .scalars()
+            .first()
+        )
+        if not local_rack_role:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Rack role #{id} not found"
+            return return_info
+        await self.session.update(RackRole).where(RackRole.id == id).values(
+            **rack_role.dict(exclude_none=True)
+        ).execute_options(synchronize_session="fetch")
+        await self.session.commit()
+        return_info = ERR_NUM_0
+        return_info.data = id
+        return return_info
 
     @router.delete("/rack-roles/{id}")
     async def delete_rack_role(self, id: int) -> BaseResponse[int]:
-        pass
+        local_rack_role: RackRole | None = (
+            (await self.session.execute(select(RackRole).where(RackRole.id == id)))
+            .scalars()
+            .first()
+        )
+        if local_rack_role is None:
+            return {
+                "code": ERR_NUM_4004.code,
+                "data": None,
+                "msg": f"Rack role #{id} not found",
+            }
+        await self.session.delete(local_rack_role)
+        await self.session.commit()
+        return_info = ERR_NUM_0
+        return_info.data = id
+        return return_info
+
+    @router.delete("rack-roles")
+    async def delete_rack_roles(self, rack_role: schemas.RackRoleBulkDelete):
+        rack_roles: List[RackRole] = (
+            (
+                await self.session.execute(
+                    select(RackRole).where(RackRole.id.in_(rack_role.ids))
+                )
+            )
+            .scalars()
+            .all()
+        )
+        if len(rack_roles) > 0:
+            for _rack_role in rack_roles:
+                await self.session.delete(_rack_role)
+        await self.session.commit()
+        return_info = ERR_NUM_0
+        return_info.data = rack_role.ids
+        return return_info
 
 
 @cbv(router)
@@ -514,7 +601,28 @@ class RackCBV:
 
     @router.post("/racks")
     async def create_rack(self, rack: schemas.RackCreate) -> BaseResponse[int]:
-        pass
+        local_rack: Rack | None = (
+            (await self.session.execute(select(Rack).where(Rack.name == rack.name)))
+            .scalars()
+            .first()
+        )
+        local_site: Site | None = (
+            (await self.session.execute(select(Site.id).where(Site.id == rack.site_id)))
+            .scalars()
+            .first()
+        )
+        # local_location: Location | None = ()
+        if local_rack is not None:
+            return_info = ERR_NUM_4009
+            return_info.msg = f"Rack with name `{rack.name}` already exists"
+            return return_info
+        if local_site is None:
+            return_info = ERR_NUM_4004
+            return_info.msg = (
+                f"Create rack failed, rack with site #{rack.site_id} not found"
+            )
+            return return_info
+        # new_rack = Rack(**rack.dict(exclude={"location_id", "device_ids", ""}))
 
     @router.get("/racks/{id}")
     async def get_rack(self, id: int) -> BaseResponse[schemas.Rack]:
@@ -723,7 +831,14 @@ class DeviceTypeCBV:
 
     @router.get("/device-types/{id}")
     async def get_device_type(self, id: int) -> BaseResponse[schemas.DeviceType]:
-        pass
+        local_device_type = await self.session.get(DeviceType, id)
+        if not local_device_type:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Device type #{id} not found"
+            return return_info.dict()
+        return_info = ERR_NUM_0
+        return_info.data = local_device_type
+        return return_info.dict()
 
     @router.get("/device-types")
     async def get_device_types(

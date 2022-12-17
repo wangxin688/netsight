@@ -12,7 +12,7 @@ async_sqlalchemy_database_uri = settings.SQLALCHEMY_DATABASE_URI
 async_engine = create_async_engine(
     async_sqlalchemy_database_uri,
     pool_pre_ping=True,
-    future=True,  # poolclass=NullPool
+    future=True,
 )
 async_session: AsyncSession = sessionmaker(
     async_engine, autoflush=False, expire_on_commit=False, class_=AsyncSession

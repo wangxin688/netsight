@@ -113,7 +113,7 @@ if __name__ == "__main__":
     except Exception:
         print(traceback.format_exc())
 
-    # # uvicorn version
+    # uvicorn version
     # app = create_app()
     # import uvicorn
 
