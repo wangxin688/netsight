@@ -9,7 +9,7 @@ from sqlalchemy.orm import selectinload
 
 from src.api.auth import schemas
 from src.api.auth.models import Group, Permission, Role, User
-from src.api.base import BaseListResponse, BaseResponse, CommonQueryParams
+from src.api.base import BaseListResponse, BaseResponse
 from src.api.deps import audit_without_data, get_current_user, get_session
 from src.register.middleware import AuditRoute
 from src.utils.error_code import (
@@ -33,6 +33,7 @@ class AuthUserCBV:
 
     @router.get("/users/{id}")
     async def get_user(self, id: int) -> BaseResponse[schemas.AuthUser]:
+        """get the user"""
         result: AsyncResult = await self.session.execute(
             select(User).where(User.id == id).options(selectinload(User.auth_role))
         )
@@ -44,19 +45,28 @@ class AuthUserCBV:
         return return_info
 
     @router.get("/users")
+    async def get_users_all(self) -> BaseListResponse[List[schemas.AuthUserBase]]:
+        local_users: List[User] = (
+            (await self.session.execute(select(User))).scalars().all()
+        )
+        count = len(local_users)
+        return_info = ERR_NUM_0
+        return_info.data = {"data": {"count": count, "results": local_users}}
+        return return_info
+
+    @router.post("/users/getList")
     async def get_users(
         self,
-        users: schemas.AuthUserQuery = Depends(schemas.AuthUserQuery),
-        common_params: CommonQueryParams = Depends(CommonQueryParams),
+        user: schemas.AuthUserQuery,
     ) -> BaseListResponse[List[schemas.AuthUser]]:
-        if not common_params.q:
+        if not user.q:
             result = (
                 (
                     await self.session.execute(
                         select(User)
                         .slice(
-                            common_params.offset,
-                            common_params.limit + common_params.offset,
+                            user.offset,
+                            user.limit + user.offset,
                         )
                         .options(selectinload(User.auth_role))
                     )
@@ -209,10 +219,17 @@ class AuthGroupCBV:
         return return_info
 
     @router.get("/groups")
+    async def get_groups_all(self) -> BaseListResponse[List[schemas.AuthGroupBase]]:
+        local_groups: List[Group] = (
+            (await self.session.execute(select(Group))).scalar().all()
+        )
+        count = len(local_groups)
+        return_info = ERR_NUM_0
+        return_info.data = {"data": {"count": count, "results": local_groups}}
+
+    @router.post("/groups/getList")
     async def get_groups(
-        self,
-        groups: schemas.AuthGroupQuery = Depends(),
-        common_params: CommonQueryParams = Depends(CommonQueryParams),
+        self, group: schemas.AuthGroupQuery
     ) -> BaseListResponse[List[schemas.AuthGroup]]:
         stm = select(Group)  # noqa
         cnt_stmt = select(func.count(Group.id))  # noqa
@@ -334,10 +351,19 @@ class AuthRoleCBV:
         return return_info
 
     @router.get("/roles")
+    async def get_roles_all(self) -> BaseListResponse[List[schemas.AuthRoleBase]]:
+        local_roles: List[Role] = (
+            (await self.session.execute(select(Role))).scalars().all()
+        )
+        count = len(local_roles)
+        return_info = ERR_NUM_0
+        return_info.data = {"data": {"count": count, "results": local_roles}}
+        return return_info
+
+    @router.post("/roles/getList")
     async def get_roles(
         self,
-        roles: schemas.AuthRoleQuery = Depends(),
-        common_params: CommonQueryParams = Depends(CommonQueryParams),
+        role: schemas.AuthRoleQuery,
     ) -> BaseListResponse[List[schemas.AuthRole]]:
         stm = select(Group)  # noqa
         cnt_stmt = select(func.count(Group.id))  # noqa

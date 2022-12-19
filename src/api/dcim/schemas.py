@@ -1,8 +1,6 @@
 from typing import List
 
-from fastapi import Query
 from pydantic import UUID4, Field, validator
-from pydantic.dataclasses import dataclass
 
 from src.api.base import BaseModel, BaseQuery
 from src.api.dcim import constraints
@@ -136,10 +134,9 @@ class RegionCreate(BaseModel):
     parent_id: int | None
 
 
-@dataclass()
 class RegionQuery(BaseQuery):
-    id: List[int] = Query(default=None)
-    name: List[str] | None = Query(default=None)
+    ids: List[int] | None
+    name: List[str] | None
 
 
 class RegionUpdate(BaseModel):
@@ -182,12 +179,11 @@ class SiteCreate(BaseModel):
     contact_ids: List[int] | None
 
 
-@dataclass()
 class SiteQuery(BaseQuery):
-    id: List[int] = Query(None)
-    name: str = Query(None)
-    site_code: str = Query(None)
-    status: constraints.SITE_STATUS = Query(None)
+    ids: List[int] | None
+    name: str | None
+    site_code: str | None
+    status: constraints.SITE_STATUS | None
 
 
 class SiteUpdate(BaseModel):
@@ -237,11 +233,10 @@ class LocationCreate(BaseModel):
     site_id: int
 
 
-@dataclass()
 class LocationQuery(BaseQuery):
-    id: List[int] = Query(None)
-    name: str = Query(None)
-    site_id: int = Query(None)
+    ids: List[int] | None
+    name: str | None
+    site_id: int | None
 
 
 class LocationUpdate(BaseModel):
@@ -268,10 +263,9 @@ class RackRoleCreate(BaseModel):
     description: str | None
 
 
-@dataclass()
 class RackRoleQuery(BaseQuery):
-    id: List[int] = Query(None)
-    name: str = Query(None)
+    id: List[int] | None
+    name: str | None
 
 
 class RackRoleUpdate(BaseModel):
@@ -302,7 +296,6 @@ class RackCreate(BaseModel):
     comments: str | None
 
 
-@dataclass()
 class RackQuery(BaseQuery):
     pass
 
@@ -342,7 +335,6 @@ class ManufacturerCreate(BaseModel):
         return v
 
 
-@dataclass()
 class ManufacturerQuery(BaseQuery):
     pass
 
@@ -377,7 +369,6 @@ class DeviceTypeCreate(BaseModel):
     rear_image: UUID4 | None
 
 
-@dataclass()
 class DeviceTypeQuery(BaseQuery):
     pass
 
@@ -409,7 +400,6 @@ class DeviceRoleCreate(BaseModel):
     vm_role: bool = False
 
 
-@dataclass()
 class DeviceRoleQuery(BaseQuery):
     pass
 
@@ -436,7 +426,6 @@ class PlatformCreate(BaseModel):
     netdev_platform: constraints.NETDEV_PLATFORM | None
 
 
-@dataclass()
 class PlatformQuery(BaseQuery):
     pass
 
@@ -475,7 +464,6 @@ class InterfaceBulkCreate(BaseModel):
     pass
 
 
-@dataclass()
 class InterfaceQuery(BaseQuery):
     pass
 

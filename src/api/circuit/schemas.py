@@ -3,7 +3,6 @@ from ipaddress import IPv4Network, IPv6Network
 from typing import List
 
 from pydantic import AnyHttpUrl, EmailStr
-from pydantic.dataclasses import dataclass
 
 from src.api.base import BaseModel, BaseQuery
 
@@ -116,7 +115,9 @@ class CricuitTypeUpdate(BaseModel):
     description: str | None
 
 
-@dataclass()
+()
+
+
 class CircuitTypeQuery(BaseQuery):
     pass
 
@@ -131,7 +132,9 @@ class CricuitUpdate(BaseModel):
     description: str | None
 
 
-@dataclass()
+()
+
+
 class CircuitQuery(BaseQuery):
     pass
 
@@ -158,6 +161,8 @@ class ProviderUpdate(BaseModel):
     comments: str | None
 
 
-@dataclass()
+()
+
+
 class ProviderQuery(BaseQuery):
     pass

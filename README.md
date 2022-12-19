@@ -32,7 +32,36 @@ For following features, are only my ideas and not related to the current environ
 8. audit log with JSON format, very easy to integrate with Filebeat and Elasticsearch for metrics, tracing, and analysis.
 9. x-request-id, x-process-time in header
 10. python 3.10+ support, with full type-hint and Pydantic validation control
+11. RESTful but not too much RESTful
+```
+"""
+Since restful is not convenient to make batch requests or bulk operations, and
+GET, DELETE will ignore request body by default in browsers, also with url length
+limitations, after doing a lot of investigation and project experience, use POST by default for bulk operations.
+Regular Operations
 
+GET /objects/ Gets all Objects
+
+GET /object/ID Gets an Object with specified ID
+
+POST /objects Adds a new Object
+
+PUT /object/ID Adds an Object with specified ID, Updates an Object
+
+DELETE /object/ID Deletes the object with specified ID
+
+All Custom actions are POST
+
+POST /objects/addList Adds a List or Array of Objects included in body
+
+POST /objects/deleteList Deletes a List of Objects included in body
+
+POST /objects/getList Creates a List based on custom query in body
+
+POST /objects/updateList Update a List based on custom query in body
+
+"""
+```
 
 ### How to start?
 1. pull the project from GitHub

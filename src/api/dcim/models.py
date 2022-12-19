@@ -388,6 +388,7 @@ class Device(Base, TimestampMixin):
 
 class Interface(Base, TimestampMixin):
     __tablename__ = "dcim_interface"
+    __table_args__ = (UniqueConstraint("device_id", "name"),)
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)

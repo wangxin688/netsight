@@ -1,9 +1,7 @@
-from dataclasses import asdict
 from datetime import datetime
 from typing import Generic, Optional, TypeVar
 
 import pydantic
-from pydantic.dataclasses import dataclass
 from pydantic.generics import GenericModel
 
 
@@ -49,19 +47,17 @@ class BaseListResponse(GenericModel, Generic[DataT]):
         }  # method for customer JSON encoding of datetime fields
 
 
-class CommonQueryParams:
+class QueryParams:
     def __init__(
         self,
         limit: int = 20,
         offset: int | None = 0,
-        q: str | None = None,
     ):
         self.limit = limit
         self.offset = offset
-        self.q = q
 
 
-@dataclass
-class BaseQuery:
-    def dict(self):
-        return asdict(self)
+class BaseQuery(BaseModel):
+    limit: int = 20
+    offset: int | None = 0
+    q: str | None = None

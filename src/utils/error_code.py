@@ -24,6 +24,7 @@ __all__ = (
     "ERR_NUM_4011",
     "ERR_NUM_4003",
     "ERR_NUM_4004",
+    "ERR_NUM_4022",
     "ERR_NUM_10001",
     "ERR_NUM_10002",
     "ERR_NUM_10003",
@@ -60,6 +61,7 @@ ERR_NUM_4003 = ErrCode(
 )
 ERR_NUM_4004 = ErrCode(4004, "Resource not found: Requested data not existed")
 ERR_NUM_4009 = ErrCode(4009, "Resource already exists")
+ERR_NUM_4022 = ErrCode(4022, "Unprocessable Entity")
 ERR_NUM_10001 = ErrCode(10001, "Cannot use this email, already exists")
 ERR_NUM_10002 = ErrCode(10002, "Incorrect email for user, not found")
 ERR_NUM_10003 = ErrCode(10003, "Incorrect password")

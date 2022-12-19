@@ -1,9 +1,7 @@
 from datetime import datetime
 from typing import List, Literal, Optional
 
-from fastapi import Query
 from pydantic import EmailStr, validator
-from pydantic.dataclasses import dataclass
 
 from src.api.base import BaseModel, BaseQuery
 from src.utils.validators import items_to_list
@@ -85,6 +83,15 @@ class AuthGroup(BaseModel):
         orm_mode = True
 
 
+class AuthGroupBase(BaseModel):
+    id: int
+    name: str
+    description: str | None
+
+    class Config:
+        orm_mode = True
+
+
 class AuthUserCreate(BaseModel):
     username: str
     email: EmailStr
@@ -117,10 +124,9 @@ class AuthUserUpdate(BaseModel):
         return v
 
 
-@dataclass()
 class AuthUserQuery(BaseQuery):
-    id: List[int] = Query(default=None, description="user ids")
-    name: List[str] = Query(default=None, description="user name")
+    ids: List[int] | None
+    name: List[str] | None
 
 
 class AuthGroupCreate(BaseModel):
@@ -145,10 +151,9 @@ class AuthGroupUpdate(BaseModel):
         return v
 
 
-@dataclass()
 class AuthGroupQuery(BaseQuery):
-    id: List[int] = Query(None)
-    name: List[str] = Query(None)
+    ids: List[int] | None
+    name: List[str] | None
 
 
 class AuthRoleCreate(BaseModel):
@@ -173,10 +178,9 @@ class AuthRoleUpdate(BaseModel):
         return v
 
 
-@dataclass()
 class AuthRoleQuery(BaseQuery):
-    id: List[int] = Query(None)
-    name: List[str] = Query(None)
+    ids: List[int] | None
+    name: List[str] | None
 
 
 class AuthPermissionCreate(BaseModel):
@@ -193,6 +197,5 @@ class AuthPermissionUpdate(BaseModel):
     auth_role_ids: int | List[int] | None
 
 
-@dataclass()
 class AuthPermissionQuery(BaseQuery):
-    id: List[int] = Query(None)
+    ids: List[int] | None

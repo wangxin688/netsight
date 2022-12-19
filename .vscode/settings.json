@@ -6,6 +6,7 @@
         "dcim",
         "fastapi",
         "gunicorn",
+        "loguru",
         "Pydantic",
         "redoc",
         "selectinload",

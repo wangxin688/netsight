@@ -1,4 +1,4 @@
-from typing import Generic, List, Sequence, Type, TypeVar
+from typing import Any, Dict, Generic, List, Sequence, Type, TypeVar
 
 from pydantic import UUID4
 from sqlalchemy import select, update
@@ -26,6 +26,16 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self, session: AsyncSession, id: int | UUID4, options: Sequence = None
     ) -> ModelType | None:
         result: ModelType | None = await session.get(self.model, id, options=options)
+        return result
+
+    async def filter(
+        self, session: AsyncSession, filter: Dict[str, Any]
+    ) -> ModelType | None:
+        result: ModelType | None = (
+            (await session.execute(select(self.model).filter(**filter)))
+            .scalars()
+            .first()
+        )
         return result
 
     async def get_multi(

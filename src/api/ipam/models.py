@@ -138,6 +138,9 @@ class IPAddress(Base):
     ipam_vrf = relationship(
         "VRF", back_populates="ipam_ip_address", overlaps="ipam_ip_address"
     )
+    version = Column(
+        ENUM("IPv4", "IPv6", name="ip_version", create_type=False), nullable=False
+    )
     status = Column(
         ENUM(
             "Active",
