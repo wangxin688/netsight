@@ -9,17 +9,18 @@ from sqlalchemy.orm import selectinload
 
 from src.api.auth import schemas
 from src.api.auth.models import Group, Permission, Role, User
-from src.api.base import BaseListResponse, BaseResponse
+from src.api.base import BaseListResponse, BaseResponse, QueryParams
 from src.api.deps import audit_without_data, get_current_user, get_session
+from src.db.crud_base import CRUDBase
 from src.register.middleware import AuditRoute
 from src.utils.error_code import (
-    ERR_NUM_0,
     ERR_NUM_10004,
     ERR_NUM_10005,
     ERR_NUM_10006,
     ERR_NUM_10007,
     ERR_NUM_10008,
     ERR_NUM_10009,
+    ResponseMsg,
 )
 
 router = InferringRouter(route_class=AuditRoute)
@@ -30,54 +31,34 @@ class AuthUserCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
     audit = Depends(audit_without_data)
+    crud = CRUDBase(User)
 
     @router.get("/users/{id}")
     async def get_user(self, id: int) -> BaseResponse[schemas.AuthUser]:
         """get the user"""
-        result: AsyncResult = await self.session.execute(
-            select(User).where(User.id == id).options(selectinload(User.auth_role))
+        local_user: AsyncResult = await self.session.get(
+            User, id, options=(selectinload(User.auth_role),)
         )
-        local_user: User | None = result.scalars().first()
         if not local_user:
             return ERR_NUM_10004.dict()
-        return_info = ERR_NUM_0.dict()
-        return_info["data"] = local_user
+        return_info = ResponseMsg(data=local_user)
         return return_info
 
     @router.get("/users")
-    async def get_users_all(self) -> BaseListResponse[List[schemas.AuthUserBase]]:
-        local_users: List[User] = (
-            (await self.session.execute(select(User))).scalars().all()
-        )
-        count = len(local_users)
-        return_info = ERR_NUM_0
-        return_info.data = {"data": {"count": count, "results": local_users}}
+    async def get_users(
+        self, q: QueryParams
+    ) -> BaseListResponse[List[schemas.AuthUserBase]]:
+        results = await self.crud.get_all(self.session, q.limit, q.offset)
+        count: int = (await self.session.execute(select(func.count(User.id)))).scalar()
+        return_info = ResponseMsg(data={"count": count, "results": results})
         return return_info
 
     @router.post("/users/getList")
-    async def get_users(
+    async def get_users_filter(
         self,
         user: schemas.AuthUserQuery,
     ) -> BaseListResponse[List[schemas.AuthUser]]:
-        if not user.q:
-            result = (
-                (
-                    await self.session.execute(
-                        select(User)
-                        .slice(
-                            user.offset,
-                            user.limit + user.offset,
-                        )
-                        .options(selectinload(User.auth_role))
-                    )
-                )
-                .scalars()
-                .all()
-            )
-            count = (await self.session.execute(select(func.count(User.id)))).scalar()
-            return_info = ERR_NUM_0.dict()
-            return_info.update({"data": {"count": count, "results": result}})
-            return return_info
+        pass
 
     @router.put("/users/{id}")
     async def update_user(
@@ -85,24 +66,13 @@ class AuthUserCBV:
         id: int,
         user: schemas.AuthUserUpdate,
     ) -> BaseResponse[int]:
-        result: AsyncResult = await self.session.execute(
-            select(User).where(User.id == id).options(selectinload(User.auth_group))
+        local_user = await self.session.get(
+            User, id, options=(selectinload(User.auth_group),)
         )
-        local_user: User | None = result.scalars().first()
         if not local_user:
             return ERR_NUM_10004.dict()
         if user.email is not None:
-            existed = (
-                (
-                    await (
-                        self.session.execute(
-                            select(User.id).where(User.email == user.email)
-                        )
-                    )
-                )
-                .scalars()
-                .one_or_none()
-            )
+            existed = await self.crud.get_by_field(self.session, "email", user.email)
             if existed:
                 return ERR_NUM_10005.dict()
         if user.auth_group_ids:
@@ -113,17 +83,7 @@ class AuthUserCBV:
                     local_user.auth_group.remove(group)
             for user_group_id in user.auth_group_ids:
                 if user_group_id not in group_ids:
-                    auth_group: Group | None = (
-                        (
-                            await (
-                                self.session.execute(
-                                    select(Group).where(Group.id == user_group_id)
-                                )
-                            )
-                        )
-                        .scalars()
-                        .one_or_none()
-                    )
+                    auth_group: Group = await self.session.get(Group, user_group_id)
                     if auth_group:
                         local_user.auth_group.append(auth_group)
         if not user.password:
@@ -147,22 +107,25 @@ class AuthUserCBV:
                 )
             )
         await self.session.commit()
-        return_info = ERR_NUM_0
-        return_info.data = local_user.id
+        return_info = ResponseMsg(data=local_user.id)
         return return_info
 
     @router.delete("/users/{id}")
     async def delete_user(self, id: int) -> BaseResponse[int]:
-        result: AsyncResult = await self.session.execute(
-            select(User).where(User.id == id)
-        )
-        local_user: User | None = result.scalars().first()
+        local_user = await self.crud.delete(self.session, id)
         if not local_user:
             return ERR_NUM_10004.dict()
-        await self.session.delete(local_user)
-        await self.session.commit()
-        return_info = ERR_NUM_0.dict()
-        return_info.update({"data": id})
+        return_info = ResponseMsg(data=id)
+        return return_info
+
+    @router.post("/users/deleteList")
+    async def delete_users(
+        self, user: schemas.AuthUserBulkDelete
+    ) -> BaseResponse[List[int]]:
+        results = await self.crud.delete_multi(self.session, user.ids)
+        if not results:
+            return ERR_NUM_10004.dict()
+        return_info = ResponseMsg(data=[d.id for d in results])
         return return_info
 
 
@@ -171,68 +134,55 @@ class AuthGroupCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
     audit = Depends(audit_without_data)
+    crud = CRUDBase(Group)
 
     @router.post("/groups")
     async def create_group(
         self, group: schemas.AuthGroupCreate
     ) -> BaseResponse[int | None]:
-        return_info = ERR_NUM_0
-        local_group: Group | None = (
-            (await self.session.execute(select(Group).where(Group.name == group.name)))
-            .scalars()
-            .first()
-        )
+        local_group = await self.crud.get_by_field(self.session, "name", group.name)
         if local_group is not None:
-            return ERR_NUM_10006
+            return ERR_NUM_10006.dict()
         new_group = Group(**group.dict(exclude={"auth_user_ids"}))
         self.session.add(new_group)
         await self.session.flush()
         if not group.auth_user_ids:
             await self.session.commit()
-            return_info.data = id
+            return_info = ResponseMsg(data=id)
             return return_info
-        users: List[User] = (
-            (
-                await self.session.execute(
-                    select(User).where(User.id.in_(group.auth_user_ids))
-                )
-            )
-            .scalars()
-            .all()
-        )
+        user_curd = CRUDBase(User)
+        users = await user_curd.get_multi(self.session, group.auth_user_ids)
         for user in users:
             new_group.auth_user.append(user)
         self.session.add(new_group)
         await self.session.commit()
-        return_info.data = id
+        return_info = ResponseMsg(data=id)
         return return_info
 
     @router.get("/groups/{id}")
     async def get_group(self, id: int) -> BaseResponse[schemas.AuthGroup]:
-        results: AsyncResult = await self.session.execute(
-            select(Group).where(Group.id == id).options(selectinload(Group.auth_user))
+        local_group = await self.session.get(
+            Group, id, options=(selectinload(Group.auth_user),)
         )
-        group: Group | None = results.scalars().first()
-        if not group:
+        if not local_group:
             return ERR_NUM_10007
-        return_info = ERR_NUM_0(data=group)
+        return_info = ResponseMsg(data=local_group)
         return return_info
 
     @router.get("/groups")
-    async def get_groups_all(self) -> BaseListResponse[List[schemas.AuthGroupBase]]:
-        local_groups: List[Group] = (
-            (await self.session.execute(select(Group))).scalar().all()
-        )
-        count = len(local_groups)
-        return_info = ERR_NUM_0
-        return_info.data = {"data": {"count": count, "results": local_groups}}
+    async def get_groups_all(
+        self, q: QueryParams
+    ) -> BaseListResponse[List[schemas.AuthGroupBase]]:
+        results = await self.crud.get_all(self.session, q.limit, q.offset)
+        count: int = (await self.session.execute(func.count(Group.id))).scalar()
+        return_info = ResponseMsg(data={"count": count, "results": results})
+        return return_info
 
     @router.post("/groups/getList")
     async def get_groups(
         self, group: schemas.AuthGroupQuery
     ) -> BaseListResponse[List[schemas.AuthGroup]]:
-        stm = select(Group)  # noqa
-        cnt_stmt = select(func.count(Group.id))  # noqa
+        pass
 
     @router.put("/groups/{id}")
     async def update_group(
@@ -240,14 +190,9 @@ class AuthGroupCBV:
         id: int,
         group: schemas.AuthGroupUpdate,
     ) -> BaseResponse[int]:
-        result: AsyncResult = await self.session.execute(
-            select(
-                select(Group)
-                .where(Group.id == id)
-                .options(selectinload(Group.auth_user))
-            )
+        local_group = await self.session.get(
+            Group, id, options=(selectinload(Group.auth_user),)
         )
-        local_group: Group | None = result.scalars().first()
         if not local_group:
             return ERR_NUM_10007
         if group.auth_user_ids:
@@ -258,15 +203,7 @@ class AuthGroupCBV:
                     local_group.auth_user.remove(user)
             for auth_user_id in group.auth_user_ids:
                 if auth_user_id not in user_ids:
-                    _auth_user: User | None = (
-                        (
-                            await self.session.execute(
-                                select(User).where(User.id == auth_user_id)
-                            )
-                        )
-                        .scalars()
-                        .one_or_none()
-                    )
+                    _auth_user: User = await self.session.get(User, auth_user_id)
                     if _auth_user:
                         local_group.auth_user.append(_auth_user)
         self.session.execute(
@@ -276,22 +213,15 @@ class AuthGroupCBV:
             .execute_options(synchronize_session="fetch")
         )
         await self.session.commit()
-        return_info = ERR_NUM_0
-        return_info.data = local_group.id
+        return_info = ResponseMsg(data=id)
         return return_info
 
     @router.delete("/groups/{id}")
     async def delete_group(self, id: int) -> BaseResponse[int]:
-        result: AsyncResult = await self.session.execute(
-            select(Group).where(Group.id == id)
-        )
-        local_group: Group | None = result.scalars().first()
+        local_group = await self.crud.delete(self.session, id)
         if not local_group:
             return ERR_NUM_10007
-        self.session.delete(local_group)
-        await self.session.commit()
-        return_info = ERR_NUM_0
-        return_info.data = local_group.id
+        return_info = ResponseMsg(data=id)
         return return_info
 
 
@@ -300,73 +230,56 @@ class AuthRoleCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
     audit = Depends(audit_without_data)
+    crud = CRUDBase(Role)
 
     @router.post("/roles")
     async def create_role(
         self,
         role: schemas.AuthRoleCreate,
     ) -> BaseResponse[int]:
-        return_info = ERR_NUM_0
-        local_role: Role | None = (
-            (await self.session.execute(select(Role).where(Role.name == role.name)))
-            .scalars()
-            .first()
-        )
+        local_role = await self.crud.get_by_field(self.session, "name", role.name)
         if local_role is not None:
-            return ERR_NUM_10008
-
+            return ERR_NUM_10008.dict()
         new_role = Role(**role.dict(exclude={"auth_user_ids", "auth_permission_ids"}))
         self.session.add(new_role)
         await self.session.flush()
+        perm_crud = CRUDBase(Permission)
         if role.auth_permission_ids:
-            permissions = List[Permission] = (
-                (
-                    await self.session.execute(
-                        select(Permission).where(
-                            Permission.id.in_(role.auth_permission_ids)
-                        )
-                    )
-                )
-                .scalars()
-                .all()
+            permissions: List[Permission] = perm_crud.get_multi(
+                self.session, role.auth_permission_ids
             )
             if permissions:
                 for permission in permissions:
                     new_role.auth_permission.append(permission)
         await self.session.commit()
-        return_info.data = new_role.id
+        return_info = ResponseMsg(data=new_role.id)
         return return_info
 
     @router.get("/roles/{id}")
     async def get_role(self, id: int) -> BaseResponse[schemas.AuthRole]:
-        results: AsyncResult = await self.session.execute(
-            select(Role)
-            .where(Role.id == id)
-            .options(selectinload(Role.auth_permission))
+        role: Role = await self.session.get(
+            Role, id, options=(selectinload(Role.auth_permission),)
         )
-        role: Role | None = results.scalars().first()
         if not role:
-            return ERR_NUM_10009
-        return_info = ERR_NUM_0(data=role)
+            return ERR_NUM_10009.dict()
+        return_info = ResponseMsg(data=role)
         return return_info
 
     @router.get("/roles")
-    async def get_roles_all(self) -> BaseListResponse[List[schemas.AuthRoleBase]]:
-        local_roles: List[Role] = (
-            (await self.session.execute(select(Role))).scalars().all()
-        )
-        count = len(local_roles)
-        return_info = ERR_NUM_0
-        return_info.data = {"data": {"count": count, "results": local_roles}}
+    async def get_roles(
+        self, q: QueryParams
+    ) -> BaseListResponse[List[schemas.AuthRoleBase]]:
+        local_roles = await self.crud.get_all(self.session, q.limit, q.offset)
+        count: int = (await self.session.execute(select(func.count(Role.id)))).scalar()
+        return_info = ResponseMsg(data={"count": count, "results": local_roles})
         return return_info
 
     @router.post("/roles/getList")
-    async def get_roles(
+    async def get_roles_filter(
         self,
         role: schemas.AuthRoleQuery,
     ) -> BaseListResponse[List[schemas.AuthRole]]:
-        stm = select(Group)  # noqa
-        cnt_stmt = select(func.count(Group.id))  # noqa
+        pass
 
     @router.put("/roles/{id}")
     async def update_role(
@@ -374,14 +287,9 @@ class AuthRoleCBV:
         id: int,
         role: schemas.AuthRoleUpdate,
     ) -> BaseResponse[int]:
-        result: AsyncResult = await self.session.execute(
-            select(
-                select(Role)
-                .where(Role.id == id)
-                .options(selectinload(Role.auth_permission))
-            )
+        local_role = await self.crud.get(
+            Role, id, options=(selectinload(Role.auth_permission),)
         )
-        local_role: Role | None = result.scalars().first()
         if not local_role:
             return ERR_NUM_10009
         if role.auth_permission_ids:
@@ -392,16 +300,8 @@ class AuthRoleCBV:
                     local_role.auth_permission.remove(permission)
             for auth_permission_id in role.auth_permission_ids:
                 if auth_permission_id not in permission_ids:
-                    _auth_permission: Permission | None = (
-                        (
-                            await self.session.execute(
-                                select(Permission).where(
-                                    Permission.id == auth_permission_id
-                                )
-                            )
-                        )
-                        .scalars()
-                        .one_or_none()
+                    _auth_permission: Permission = self.session.get(
+                        Permission, auth_permission_id
                     )
                     if _auth_permission:
                         local_role.auth_user.append(_auth_permission)
@@ -412,20 +312,23 @@ class AuthRoleCBV:
             .execute_options(synchronize_session="fetch")
         )
         await self.session.commit()
-        return_info = ERR_NUM_0
-        return_info.data = local_role.id
+        return_info = ResponseMsg(data=id)
         return return_info
 
     @router.delete("/roles/{id}")
     async def delete_role(self, id: int) -> BaseResponse[int]:
-        result: AsyncResult = await self.session.execute(
-            select(Role).where(Role.id == id)
-        )
-        local_role: Role | None = result.scalars().first()
+        local_role = await self.crud.delete(self.session, id)
         if not local_role:
             return ERR_NUM_10007
-        self.session.delete(local_role)
-        await self.session.commit()
-        return_info = ERR_NUM_0
-        return_info.data = local_role.id
+        return_info = ResponseMsg(data=id)
+        return return_info
+
+    @router.post("/roles/deleteList")
+    async def delete_roles(
+        self, role: schemas.AuthRoleBulkDelete
+    ) -> BaseResponse[List[int]]:
+        results = await self.crud.delete_multi(self.session, role.ids)
+        if not results:
+            return ERR_NUM_10007
+        return_info = ResponseMsg(data=[d.id for d in results])
         return return_info

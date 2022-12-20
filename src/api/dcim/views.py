@@ -27,8 +27,9 @@ from src.api.dcim.models import (
 from src.api.deps import get_current_user, get_session
 from src.api.ipam.models import ASN
 from src.api.netsight.models import Contact
+from src.db.crud_base import CRUDBase
 from src.register.middleware import AuditRoute
-from src.utils.error_code import ERR_NUM_0, ERR_NUM_4004, ERR_NUM_4009, ERR_NUM_4022
+from src.utils.error_code import ERR_NUM_4004, ERR_NUM_4009, ERR_NUM_4022, ResponseMsg
 
 router = InferringRouter(route_class=AuditRoute)
 
@@ -37,10 +38,17 @@ router = InferringRouter(route_class=AuditRoute)
 class RegionCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
+    crud = CRUDBase(Region)
 
     @router.post("/regions")
     async def create_region(self, region: schemas.RegionCreate) -> BaseResponse[int]:
         """create a new region"""
+        if region.parent_id:
+            local_region = self.session.get(Region, region.parent_id)
+            if not local_region:
+                return_info = ERR_NUM_4004
+                return_info.msg = f"Created region failed, region with parent_id #{region.parent_id} not found"
+                return return_info
         new_region = Region(**region.dict(exclude_none=True))
         self.session.add(new_region)
         try:
@@ -48,15 +56,14 @@ class RegionCBV:
         except IntegrityError as e:
             logger.error(e)
             await self.session.rollback()
-            return {
-                "code": ERR_NUM_4009.code,
-                "data": None,
-                "msg": f"Region with name: `{region.name}` already exists in the same level",
-            }
+            return_info = ERR_NUM_4009
+            return_info.msg = (
+                f"Create region failed, region with name: `{region.name}` already exists in the same level",
+            )
+            return return_info
         await self.session.flush()
-        return_info = ERR_NUM_0
-        return_info.data = new_region.id
-        return return_info.dict()
+        return_info = ResponseMsg(data=new_region.id)
+        return return_info
 
     @router.get("/regions/{id}")
     async def get_region(self, id: int) -> BaseResponse[schemas.Region]:
@@ -65,28 +72,18 @@ class RegionCBV:
         if local_region is None:
             return_info = ERR_NUM_4004
             return_info.msg = f"Region #{id} not found"
-            return return_info.dict()
-        return_info = ERR_NUM_0
-        return_info.data = local_region
-        return return_info.dict()
+            return return_info
+        return_info = ResponseMsg(data=local_region)
+        return return_info
 
     @router.get("/regions")
     async def get_regions(
         self, q: QueryParams = Depends(QueryParams)
     ) -> BaseListResponse[List[schemas.RegionBase]]:
         """get regions without custom parameters"""
-        local_regions = (
-            (
-                await self.session.execute(
-                    select(Region).slice(q.offset, q.limit + q.offset)
-                )
-            )
-            .scalars()
-            .all()
-        )
-        count = (await self.session.execute(select(Region.id))).scalar()
-        return_info = ERR_NUM_0
-        return_info.data = {"count": count, "results": local_regions}
+        local_regions = await self.crud.get_all(self.session, q.limit, q.offset)
+        count = (await self.session.execute(select(func.count(Region.id)))).scalar()
+        return_info = ResponseMsg(data={"count": count, "results": local_regions})
         return return_info
 
     @router.post("/regions/getList")
@@ -110,9 +107,8 @@ class RegionCBV:
         stmt = stmt.slice(region.offset, region.offset + region.limit)
         results = (await self.session.execute(stmt)).scalars().all()
         count = (await self.session.execute(count_stmt)).scalar()
-        return_info = ERR_NUM_0
-        return_info.data = {"count": count, "results": results}
-        return return_info.dict()
+        return_info = ResponseMsg(data={"count": count, "results": results})
+        return return_info
 
     @router.put("/regions/{id}")
     async def update_region(
@@ -122,8 +118,14 @@ class RegionCBV:
         local_region: Region | None = await self.session.get(Region, id)
         if not local_region:
             return_info = ERR_NUM_4004
-            return_info.data = local_region
-            return return_info.dict()
+            return_info.msg = f"Update region failed, region #{id} not found"
+            return return_info
+        if region.parent_id:
+            parent_region = self.session.get(Region, region.parent_id)
+            if not parent_region:
+                return_info = ERR_NUM_4004
+                return_info.msg = f"Update region failed, region with parent_id #{region.parent_id} not found"
+                return return_info
         stmt = (
             update(Region)
             .where(Region.id == id)
@@ -136,36 +138,25 @@ class RegionCBV:
         except IntegrityError as e:
             logger.error(e)
             await self.session.rollback()
-            return {
-                "code": ERR_NUM_4009.code,
-                "data": None,
-                "msg": f"Region with name '{region.name}' already exists in the same level",
-            }
-        return_info = ERR_NUM_0
-        return_info.data = id
-        return return_info.dict()
+            return_info = ERR_NUM_4009
+            return_info.msg = f"Update region failed, region with name `{region.name}` already exists in the same level"
+            return return_info
+        return_info = ResponseMsg(data=id)
+        return return_info
 
     @router.post("/regions/updateList")
     async def bulk_update_regions(
         self, region: schemas.RegionBulkUpdate
     ) -> BaseResponse[List[int]]:
         """bulk update a list of regions"""
-        local_regions = (
-            (
-                await self.session.execute(
-                    select(Region.id).where(Region.id.in_(region.ids))
-                )
-            )
-            .scalars()
-            .all()
-        )
+        local_regions = await self.crud.get_multi(self.session, region.ids)
         diff_region: set = set(region.ids) - set(local_regions)
         if diff_region:
             return_info = ERR_NUM_4004
             return_info.msg = (
                 f"Bulk update region failed, region #{list(diff_region)} not found"
             )
-            return return_info.dict()
+            return return_info
         await self.session.execute(
             update(Region)
             .where(Region.id.in_(region.region_ids))
@@ -173,22 +164,18 @@ class RegionCBV:
             .execute_options(synchronize_session="fetch")
         )
         await self.session.commit()
-        return_info = ERR_NUM_0
-        return_info.data = region.region_ids
+        return_info = ResponseMsg(data=region.ids)
         return return_info
 
     @router.delete("/regions/{id}")
     async def delete_region(self, id: int) -> BaseResponse[int]:
         """delete a region"""
-        local_region: Region | None = await self.session.get(Region, id)
+        local_region: Region | None = await self.crud.delete(self.session, id)
         if local_region is None:
-            return {
-                "code": ERR_NUM_4004.code,
-                "data": None,
-                "msg": f"Delete region failed, region #{id} not found",
-            }
-        return_info = ERR_NUM_0
-        return_info.data = id
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Delete region failed, region #{id} not found"
+            return return_info
+        return_info = ResponseMsg(data=id)
         return return_info
 
     @router.post("/regions/deleteList")
@@ -196,25 +183,13 @@ class RegionCBV:
         self, region: schemas.RegionBulkDelete
     ) -> BaseResponse[List[int]]:
         """bulk delete regions"""
-        regions: List[Region] = (
-            (
-                await self.session.execute(
-                    select(Region).where(Region.id.in_(region.ids))
-                )
-            )
-            .scalars()
-            .all()
-        )
-        if not regions:
+        local_regions = await self.crud.delete_multi(self.session, region.ids)
+        if not local_regions:
             return_info = ERR_NUM_4004
             return_info.msg = (
                 f"Bulk delete regions failed, regions #{region.ids} not found"
             )
-        for _region in regions:
-            await self.session.delete(_region)
-        await self.session.commit()
-        return_info = ERR_NUM_0
-        return_info.data = region.ids
+        return_info = ResponseMsg(data=[d.id for d in local_regions])
         return return_info
 
 
@@ -222,25 +197,21 @@ class RegionCBV:
 class SiteCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
+    curd = CRUDBase(Site)
 
     @router.post("/sites")
     async def create_site(
         self, site: schemas.SiteCreate
     ) -> BaseListResponse[List[schemas.Region]]:
         """Create a new site"""
+        contact_crud = CRUDBase(Contact)
+        new_site = Site(**site.dict(exclude={"contact_ids"}))
         try:
-            new_site = Site(**site.dict(exclude={"contact_ids"}))
             await self.session.add(new_site)
             await self.session.flush()
             if site.contact_ids:
-                contacts: List[Contact] = (
-                    (
-                        await self.session.execute(
-                            select(Contact).where(Contact.id.in_(site.contact_ids))
-                        )
-                    )
-                    .scalars()
-                    .all()
+                contacts: List[Contact] = await contact_crud.get_multi(
+                    self.session, site.contact_ids
                 )
                 if len(contacts) > 0:
                     for contact in contacts:
@@ -248,14 +219,11 @@ class SiteCBV:
         except IntegrityError as e:
             logger.error(e)
             await self.session.rollback()
-            return {
-                "code": ERR_NUM_4009.code,
-                "data": None,
-                "msg": f"Create site failed, site with `{site.name}` or `{site.site_code}` already exists",
-            }
+            return_info = ERR_NUM_4009
+            return_info.msg = f"Create site failed, site with `{site.name}` or `{site.site_code}` already exists"
+            return return_info
         await self.session.commit()
-        return_info = ERR_NUM_0
-        return_info.data = new_site.id
+        return_info = ResponseMsg(data=new_site.id)
         return return_info
 
     @router.get("/sites/{id}")
@@ -264,25 +232,23 @@ class SiteCBV:
         id: int,
     ) -> BaseResponse[schemas.Site]:
         """Get the site"""
-        result: AsyncResult = await self.session.execute(
-            select(Site)
-            .where(Site.id == id)
-            .options(
+        local_site: AsyncResult = await self.curd.get(
+            Site,
+            id,
+            options=(
                 selectinload(
                     Site.dcim_device,
                     Site.dcim_location,
                     Site.dcim_rack,
                     Site.circuit_termination,
-                )
-            )
+                ),
+            ),
         )
-        local_site: Site | None = result.scalars().first()
         if not local_site:
             return_info = ERR_NUM_4004
             return_info.msg = f"Site #{id} not found,  requested data not existed"
             return return_info
-        return_info = ERR_NUM_0
-        return_info.data = local_site
+        return_info = ResponseMsg(data=local_site)
         return return_info
 
     @router.get("/sites")
@@ -290,18 +256,11 @@ class SiteCBV:
         self, q: QueryParams = Depends(QueryParams)
     ) -> BaseListResponse[List[schemas.SiteBase]]:
         """get sites without custom parameters"""
-        local_sites: List[Site] = (
-            (
-                await self.session.execute(
-                    select(Site).slice(q.offset, q.limit + q.offset)
-                )
-            )
-            .scalars()
-            .all()
+        local_sites: List[Site] = await self.curd.get_all(
+            self.session, q.limit, q.offset
         )
-        count = (await self.session.execute(select(Site.id))).scalar()
-        return_info = ERR_NUM_0
-        return_info.data = {"data": {"count": count, "results": local_sites}}
+        count = (await self.session.execute(select(func.count(Site.id)))).scalar()
+        return_info = ResponseMsg(data={"count": count, "results": local_sites})
         return return_info
 
     @router.post("/sites/getList")
@@ -316,21 +275,13 @@ class SiteCBV:
         id: int,
         site: schemas.SiteUpdate,
     ) -> BaseResponse[int]:
-        local_site: Site | None = (
-            (
-                await self.session.execute(select(Site).where(Site.id == id)).options(
-                    selectinload(Site.ipam_asn, Site.contact)
-                )
-            )
-            .scalars()
-            .first()
+        local_site: Site | None = await self.session.get(
+            Site, id, options=(selectinload(Site.ipam_asn, Site.contact),)
         )
         if not local_site:
-            return {
-                "code": ERR_NUM_4004.code,
-                "data": None,
-                "msg": f"Site #{id} not found",
-            }
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Update site failed, site #{id} not found"
+            return return_info
         if site.ipam_asn_ids:
             asns: List[ASN] | None = local_site.ipam_asn
             asn_ids = [asn.id for asn in asns]
@@ -370,10 +321,9 @@ class SiteCBV:
                 await self.session.rollback()
                 return_info = ERR_NUM_4009
                 return_info.msg = f"Site with name `{site.name}` or site_code `{site.site_code}` already exists"
-                return return_info.dict()
+                return return_info
         await self.session.commit()
-        return_info = ERR_NUM_0
-        return_info.data = id
+        return_info = ResponseMsg(data=id)
         return return_info
 
     @router.post("/sites/updateList")
@@ -387,13 +337,12 @@ class SiteCBV:
         self,
         id: int,
     ) -> BaseResponse[int]:
-        local_site: Site | None = await self.session.get(Site, id)
+        local_site: Site | None = await self.curd.delete(self.session, id)
         if not local_site:
             return_info = ERR_NUM_4004
             return_info.msg = f"Delete site failed, site #{id} not found"
             return return_info
-        return_info = ERR_NUM_0
-        return_info.data = id
+        return_info = ResponseMsg(data=id)
         return return_info
 
     @router.post("/sites/deleteList")
@@ -401,17 +350,12 @@ class SiteCBV:
         self, site: schemas.SiteBulkDelete
     ) -> BaseResponse[List[int]]:
         """bulk delete sites"""
-        local_sites: List[Site] | None = (
-            (await self.session.execute(select(Site).where(Site.id.in_(site.ids))))
-            .scalars()
-            .all()
-        )
+        local_sites: List[Site] = await self.curd.get_multi(self.session, site.ids)
         if local_sites is None:
             return_info = ERR_NUM_4004
             return_info.msg = f"Bulk delete sites failed, sites #{id} not found"
             return return_info
-        return_info = ERR_NUM_0
-        return_info.data = site.ids
+        return_info = ResponseMsg(data=[d.id for d in local_sites])
         return return_info
 
 
@@ -419,6 +363,7 @@ class SiteCBV:
 class LocationCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
+    curd = CRUDBase(Location)
 
     @router.post("/locations")
     async def create_location(
@@ -441,8 +386,7 @@ class LocationCBV:
             return_info = ERR_NUM_4009
             return_info.msg = f"Create Location failed, Location with same name `{location.name}` already exists"
             return return_info
-        return_info = ERR_NUM_0
-        return_info.data = new_location.id
+        return_info = ResponseMsg(data=new_location.id)
         return return_info
 
     @router.get("/locations/{id}")
@@ -451,27 +395,21 @@ class LocationCBV:
         if not local_location:
             return_info = ERR_NUM_4004
             return_info.msg = f"Location #{id} not found"
-            return return_info.dict()
-        return_info = ERR_NUM_0
-        return_info.data = local_location
-        return return_info.dict()
+            return return_info
+        return_info = ResponseMsg(data=local_location)
+        return return_info
 
     @router.get("/locations")
     async def get_locations(
         self, q: QueryParams = Depends(QueryParams)
     ) -> BaseListResponse[List[schemas.LocationBase]]:
-        results: List[Location] = (
-            (
-                await self.session.execute(
-                    select(Location).slice(q.offset, q.limit + q.offset)
-                )
-            )
-            .scalars()
-            .all()
+        results: List[Location] = await self.curd.get_all(
+            self.session, q.limit, q.offset
         )
-        count: int = (await self.session.execute(select(Location.id))).scalar()
-        return_info = ERR_NUM_0
-        return_info.data = {"data": {"count": count, "results": results}}
+        count: int = (
+            await self.session.execute(select(func.count(Location.id)))
+        ).scalar()
+        return_info = ResponseMsg(data={"count": count, "results": results})
         return return_info
 
     @router.post("/locations/getList")
@@ -504,69 +442,56 @@ class LocationCBV:
             .execute_options(synchronize_session="fetch")
         )
         await self.session.commit()
-        return_info = ERR_NUM_0
-        return_info.data = id
+        return_info = ResponseMsg(data=id)
         return return_info
 
     @router.delete("/locations/{id}")
     async def delete_location(self, id: int) -> BaseResponse[int]:
-        local_location: Location | None = await self.session.get(Location, id)
+        local_location: Location | None = await self.curd.delete(self.session, id)
         if not local_location:
             return_info = ERR_NUM_4009
             return_info.msg = f"Delete location failed, location #{id} not found"
             return return_info
-        await self.session.delete(local_location)
-        await self.session.commit()
-        return_info = ERR_NUM_0
-        return_info.data = id
+        return_info = ResponseMsg(data=id)
         return return_info
 
     @router.delete("/locations/deleteList")
     async def bulk_delete_locations(
         self, location: schemas.LocationBulkDelete
     ) -> BaseResponse[List[int]]:
-        local_locations: List[Location] = (
-            (
-                await self.session.execute(
-                    select(Location).where(Location.id.in_(location.ids))
-                )
-            )
-            .scalars()
-            .all()
+        local_locations: List[Location] = await self.curd.delete_multi(
+            self.session, location.ids
         )
         if not local_locations:
             return_info = ERR_NUM_4004
             return_info.msg = (
                 f"Bulk delete location failed, location #{location.ids} not found"
             )
+            return return_info
+        return_info = ResponseMsg(data=[d.id for d in local_locations])
+        return return_info
 
 
 @cbv(router)
 class RackRoleCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
+    crud = CRUDBase(RackRole)
 
     @router.post("/rack-roles")
     async def create_rack_role(self, rack: schemas.RackRoleCreate) -> BaseResponse[int]:
-        local_rack_role: RackRole | None = (
-            (
-                await self.session.execute(
-                    select(RackRole).where(RackRole.name == rack.name)
-                )
-            )
-            .scalars()
-            .first()
+        local_rack_role: RackRole | None = await self.crud.get_by_field(
+            self.session, "name", rack.name
         )
         if local_rack_role is not None:
             return_info = ERR_NUM_4009
             return_info.msg = f"Rack role with name {rack.name} already exists"
-            return return_info.dict()
+            return return_info
         new_rack_role = RackRole(**rack.dict())
         await self.session.add(new_rack_role)
         await self.session.commit()
-        return_info = ERR_NUM_0
-        return_info.data = new_rack_role.id
-        return return_info.dict()
+        return_info = ResponseMsg(data=new_rack_role.id)
+        return return_info
 
     @router.get("/rack-roles/{id}")
     async def get_rack_role(self, id: int) -> BaseResponse[schemas.RackRole]:
@@ -575,8 +500,7 @@ class RackRoleCBV:
             return_info = ERR_NUM_4004
             return_info.msg = f"Rack role #{id} not found"
             return return_info
-        return_info = ERR_NUM_0
-        return_info.data = local_rack_role
+        return_info = ResponseMsg(data=local_rack_role)
         return return_info
 
     @router.get("/rack-roles")
@@ -584,18 +508,13 @@ class RackRoleCBV:
         self, q: QueryParams = Depends(QueryParams)
     ) -> BaseListResponse[List[schemas.RackRoleBase]]:
         """get rack roles without custom parameters"""
-        results: List[RackRole] = (
-            (
-                await self.session.execute(
-                    select(RackRole).slice(q.offset, q.limit + q.offset)
-                )
-            )
-            .scalars()
-            .all()
+        results: List[RackRole] = await self.crud.get_all(
+            self.session, q.limit, q.offset
         )
-        count: int = (await self.session.execute(select(RackRole.id))).scalar()
-        return_info = ERR_NUM_0
-        return_info.data = {"data": {"count": count, "results": results}}
+        count: int = (
+            await self.session.execute(select(func.count(RackRole.id)))
+        ).scalar()
+        return_info = ResponseMsg(data={"count": count, "results": results})
         return return_info
 
     @router.post("/rack-roles/getList")
@@ -617,44 +536,34 @@ class RackRoleCBV:
             **rack_role.dict(exclude_none=True)
         ).execute_options(synchronize_session="fetch")
         await self.session.commit()
-        return_info = ERR_NUM_0
-        return_info.data = id
+        return_info = ResponseMsg(data=id)
         return return_info
 
     @router.delete("/rack-roles/{id}")
     async def delete_rack_role(self, id: int) -> BaseResponse[int]:
-        local_rack_role: RackRole | None = await self.session.get(RackRole, id)
+        local_rack_role: RackRole | None = await self.crud.delete(self.session, id)
         if local_rack_role is None:
-            return {
-                "code": ERR_NUM_4004.code,
-                "data": None,
-                "msg": f"Rack role #{id} not found",
-            }
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Delete rack role failed, rack role #{id} not found"
+            return return_info
         await self.session.delete(local_rack_role)
         await self.session.commit()
-        return_info = ERR_NUM_0
-        return_info.data = id
+        return_info = ResponseMsg(data=id)
         return return_info
 
     @router.delete("rack-roles/deleteList")
     async def bulk_delete_rack_roles(
         self, rack_role: schemas.RackRoleBulkDelete
     ) -> BaseResponse[List[int]]:
-        rack_roles: List[RackRole] = (
-            (
-                await self.session.execute(
-                    select(RackRole).where(RackRole.id.in_(rack_role.ids))
-                )
-            )
-            .scalars()
-            .all()
+        rack_roles: List[RackRole] = await self.crud.delete_multi(
+            self.session, rack_role.ids
         )
-        if len(rack_roles) > 0:
-            for _rack_role in rack_roles:
-                await self.session.delete(_rack_role)
-        await self.session.commit()
-        return_info = ERR_NUM_0
-        return_info.data = rack_role.ids
+
+        if len(rack_roles) == 0:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Bulk delete rack roles failed, rack role with id #{rack_role.ids} not found"
+            return return_info
+        return_info = ResponseMsg(data=[d.id for d in rack_roles])
         return return_info
 
 
@@ -662,19 +571,27 @@ class RackRoleCBV:
 class RackCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
+    curd = CRUDBase(Rack)
 
     @router.post("/racks")
     async def create_rack(self, rack: schemas.RackCreate) -> BaseResponse[int]:
-        local_rack: Rack | None = (
-            (await self.session.execute(select(Rack).where(Rack.name == rack.name)))
-            .scalars()
-            .first()
+        local_rack: Rack | None = await self.curd.get_by_field(
+            self.session, "name", rack.name
         )
         local_site: Site | None = await self.session.get(Site, rack.site_id)
-        # local_location: Location | None = ()
+        if rack.location_id:
+            local_location: Location = await self.session.get(
+                Location, rack.location_id
+            )
+            if local_location is None:
+                return_info = ERR_NUM_4004
+                return_info.msg = f"Create rack failed, rack with location #{rack.location_id} not found"
+                return return_info
         if local_rack is not None:
             return_info = ERR_NUM_4009
-            return_info.msg = f"Rack with name `{rack.name}` already exists"
+            return_info.msg = (
+                f"Create rack failed, rack with name `{rack.name}` already exists"
+            )
             return return_info
         if local_site is None:
             return_info = ERR_NUM_4004
@@ -682,29 +599,30 @@ class RackCBV:
                 f"Create rack failed, rack with site #{rack.site_id} not found"
             )
             return return_info
-        # new_rack = Rack(**rack.dict(exclude={"location_id", "device_ids", ""}))
+        new_rack = Rack(**rack.dict())
+        await self.session.add(new_rack)
+        await self.session.commit()
+        return_info = ResponseMsg(data=id)
+        return return_info
 
     @router.get("/racks/{id}")
-    async def get_rack(self, id: int) -> BaseResponse[schemas.Rack]:
-        pass
+    async def get_rack(self, id: int) -> BaseResponse[schemas.RackBase]:
+        local_rack: Rack = await self.session.get(Rack, id)
+        if not local_rack:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Rack #{id} not found"
+            return return_info
+        return_info = ResponseMsg(data=local_rack)
+        return return_info
 
     @router.get("/racks")
     async def get_racks(
         self, q: QueryParams = Depends(QueryParams)
     ) -> BaseListResponse[schemas.RackBase]:
         """get rack without custom parameters"""
-        results: List[Rack] = (
-            (
-                await self.session.execute(
-                    select(Rack).slice(q.offset, q.limit + q.offset)
-                )
-            )
-            .scalars()
-            .all()
-        )
-        count: int = (await self.session.execute(select(Rack.id))).scalar()
-        return_info = ERR_NUM_0
-        return_info.data = {"data": {"count": count, "results": results}}
+        results: List[Rack] = await self.curd.get_all(self.session, q.limit, q.offset)
+        count: int = (await self.session.execute(func.count(select(Rack.id)))).scalar()
+        return_info = ResponseMsg(data={"count": count, "results": results})
         return return_info
 
     @router.post("/racks/getList")
@@ -719,35 +637,25 @@ class RackCBV:
 
     @router.delete("/racks/{id}")
     async def delete_rack(self, id: int) -> BaseResponse[int]:
-        local_rack: Rack = self.session.get(Rack, id)
+        local_rack: Rack = self.curd.delete(self.session, id)
         if not local_rack:
             return_info = ERR_NUM_4004
             return_info.msg = f"Delete rack failed, rack with id #{id} not found"
             return return_info
-        await self.session.delete(local_rack)
-        await self.session.commit()
-        return_info = ERR_NUM_0
-        return_info.data = id
+        return_info = ResponseMsg(data=id)
         return return_info
 
     @router.delete("/racks/deleteList")
     async def bulk_delete_racks(
         self, rack: schemas.RackBulkDelete
     ) -> BaseListResponse[List[int]]:
-        racks: List[Rack] = (
-            (await self.session.execute(select(Rack).where(Rack.id.in_(rack.ids))))
-            .scalars()
-            .all()
-        )
+        racks: List[Rack] = await self.curd.delete_multi(self.session, rack.ids)
+
         if not racks:
             return_info = ERR_NUM_4004
             return_info.msg = f"Bulk delete racks failed, racks #{rack.ids} not found"
             return return_info
-        for _rack in racks:
-            await self.session.delete(_rack)
-        await self.session.commit()
-        return_info = ERR_NUM_0
-        return_info.data = rack.ids
+        return_info = ResponseMsg(data=[d.id for d in racks])
         return return_info
 
 
@@ -755,41 +663,27 @@ class RackCBV:
 class ManufacturerCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
+    curd = CRUDBase(Manufacturer)
 
     @router.post("/manufacturers")
     async def create_manufacturer(
         self, manufacturer: schemas.ManufacturerCreate
     ) -> BaseResponse[int]:
-        local_manufacturer: Manufacturer | None = (
-            (
-                await self.session.execute(
-                    select(Manufacturer).where(Manufacturer.name == manufacturer.name)
-                )
-            )
-            .scalars()
-            .first()
+        local_manufacturer: Manufacturer | None = await self.curd.get_by_field(
+            self.session, "name", manufacturer.name
         )
         if local_manufacturer is not None:
-            return {
-                "code": ERR_NUM_4009.code,
-                "data": None,
-                "msg": f"Create manufacturer failed, manufacturer with name {manufacturer.name} already exists",
-            }
+            return_info = ERR_NUM_4009
+            return_info.msg = f"Create manufacturer failed, manufacturer with name {manufacturer.name} already exists"
+            return return_info
         new_manufacturer = Manufacturer(
             **manufacturer.dict(exclude={"device_type_ids"})
         )
         await self.session.add(new_manufacturer)
         if manufacturer.device_type_ids:
-            device_types: List[DeviceType] | None = (
-                (
-                    await self.session.execute(
-                        select(DeviceType).where(
-                            DeviceType.id.in_(manufacturer.device_type_ids)
-                        )
-                    )
-                )
-                .scalar()
-                .all()
+            device_type_crud = CRUDBase(DeviceType)
+            device_types: List[DeviceType] | None = await device_type_crud.get_multi(
+                self.session, manufacturer.device_type_ids
             )
             if len(device_types) > 0:
                 for device_type in device_types:
@@ -797,9 +691,8 @@ class ManufacturerCBV:
                         device_type.manufacturer_id = new_manufacturer.id
                         await self.session.add(device_type)
         await self.session.commit()
-        return_info = ERR_NUM_0
-        return_info.data = new_manufacturer.id
-        return return_info.dict()
+        return_info = ResponseMsg(data=new_manufacturer.id)
+        return return_info
 
     @router.get("/manufacturers/{id}")
     async def get_manufacturer(self, id: int) -> BaseResponse[schemas.Manufacturer]:
@@ -809,26 +702,18 @@ class ManufacturerCBV:
         if not local_manufacturer:
             return_info = ERR_NUM_4004
             return_info.msg = f"Manufacturer #{id} not found"
-        return_info = ERR_NUM_0
-        return_info.data = local_manufacturer
-        return return_info.dict()
+        return_info = ResponseMsg(data=local_manufacturer)
+        return return_info
 
     @router.get("/manufacturers")
     async def get_manufacturers(
         self, q: QueryParams = Depends(QueryParams)
     ) -> BaseListResponse[List[schemas.ManufacturerBase]]:
-        results: List[Manufacturer] = (
-            (
-                await self.session.execute(
-                    select(Manufacturer).slice(q.offset, q.limit + q.offset)
-                )
-            )
-            .scalars()
-            .all()
+        results: List[Manufacturer] = await self.curd.get_all(
+            self.session, q.limit, q.offset
         )
-        count: int = (await self.session.execute(Manufacturer.id)).scalar()
-        return_info = ERR_NUM_0
-        return_info.data = {"data": {"count": count, "results": results}}
+        count: int = (await self.session.execute(func.count(Manufacturer.id))).scalar()
+        return_info = ResponseMsg(data={"count": count, "results": results})
         return return_info
 
     @router.post("/manufacturers/getList")
@@ -842,14 +727,14 @@ class ManufacturerCBV:
         self, id: int, manufacturer: schemas.ManufacturerUpdate
     ) -> BaseResponse[int]:
         local_manufacturer: Manufacturer | None = await self.session.get(
-            Manufacturer, id
+            Manufacturer, id, options=(selectinload(Manufacturer.dcim_device_type))
         )
         if not local_manufacturer:
-            return {
-                "code": ERR_NUM_4004.code,
-                "data": None,
-                "msg": "Manufacturer #id not found",
-            }
+            return_info = ERR_NUM_4004
+            return_info.msg = (
+                f"Updated manufacturer failed, manufacturer #{id} not found "
+            )
+            return return_info
         await self.session.execute(
             update(Manufacturer)
             .where(manufacturer.id == id)
@@ -857,16 +742,9 @@ class ManufacturerCBV:
             .execute_options(synchronize_session="fetch")
         )
         if manufacturer.device_type_ids is not None:
-            device_types: List[DeviceType] | None = (
-                (
-                    await self.session.execute(
-                        select(DeviceType).where(
-                            DeviceType.id.in_(manufacturer.device_type_ids)
-                        )
-                    )
-                )
-                .scalar()
-                .all()
+            device_type_crud = CRUDBase(DeviceType)
+            device_types: List[DeviceType] | None = await device_type_crud.get_multi(
+                self.session, manufacturer.device_type_ids
             )
             if len(device_types) > 0:
                 for device_type in device_types:
@@ -874,23 +752,37 @@ class ManufacturerCBV:
                         device_type.manufacturer_id = id
                         await self.session.add(device_type)
         await self.session.commit()
-        return_info = ERR_NUM_0
-        return_info.data = id
+        return_info = ResponseMsg(data=id)
         return return_info
 
     @router.delete("/manufacturers/{id}")
     async def delete_manufacturer(self, id: int) -> BaseResponse[int]:
-        local_manufacturer: Manufacturer | None = await self.session.get(
-            Manufacturer, id
+        local_manufacturer: Manufacturer | None = await self.curd.delete(
+            self.session, id
         )
         if not local_manufacturer:
             return_info = ERR_NUM_4004
-            return_info.msg = f"Manufacturer #{id} not found"
+            return_info.msg = (
+                f"Delete manufacturer failed, manufacturer #{id} not found"
+            )
             return return_info
-        await self.session.delete(local_manufacturer)
-        await self.session.commit()
-        return_info = ERR_NUM_0
-        return_info.data = id
+        return_info = ResponseMsg(data=id)
+        return return_info
+
+    @router.post("/manufacturers/deleteList")
+    async def delete_manufacturers(
+        self, manufacturer: schemas.ManufacturerBulkDelete
+    ) -> BaseListResponse[List[int]]:
+        results: List[Manufacturer] = await self.curd.delete_multi(
+            self.session, manufacturer.ids
+        )
+        if not results:
+            return_info = ERR_NUM_4004
+            return_info.msg = (
+                f"Bulk delete manufacturer failed, manufacturer #{id} not found"
+            )
+            return return_info
+        return_info = ResponseMsg(data=[d.id for d in results])
         return return_info
 
 
@@ -898,23 +790,18 @@ class ManufacturerCBV:
 class DeviceTypeCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
+    crud = CRUDBase(DeviceType)
 
     @router.post("/device-types")
     async def create_device_type(
         self, device_type: schemas.DeviceTypeCreate
     ) -> BaseResponse[int]:
-        local_deive_type: DeviceType | None = (
-            await self.session.execute(
-                select(DeviceType).where(DeviceType.name == device_type.name)
-            )
-            .scalars()
-            .first()
+        local_device_type: DeviceType | None = await self.crud.get_by_field(
+            self.session, "name", device_type.name
         )
-        if local_deive_type is not None:
+        if local_device_type is not None:
             return_info = ERR_NUM_4009
-            return_info.msg = (
-                f"Device Type with name `{device_type.name}` already existed"
-            )
+            return_info.msg = f"Create device type failed, device Type with name `{device_type.name}` already existed"
             return return_info
         if device_type.manufacturer_id is not None:
             manufacture: Manufacturer | None = await self.session.get(
@@ -922,14 +809,15 @@ class DeviceTypeCBV:
             )
             if not manufacture:
                 return_info = ERR_NUM_4004
-                return_info.msg = f"Manufacturer #{id} not found"
+                return_info.msg = (
+                    f"Create device type failed, manufacturer #{id} not found"
+                )
                 return return_info
         new_device_type = DeviceType(**device_type.dict(exclude_none=True))
         await self.session.add(new_device_type)
         await self.session.commit()
-        return_info = ERR_NUM_0
-        return_info.data = new_device_type.id
-        return return_info.dict()
+        return_info = ResponseMsg(data=new_device_type.id)
+        return return_info
 
     @router.get("/device-types/{id}")
     async def get_device_type(self, id: int) -> BaseResponse[schemas.DeviceType]:
@@ -937,13 +825,25 @@ class DeviceTypeCBV:
         if not local_device_type:
             return_info = ERR_NUM_4004
             return_info.msg = f"Device type #{id} not found"
-            return return_info.dict()
-        return_info = ERR_NUM_0
-        return_info.data = local_device_type
-        return return_info.dict()
+            return return_info
+        return_info = ResponseMsg(data=local_device_type)
+        return return_info
 
     @router.get("/device-types")
     async def get_device_types(
+        self, q: QueryParams
+    ) -> BaseListResponse[List[schemas.DeviceTypeBase]]:
+        results: List[DeviceType] = await self.crud.get_all(
+            self.session, q.limit, q.offset
+        )
+        count: int = await self.session.execute(
+            select(func.count(DeviceType.id))
+        ).scalar()
+        return_info = ResponseMsg(data={"count": count, "results": results})
+        return return_info
+
+    @router.post("/device-types/getList")
+    async def get_device_types_filter(
         self, device_type: schemas.DeviceTypeQuery
     ) -> BaseListResponse[List[schemas.DeviceType]]:
         pass
@@ -955,16 +855,18 @@ class DeviceTypeCBV:
         local_device_type = await self.session.get(DeviceType, id)
         if not local_device_type:
             return_info = ERR_NUM_4004
-            return_info.msg = f"Device Type #{id} not found"
-            return return_info.dict()
+            return_info.msg = f"Update device type failed, device type #{id} not found"
+            return return_info
         if device_type.manufacturer_id:
             manufacture: Manufacturer | None = await self.session.get(
                 Manufacturer, device_type.manufacturer_id
             )
             if not manufacture:
                 return_info = ERR_NUM_4004
-                return_info.msg = f"Manufacturer #{id} not found"
-                return return_info.dict()
+                return_info.msg = (
+                    f"Update device type failed, manufacturer #{id} not found"
+                )
+                return return_info
         await self.session.execute(
             update(DeviceType)
             .where(DeviceType.id == id)
@@ -972,55 +874,54 @@ class DeviceTypeCBV:
             .execute_options(synchronize_session="fetch")
         )
         await self.session.commit()
-        return_info = ERR_NUM_0
-        return_info.data = id
-        return return_info.dict()
+        return_info = ResponseMsg(data=id)
+        return return_info
 
     @router.delete("/device-types/{id}")
     async def delete_device_type(self, id: int) -> BaseResponse[int]:
-        local_device_type = await self.session.get(DeviceType, id)
+        local_device_type = await self.crud.delete(self.session, id)
         if not local_device_type:
             return_info = ERR_NUM_4004
-            return_info.msg = f"Device Type #{id} not found"
-            return return_info.dict()
+            return_info.msg = f"Delete device type failed, device Type #{id} not found"
+            return return_info
+        return_info = ResponseMsg(data=id)
+        return return_info
 
-        await self.session.delete(local_device_type)
-        await self.session.commit()
-        return_info = ERR_NUM_0
-        return_info.data = id
-        return return_info.dict()
+    @router.post("/device-types/deleteList")
+    async def delete_device_types(
+        self, device_type: schemas.DeviceRoleBulkDelete
+    ) -> BaseListResponse[List[int]]:
+        local_device_type = await self.crud.delete(self.session, device_type.ids)
+        if not local_device_type:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Bulk delete device type failed, device Type #{device_type.ids} not found"
+            return return_info
+        return_info = ResponseMsg(data=[d.id for d in local_device_type])
+        return return_info
 
 
 @cbv(router)
 class DeviceRoleCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
+    crud = CRUDBase(DeviceRole)
 
     @router.post("/device-roles")
     async def create_device_role(
         self, device_role: schemas.DeviceRoleCreate
     ) -> BaseResponse[int]:
-        local_device_role: DeviceRole | None = (
-            (
-                await self.session.execute(
-                    select(DeviceRole).where(DeviceRole.name == device_role.name)
-                )
-            )
-            .scalars()
-            .first()
+        local_device_role: DeviceRole | None = await self.crud.get_by_field(
+            self.session, "name", device_role.name
         )
         if local_device_role is not None:
             return_info = ERR_NUM_4009
-            return_info.msg = (
-                f"Device role with name: `{device_role.name}` already exsits"
-            )
-            return return_info.dict()
+            return_info.msg = f"Create device role failed, device role with name: `{device_role.name}` already exsits"
+            return return_info
         new_device_role = DeviceRole(**device_role.dict(exclude_none=True))
         await self.session.add(new_device_role)
         await self.session.commit(new_device_role)
-        return_info = ERR_NUM_0
-        return_info.data = new_device_role.id
-        return return_info.dict()
+        return_info = ResponseMsg(data=new_device_role.id)
+        return return_info
 
     @router.get("/device-roles/{id}")
     async def get_device_role(self, id: int) -> BaseResponse[schemas.DeviceRole]:
@@ -1028,13 +929,23 @@ class DeviceRoleCBV:
         if local_device_role is None:
             return_info = ERR_NUM_4004
             return_info.msg = f"Device role #{id} not found"
-            return return_info.dict()
-        return_info = ERR_NUM_0
-        return_info.data = local_device_role
+            return return_info
+        return_info = ResponseMsg(data=local_device_role)
         return return_info
 
     @router.get("/device-roles")
     async def get_device_roles(
+        self, q: QueryParams
+    ) -> BaseListResponse[List[schemas.DeviceRoleBase]]:
+        results: List[DeviceRole] = await self.crud.get_all(
+            self.session, q.limit, q.offset
+        )
+        count: int = self.session.execute(select(func.count(DeviceRole.id))).scalar()
+        return_info = ResponseMsg(data={"count": count, "results": results})
+        return return_info
+
+    @router.post("/device-roles/getList")
+    async def get_device_roles_filter(
         self, device_role: schemas.DeviceRoleQuery
     ) -> BaseListResponse[List[schemas.DeviceRole]]:
         pass
@@ -1047,7 +958,7 @@ class DeviceRoleCBV:
         if local_device_role is None:
             return_info = ERR_NUM_4004
             return_info.msg = f"Device role #{id} not found"
-            return return_info.dict()
+            return return_info
         try:
             await self.session.execute(
                 update(DeviceRole)
@@ -1063,29 +974,40 @@ class DeviceRoleCBV:
             return_info.msg = (
                 f"Device Role with name `{device_role.name}` already exists"
             )
-            return return_info.dict()
-        return_info = ERR_NUM_0
-        return_info.data = id
+            return return_info
+        return_info = ResponseMsg(data=id)
         return return_info
 
     @router.delete("/device-roles/{id}")
     async def delete_device_role(self, id: int) -> BaseResponse[int]:
-        local_device_role: DeviceRole | None = await self.session.get(DeviceRole, id)
+        local_device_role: DeviceRole | None = await self.crud.delete(self.session, id)
         if local_device_role is None:
             return_info = ERR_NUM_4004
-            return_info.msg = f"DeleteDevice role #{id} not found"
-            return return_info.dict()
-        await self.session.delete(local_device_role)
-        await self.session.commit()
-        return_info = ERR_NUM_0
-        return_info.data = id
-        return return_info.dict()
+            return_info.msg = f"Delete device role failed, device role #{id} not found"
+            return return_info
+        return_info = ResponseMsg(data=id)
+        return return_info
+
+    @router.delete("/device-roles/deleteList")
+    async def delete_device_roles(
+        self, device_role: schemas.DeviceRoleBulkDelete
+    ) -> BaseListResponse[List[int]]:
+        results: List[DeviceRole] = await self.crud.delete_multi(
+            self.session, device_role.ids
+        )
+        if not results:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Bulk device device role failed, device role #{device_role.ids} not found"
+            return return_info
+        return_info = ResponseMsg(data=[d.id for d in results])
+        return return_info
 
 
 @cbv(router)
 class InterfaceCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
+    crud = CRUDBase(Interface)
 
     @router.post("/interfaces")
     async def create_interface(
@@ -1101,17 +1023,33 @@ class InterfaceCBV:
             return_info = ERR_NUM_4022
             return_info.data = str(e)
             return_info.msg = "Error creating interface, params error"
-            return return_info.dict()
-        return_info = ERR_NUM_0
-        return_info.data = new_interface.id
-        return return_info.dict()
+            return return_info
+        return_info = ResponseMsg(data=new_interface.id)
+        return return_info
 
     @router.get("/interfaces/{id}")
-    async def get_interface(self, id: int) -> BaseResponse[int]:
-        pass
+    async def get_interface(self, id: int) -> BaseResponse[schemas.InterfaceBase]:
+        local_interface = await self.crud.get(self.session, id)
+        if not local_interface:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Interface #{id} not found"
+            return return_info
+        return_info = ResponseMsg(data=local_interface)
+        return return_info
 
-    @router.get("/interfaces/")
+    @router.get("/interfaces")
     async def get_interfaces(
+        self, q: QueryParams
+    ) -> BaseListResponse[List[schemas.InterfaceBase]]:
+        results = await self.crud.get_all(self.session, q.limit, q.offset)
+        count: int = await self.session.execute(
+            select(func.count(Interface.id))
+        ).scalar()
+        return_info = ResponseMsg(data={"count": count, "results": results})
+        return return_info
+
+    @router.post("/interfaces/getList")
+    async def get_interfaces_filter(
         self, interface: schemas.InterfaceQuery
     ) -> BaseListResponse[List[schemas.Interface]]:
         pass
@@ -1124,40 +1062,32 @@ class InterfaceCBV:
 
     @router.delete("/interfaces/{id}")
     async def delete_interface(self, id: int) -> BaseResponse[int]:
-        local_interface: Interface = self.session.get(Interface, id)
+        local_interface: Interface = self.crud.delete(self.session, id)
         if not local_interface:
             return_info = ERR_NUM_4004
             return_info.msg = f"Delete interface failed, interface #{id} not found"
-            return return_info.dict()
-        await self.session.delete(local_interface)
-        await self.session.commit()
-        return_info = ERR_NUM_0
-        return_info.data = id
-        return return_info.dict()
+            return return_info
+        return_info = ResponseMsg(data=id)
+        return return_info
 
-    @router.delete("/interfaces")
+    @router.delete("/interfaces/deleteList")
     async def bulk_delete_interface(
         self, interface: schemas.InterfaceBulkDelete
     ) -> BaseResponse[List[int]]:
-        local_interface: List[Interface] = (
-            (
-                await self.session.execute(
-                    select(Interface).where(Interface.id.in_(interface.ids))
-                )
-            )
-            .scalars()
-            .all()
-        )
+        local_interface = await self.crud.delete_multi(self.session, interface.ids)
         if not local_interface:
             return_info = ERR_NUM_4004
             return_info.msg = f"Bulk delete interface failed, interface #{id} not found"
-            return return_info.dict()
+            return return_info
+        return_info = ResponseMsg(data=[d.id for d in local_interface])
+        return return_info
 
 
 @cbv(router)
 class PlatformCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
+    crud = CRUDBase(Platform)
 
     @router.post("/platforms")
     async def create_platform(
@@ -1174,17 +1104,33 @@ class PlatformCBV:
             return_info.msg = (
                 f"Created platform failed, platform with {platform.name} already exists"
             )
-            return return_info.dict()
-        return_info = ERR_NUM_0
-        return_info.data = new_platform.id
-        return return_info.dict()
+            return return_info
+        return_info = ResponseMsg(new_platform.id)
+        return return_info
 
     @router.get("/platforms/id")
-    async def get_platform(self, id: int):
-        pass
+    async def get_platform(self, id: int) -> BaseResponse[schemas.PlatformBase]:
+        local_platform = await self.crud.get(self.session, id)
+        if not local_platform:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Platform #{id} not found"
+            return return_info
+        return_info = ResponseMsg(local_platform)
+        return return_info
 
     @router.get("/platforms")
-    async def get_platforms(self, platforms: schemas.PlatformQuery):
+    async def get_platforms(
+        self, q: QueryParams
+    ) -> BaseListResponse[List[schemas.PlatformBase]]:
+        results = await self.curd.get_all(self.session, q.limit, q.offset)
+        count = await self.session.execute(select(func.count(Platform.id))).scalar()
+        return_info = ResponseMsg(data={"count": count, "results": results})
+        return return_info
+
+    @router.post("/platforms/getList")
+    async def get_platforms_filter(
+        self, platforms: schemas.PlatformQuery
+    ) -> BaseListResponse[List[schemas.PlatformBase]]:
         pass
 
     @router.put("/platforms/{id}")
@@ -1195,38 +1141,25 @@ class PlatformCBV:
 
     @router.delete("/platforms/{id}")
     async def delete_platform(self, id: int) -> BaseResponse[int]:
-        local_platform: Platform = await self.session.get(Platform, id)
+        local_platform = await self.crud.delete(self.session, id)
         if not local_platform:
             return_info = ERR_NUM_4004
             return_info.msg = f"Delete platform failed, platform #{id} not found"
-            return return_info.dict()
-        await self.session.delete(local_platform)
-        return_info = ERR_NUM_0
-        return_info.data = id
-        return return_info.dict()
+            return return_info
+        return_info = ResponseMsg(data=id)
+        return return_info
 
-    @router.delete("/platforms")
+    @router.delete("/platforms/deleteList")
     async def bulk_delete_platforms(
         self, platform: schemas.PlatformBulkDelete
     ) -> BaseResponse[List[int]]:
-        local_platforms: List[Platform] = (
-            (
-                await self.session.execute(
-                    select(Platform).where(Platform.id.in_(platform.ids))
-                )
-            )
-            .scalars()
-            .all()
-        )
-        if local_platforms is None:
+        results = await self.crud.delete_multi(self.session, platform.ids)
+        if results is None:
             return_info = ERR_NUM_4004
             return_info.msg = (
                 f"Bulk delete platform failed, platform #{platform.ids} not found"
             )
-            return return_info.dict()
-        for _platform in local_platforms:
-            await self.session.delete(_platform)
-        await self.session.commit()
-        return_info = ERR_NUM_0
+            return return_info
+        return_info = ResponseMsg(data=[d.id for d in results])
         return_info.data = platform.ids
-        return return_info.dict()
+        return return_info

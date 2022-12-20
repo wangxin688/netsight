@@ -28,6 +28,22 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         result: ModelType | None = await session.get(self.model, id, options=options)
         return result
 
+    async def get_by_field(
+        self, session: AsyncSession, field: str, value: Any
+    ) -> ModelType | List[ModelType] | None:
+        results: List[ModelType] | None = (
+            (
+                await self.session.execute(
+                    select(self.model).where(getattr(self.model, field) == value)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        if len(results) == 1:
+            return results[0]
+        return results
+
     async def filter(
         self, session: AsyncSession, filter: Dict[str, Any]
     ) -> ModelType | None:
@@ -37,6 +53,16 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             .first()
         )
         return result
+
+    async def get_all(
+        self, session: AsyncSession, limit: int, offset: int
+    ) -> List[ModelType]:
+        results: List[ModelType] = (
+            (await session.execute(select(self.model).slice(offset, limit + offset)))
+            .scalars()
+            .all()
+        )
+        return results
 
     async def get_multi(
         self, session: AsyncSession, ids: List[int] | List[UUID4]

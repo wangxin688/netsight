@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
@@ -46,6 +46,7 @@ class User(Base, TimestampMixin):
     role_id = Column(
         Integer, ForeignKey("auth_role.id", ondelete="SET NULL"), nullable=True
     )
+    last_login = Column(DateTime(timezone=True), default=func.now())
     auth_role = relationship("Role", back_populates="auth_user", overlaps="auth_user")
     auth_group = relationship(
         "Group",

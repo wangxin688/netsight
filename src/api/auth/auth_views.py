@@ -23,7 +23,12 @@ from src.core.security import (
     verify_password,
 )
 from src.register.middleware import AuditRoute
-from src.utils.error_code import ERR_NUM_0, ERR_NUM_10001, ERR_NUM_10002, ERR_NUM_10003
+from src.utils.error_code import (
+    ERR_NUM_10001,
+    ERR_NUM_10002,
+    ERR_NUM_10003,
+    ResponseMsg,
+)
 from src.utils.exceptions import TokenInvalidForRefreshError
 from src.utils.external.lark_api import LarkClient
 
@@ -32,7 +37,7 @@ router = APIRouter(route_class=AuditRoute)
 
 # demo bg_task1 and exceptions show
 def bg_task1():
-    logger.info("recive bg task...")
+    logger.info("receive bg task...")
     # a = 1 / 0
     # logger.info(a)
 
@@ -43,7 +48,6 @@ async def register_new_user(
     auth_user: schemas.AuthUserCreate,
     session: AsyncSession = Depends(get_session),
 ):
-    logger.info("recived new_role")
     result = await session.execute(select(User).where(User.email == auth_user.email))
     if result.scalars().first() is not None:
         return ERR_NUM_10001
@@ -54,10 +58,9 @@ async def register_new_user(
     )
     session.add(user)
     await session.commit()
-    return_info = ERR_NUM_0
-    return_info.data = user.id
+    return_info = ResponseMsg(data=user.id)
     bg_task.add_task(bg_task1)
-    return return_info.dict()
+    return return_info
 
 
 @router.post("/login", response_model=BaseResponse[schemas.AccessToken])
@@ -65,7 +68,6 @@ async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(get_session),
 ):
-    logger.info("Login start")
     result: AsyncResult = await session.execute(
         select(User).where(User.email == form_data.username)
     )
@@ -74,13 +76,12 @@ async def login(
         return ERR_NUM_10002.dict()
     if not verify_password(form_data.password, user.hashed_password):
         return ERR_NUM_10003.dict()
-    return_info = ERR_NUM_0
     token = generate_access_token_response(str(user.id))
-    return_info.data = token
-    user.updated_at = datetime.now()
+    return_info = ResponseMsg(data=token)
+    user.last_login = datetime.now()
     session.add(user)
     await session.commit()
-    return return_info.dict()
+    return return_info
 
 
 @router.post("/refresh-token", response_model=BaseResponse[schemas.AccessToken])
@@ -116,8 +117,7 @@ async def refresh_token(
         return ERR_NUM_10001.dict()
 
     token = generate_access_token_response(str(user.id))
-    return_info = ERR_NUM_0.dict()
-    return_info["data"] = token
+    return_info = ResponseMsg(data=token)
     return return_info
 
 

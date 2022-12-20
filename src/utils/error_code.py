@@ -15,7 +15,6 @@ from typing import Any, List, Optional
 from pydantic import BaseModel
 
 __all__ = (
-    "ERR_NUM_0",
     "ERR_NUM_1",
     "ERR_NUM_500",
     "ERR_NUM_2002",
@@ -37,43 +36,44 @@ __all__ = (
 )
 
 
-class ErrCode(BaseModel):
-    code: int
-    msg: str
+class ResponseMsg(BaseModel):
+    code: int = 0
+    msg: str = "success"
     data: Optional[Any] = None
 
     def __init__(self, code, msg, data=None) -> None:
         super().__init__(code=code, msg=msg, data=data)
 
 
-ERR_NUM_0 = ErrCode(0, "success")
-ERR_NUM_1 = ErrCode(0, "Validation Error, please check requested params or body format")
-ERR_NUM_500 = ErrCode(500, "Internal Server Error")
-ERR_NUM_2002 = ErrCode(2002, "Request not completed, in processing")
-ERR_NUM_4001 = ErrCode(
+ERR_NUM_1 = ResponseMsg(
+    0, "Validation Error, please check requested params or body format"
+)
+ERR_NUM_500 = ResponseMsg(500, "Internal Server Error")
+ERR_NUM_2002 = ResponseMsg(2002, "Request not completed, in processing")
+ERR_NUM_4001 = ResponseMsg(
     4001, "Authenticated failed: Bearer token invalid or not provide"
 )
-ERR_NUM_4002 = ErrCode(4001, "Authenticated failed: Bearer token expired")
-ERR_NUM_4011 = ErrCode(4011, "Unauthenticated: Bearer token is refresh token")
+ERR_NUM_4002 = ResponseMsg(4001, "Authenticated failed: Bearer token expired")
+ERR_NUM_4011 = ResponseMsg(4011, "Unauthenticated: Bearer token is refresh token")
 
-ERR_NUM_4003 = ErrCode(
+ERR_NUM_4003 = ResponseMsg(
     4003, "Permission Denied: Privilege limited, Operation not permit"
 )
-ERR_NUM_4004 = ErrCode(4004, "Resource not found: Requested data not existed")
-ERR_NUM_4009 = ErrCode(4009, "Resource already exists")
-ERR_NUM_4022 = ErrCode(4022, "Unprocessable Entity")
-ERR_NUM_10001 = ErrCode(10001, "Cannot use this email, already exists")
-ERR_NUM_10002 = ErrCode(10002, "Incorrect email for user, not found")
-ERR_NUM_10003 = ErrCode(10003, "Incorrect password")
-ERR_NUM_10004 = ErrCode(10004, "User not found")
-ERR_NUM_10005 = ErrCode(10005, "User with same email already existed")
-ERR_NUM_10006 = ErrCode(10006, "Group with same name already existed")
-ERR_NUM_10007 = ErrCode(10007, "Group not found")
-ERR_NUM_10008 = ErrCode(10008, "Role with same name already existed")
-ERR_NUM_10009 = ErrCode(10009, "Role not found")
+ERR_NUM_4004 = ResponseMsg(4004, "Resource not found: Requested data not existed")
+ERR_NUM_4009 = ResponseMsg(4009, "Resource already exists")
+ERR_NUM_4022 = ResponseMsg(4022, "Unprocessable Entity")
+ERR_NUM_10001 = ResponseMsg(10001, "Cannot use this email, already exists")
+ERR_NUM_10002 = ResponseMsg(10002, "Incorrect email for user, not found")
+ERR_NUM_10003 = ResponseMsg(10003, "Incorrect password")
+ERR_NUM_10004 = ResponseMsg(10004, "User not found")
+ERR_NUM_10005 = ResponseMsg(10005, "User with same email already existed")
+ERR_NUM_10006 = ResponseMsg(10006, "Group with same name already existed")
+ERR_NUM_10007 = ResponseMsg(10007, "Group not found")
+ERR_NUM_10008 = ResponseMsg(10008, "Role with same name already existed")
+ERR_NUM_10009 = ResponseMsg(10009, "Role not found")
 
 
-def __getattr__(name: str) -> ErrCode:
+def __getattr__(name: str) -> ResponseMsg:
     raise AttributeError("module {__name__} has not attribute '{name}'")
 
 

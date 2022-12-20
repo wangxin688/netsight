@@ -129,6 +129,10 @@ class AuthUserQuery(BaseQuery):
     name: List[str] | None
 
 
+class AuthUserBulkDelete(BaseModel):
+    ids: List[int]
+
+
 class AuthGroupCreate(BaseModel):
     name: str
     description: str | None
@@ -181,6 +185,10 @@ class AuthRoleUpdate(BaseModel):
 class AuthRoleQuery(BaseQuery):
     ids: List[int] | None
     name: List[str] | None
+
+
+class AuthRoleBulkDelete(BaseModel):
+    ids: List[int]
 
 
 class AuthPermissionCreate(BaseModel):

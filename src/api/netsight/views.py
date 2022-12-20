@@ -9,7 +9,7 @@ from src.api import deps
 from src.api.auth.models import User
 from src.api.base import BaseListResponse
 from src.api.netsight import schemas
-from src.utils.error_code import ERR_NUM_0, ERR_NUM_500, ERR_NUM_2002
+from src.utils.error_code import ERR_NUM_500, ERR_NUM_2002, ResponseMsg
 
 router = APIRouter()
 
@@ -31,11 +31,8 @@ async def get_task_result(
         return JSONResponse(status_code=200, content=return_info)
     result = task.get()
 
-    return {
-        "code": ERR_NUM_0.code,
-        "data": {"task_id": str(task_id), "results": result},
-        "msg": ERR_NUM_0.msg,
-    }
+    return_info = ResponseMsg(data={"task_id": str(task_id), "results": result})
+    return return_info
 
 
 @router.get(
@@ -46,6 +43,5 @@ def inspect_endpoints(request: Request):
         {"name": route.name, "url": route.path, "action": route.methods}
         for route in request.app.routes
     ]
-    return_info = ERR_NUM_0
-    return_info.data = {"count": len(endpoints), "results": endpoints}
+    return_info = ResponseMsg(data={"count": len(endpoints), "results": endpoints})
     return return_info

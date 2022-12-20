@@ -73,6 +73,14 @@ class InterfaceBase(BaseModel):
     pass
 
 
+class Platform(BaseModel):
+    pass
+
+
+class PlatformBase(BaseModel):
+    pass
+
+
 class RegionBase(BaseModel):
     id: int
     name: str
