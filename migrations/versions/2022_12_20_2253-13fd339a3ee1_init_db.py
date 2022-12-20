@@ -1,8 +1,8 @@
 """init db
 
-Revision ID: 53901696b370
+Revision ID: 13fd339a3ee1
 Revises: 
-Create Date: 2022-12-16 23:02:42.990257
+Create Date: 2022-12-20 22:53:52.107449
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '53901696b370'
+revision = '13fd339a3ee1'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -194,6 +194,7 @@ def upgrade() -> None:
     sa.Column('hashed_password', sa.String(), nullable=False),
     sa.Column('is_active', sa.Boolean(), server_default=sa.text('true'), nullable=False),
     sa.Column('role_id', sa.Integer(), nullable=True),
+    sa.Column('last_login', sa.DateTime(timezone=True), nullable=True),
     sa.ForeignKeyConstraint(['role_id'], ['auth_role.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email')
@@ -483,7 +484,8 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['parent_interface_id'], ['dcim_interface.id'], ),
     sa.ForeignKeyConstraint(['vlan_id'], ['ipam_vlan.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['vrf_id'], ['ipam_vrf.id'], ondelete='SET NULL'),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('device_id', 'name')
     )
     op.create_index(op.f('ix_dcim_interface_created_at'), 'dcim_interface', ['created_at'], unique=False)
     op.create_table('circuit_termination',
@@ -505,6 +507,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('address', postgresql.INET(), nullable=False),
     sa.Column('vrf_id', sa.Integer(), nullable=True),
+    sa.Column('version', postgresql.ENUM('IPv4', 'IPv6', name='ip_version'), nullable=False),
     sa.Column('status', postgresql.ENUM('Active', 'Reserved', 'Deprecated', 'DHCP', 'Available', name='ip_status'), nullable=False),
     sa.Column('dns_name', sa.String(), nullable=True),
     sa.Column('description', sa.String(), nullable=True),
