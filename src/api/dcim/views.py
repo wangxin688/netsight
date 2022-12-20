@@ -831,7 +831,7 @@ class DeviceTypeCBV:
 
     @router.get("/device-types")
     async def get_device_types(
-        self, q: QueryParams
+        self, q: QueryParams = Depends(QueryParams)
     ) -> BaseListResponse[List[schemas.DeviceTypeBase]]:
         results: List[DeviceType] = await self.crud.get_all(
             self.session, q.limit, q.offset
@@ -935,7 +935,7 @@ class DeviceRoleCBV:
 
     @router.get("/device-roles")
     async def get_device_roles(
-        self, q: QueryParams
+        self, q: QueryParams = Depends(QueryParams)
     ) -> BaseListResponse[List[schemas.DeviceRoleBase]]:
         results: List[DeviceRole] = await self.crud.get_all(
             self.session, q.limit, q.offset
@@ -1039,7 +1039,7 @@ class InterfaceCBV:
 
     @router.get("/interfaces")
     async def get_interfaces(
-        self, q: QueryParams
+        self, q: QueryParams = Depends(QueryParams)
     ) -> BaseListResponse[List[schemas.InterfaceBase]]:
         results = await self.crud.get_all(self.session, q.limit, q.offset)
         count: int = await self.session.execute(
@@ -1120,7 +1120,7 @@ class PlatformCBV:
 
     @router.get("/platforms")
     async def get_platforms(
-        self, q: QueryParams
+        self, q: QueryParams = Depends(QueryParams)
     ) -> BaseListResponse[List[schemas.PlatformBase]]:
         results = await self.curd.get_all(self.session, q.limit, q.offset)
         count = await self.session.execute(select(func.count(Platform.id))).scalar()

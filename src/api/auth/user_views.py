@@ -46,7 +46,7 @@ class AuthUserCBV:
 
     @router.get("/users")
     async def get_users(
-        self, q: QueryParams
+        self, q: QueryParams = Depends(QueryParams)
     ) -> BaseListResponse[List[schemas.AuthUserBase]]:
         results = await self.crud.get_all(self.session, q.limit, q.offset)
         count: int = (await self.session.execute(select(func.count(User.id)))).scalar()
@@ -171,7 +171,7 @@ class AuthGroupCBV:
 
     @router.get("/groups")
     async def get_groups_all(
-        self, q: QueryParams
+        self, q: QueryParams = Depends(QueryParams)
     ) -> BaseListResponse[List[schemas.AuthGroupBase]]:
         results = await self.crud.get_all(self.session, q.limit, q.offset)
         count: int = (await self.session.execute(func.count(Group.id))).scalar()
@@ -267,7 +267,7 @@ class AuthRoleCBV:
 
     @router.get("/roles")
     async def get_roles(
-        self, q: QueryParams
+        self, q: QueryParams = Depends(QueryParams)
     ) -> BaseListResponse[List[schemas.AuthRoleBase]]:
         local_roles = await self.crud.get_all(self.session, q.limit, q.offset)
         count: int = (await self.session.execute(select(func.count(Role.id)))).scalar()
