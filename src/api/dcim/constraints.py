@@ -617,6 +617,7 @@ SITE_CLASSIFICATIONS = Literal[
     "DataCenter",
     "POP",
     "CouldDataCenter",
+    "CDN",
 ]
 
 INTERFACE_MODE = Literal["access", "hybrid", "trunk", "layer-3"]

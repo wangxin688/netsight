@@ -14,7 +14,7 @@ from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy.sql import expression
 
 from src.db.db_base import Base
-from src.db.db_mixin import NameMixin, TimestampMixin
+from src.db.db_mixin import AuditLogMixin, NameMixin, TimestampMixin
 
 __all__ = (
     "Region",
@@ -26,10 +26,11 @@ __all__ = (
     "DeviceType",
     "DeviceRole",
     "Interface",
+    "Platform",
 )
 
 
-class Region(Base, NameMixin):
+class Region(Base, NameMixin, AuditLogMixin):
     __tablename__ = "dcim_region"
     __table_args__ = (UniqueConstraint("parent_id", "name"),)
     id = Column(Integer, primary_key=True)
@@ -55,7 +56,7 @@ class Region(Base, NameMixin):
         )
 
 
-class Site(Base, NameMixin, TimestampMixin):
+class Site(Base, NameMixin, TimestampMixin, AuditLogMixin):
     __tablename__ = "dcim_site"
     id = Column(Integer, primary_key=True)
     site_code = Column(String, unique=True, nullable=False, index=True)
@@ -126,7 +127,7 @@ class Site(Base, NameMixin, TimestampMixin):
     )
 
 
-class Location(Base, TimestampMixin):
+class Location(Base, TimestampMixin, AuditLogMixin):
     """a sub location of site, like building, floor, idf, mdf and etc"""
 
     __tablename__ = "dcim_location"
@@ -171,7 +172,7 @@ class Location(Base, TimestampMixin):
     )
 
 
-class RackRole(Base):
+class RackRole(Base, AuditLogMixin):
     __tablename__ = "dcim_rack_role"
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True, nullable=False)
@@ -181,7 +182,7 @@ class RackRole(Base):
     )
 
 
-class Rack(Base, NameMixin, TimestampMixin):
+class Rack(Base, NameMixin, TimestampMixin, AuditLogMixin):
     __tablename__ = "dcim_rack"
     id = Column(Integer, primary_key=True)
     facility_id = Column(String, nullable=True)
@@ -235,7 +236,7 @@ class Rack(Base, NameMixin, TimestampMixin):
     comments = Column(Text, nullable=True)
 
 
-class Manufacturer(Base):
+class Manufacturer(Base, AuditLogMixin):
     __tablename__ = "dcim_manufacturer"
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, unique=True)
@@ -251,7 +252,7 @@ class Manufacturer(Base):
     )
 
 
-class DeviceType(Base):
+class DeviceType(Base, AuditLogMixin):
     __tablename__ = "dcim_device_type"
     __table_args__ = (UniqueConstraint("manufacturer_id", "name"),)
     id = Column(Integer, primary_key=True)
@@ -272,7 +273,7 @@ class DeviceType(Base):
     rear_image = Column(UUID(as_uuid=True), nullable=True)
 
 
-class DeviceRole(Base):
+class DeviceRole(Base, AuditLogMixin):
     __tablename__ = "dcim_device_role"
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, unique=True)
@@ -286,7 +287,7 @@ class DeviceRole(Base):
     )
 
 
-class Platform(Base):
+class Platform(Base, AuditLogMixin):
     __tablename__ = "dcim_platform"
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, unique=True)
@@ -300,14 +301,14 @@ class Platform(Base):
     )
 
 
-class Device(Base, TimestampMixin):
+class Device(Base, TimestampMixin, AuditLogMixin):
     __tablename__ = "dcim_device"
     __table_args__ = (UniqueConstraint("rack_id", "position"),)
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, index=True)
-    primary_ipv4 = Column(INET, nullable=False, index=True)
-    primary_ipv6 = Column(INET, nullable=True)
-    comments = Column(String, nullable=True)
+    primary_ipv4 = Column(INET, nullable=True, index=True)
+    primary_ipv6 = Column(INET, nullable=True, index=True)
+    description = Column(String, nullable=True)
     device_type_id = Column(
         Integer, ForeignKey("dcim_device_type.id", ondelete="SET NULL"), nullable=True
     )
@@ -386,7 +387,7 @@ class Device(Base, TimestampMixin):
     )
 
 
-class Interface(Base, TimestampMixin):
+class Interface(Base, TimestampMixin, AuditLogMixin):
     __tablename__ = "dcim_interface"
     __table_args__ = (UniqueConstraint("device_id", "name"),)
     id = Column(Integer, primary_key=True)

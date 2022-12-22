@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
 from src.db.db_base import Base
-from src.db.db_mixin import NameMixin, TimestampMixin
+from src.db.db_mixin import AuditLogMixin, NameMixin, TimestampMixin
 
 __all__ = (
     "SiteASN",
@@ -17,7 +17,7 @@ __all__ = (
     "IPAddress",
     "VLAN",
     "VLANGroup",
-    "VRFRouteTargetLink",
+    "VRFRouteTarget",
     "VRF",
     "RouteTarget",
 )
@@ -38,7 +38,7 @@ class RIR(Base, TimestampMixin):
     ipam_block = relationship("Block", back_populates="ipam_rir", passive_deletes=True)
 
 
-class Block(Base, TimestampMixin):
+class Block(Base, TimestampMixin, AuditLogMixin):
     __tablename__ = "ipam_block"
     id = Column(Integer, primary_key=True)
     block = Column(CIDR, nullable=False)
@@ -49,7 +49,7 @@ class Block(Base, TimestampMixin):
     description = Column(String, nullable=True)
 
 
-class IPRole(Base):
+class IPRole(Base, TimestampMixin, AuditLogMixin):
     __tablename__ = "ipam_role"
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, unique=True)
@@ -63,7 +63,7 @@ class IPRole(Base):
     )
 
 
-class Prefix(Base, TimestampMixin):
+class Prefix(Base, TimestampMixin, AuditLogMixin):
     __tablename__ = "ipam_prefix"
     id = Column(Integer, primary_key=True)
     prefix = Column(CIDR, nullable=False)
@@ -87,7 +87,7 @@ class Prefix(Base, TimestampMixin):
     is_full = Column(Boolean, server_default=expression.false())
 
 
-class ASN(Base, TimestampMixin):
+class ASN(Base, TimestampMixin, AuditLogMixin):
     __tablename__ = "ipam_asn"
     id = Column(Integer, primary_key=True)
     asn = Column(Integer, unique=True, nullable=False)
@@ -100,7 +100,7 @@ class ASN(Base, TimestampMixin):
     )
 
 
-class IPRange(Base):
+class IPRange(Base, TimestampMixin, AuditLogMixin):
     __tablename__ = "ipam_ip_range"
     id = Column(Integer, primary_key=True)
     start_address = Column(INET)
@@ -110,9 +110,7 @@ class IPRange(Base):
         ENUM("Active", "Reserved", "Deprecated", name="vlan_status", create_type=False),
         nullable=False,
     )
-    size = Column(
-        Integer,
-    )
+    size = Column(Integer, nullable=False)
     vrf_id = Column(
         Integer, ForeignKey("ipam_vrf.id", ondelete="SET NULL"), nullable=True
     )
@@ -128,7 +126,7 @@ class IPRange(Base):
     description = Column(String, nullable=True)
 
 
-class IPAddress(Base):
+class IPAddress(Base, TimestampMixin, AuditLogMixin):
     __tablename__ = "ipam_ip_address"
     id = Column(Integer, primary_key=True)
     address = Column(INET, nullable=False, index=True)
@@ -164,11 +162,11 @@ class IPAddress(Base):
     )
 
 
-class VLAN(Base):
+class VLAN(Base, TimestampMixin, AuditLogMixin):
     __tablename__ = "ipam_vlan"
     __table_args__ = (UniqueConstraint("site_id", "vlan_group_id", "vid", "id"),)
     id = Column(Integer, primary_key=True)
-    name = Column(String, unique=True, nullable=False)
+    name = Column(String, nullable=False)
     description = Column(String, nullable=True)
     status = Column(
         ENUM("Active", "Reserved", "Deprecated", name="vlan_status", create_type=False),
@@ -185,7 +183,6 @@ class VLAN(Base):
         "VLANGroup", back_populates="ipam_vlan", overlaps="ipam_vlan"
     )
     vid = Column(Integer, nullable=False)
-    name = Column(String, nullable=False)
     role_id = Column(
         Integer, ForeignKey("ipam_role.id", ondelete="SET NULL"), nullable=True
     )
@@ -195,7 +192,7 @@ class VLAN(Base):
     )
 
 
-class VLANGroup(Base, NameMixin):
+class VLANGroup(Base, NameMixin, AuditLogMixin):
     __tablename__ = "ipam_vlan_group"
     id = Column(Integer, primary_key=True)
     ipam_vlan = relationship(
@@ -203,7 +200,7 @@ class VLANGroup(Base, NameMixin):
     )
 
 
-class VRFRouteTargetLink(Base):
+class VRFRouteTarget(Base):
     __tablename__ = "ipam_vrf_route_target_link"
     id = Column(Integer, primary_key=True)
     vrf_id = Column(Integer, ForeignKey("ipam_vrf.id"), primary_key=True)
@@ -213,7 +210,7 @@ class VRFRouteTargetLink(Base):
     target_type = Column(String, nullable=False)
 
 
-class VRF(Base, NameMixin):
+class VRF(Base, NameMixin, AuditLogMixin):
     __tablename__ = "ipam_vrf"
     id = Column(Integer, primary_key=True)
     rd = Column(String, unique=True, nullable=True)
@@ -239,7 +236,7 @@ class VRF(Base, NameMixin):
     )
 
 
-class RouteTarget(Base, NameMixin):
+class RouteTarget(Base, NameMixin, AuditLogMixin):
     __tablename__ = "ipam_route_target"
     id = Column(Integer, primary_key=True)
     ipam_vrf = relationship(

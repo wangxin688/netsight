@@ -11,12 +11,12 @@ from sqlalchemy.dialects.postgresql import ARRAY, ENUM, INET
 from sqlalchemy.orm import relationship
 
 from src.db.db_base import Base
-from src.db.db_mixin import NameMixin, TimestampMixin
+from src.db.db_mixin import AuditLogMixin, NameMixin, TimestampMixin
 
 __all__ = ("CircuitType", "Circuit", "CircuitTermination", "Provider")
 
 
-class CircuitType(Base):
+class CircuitType(Base, AuditLogMixin):
     __tablename__ = "circuit_type"
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, unique=True)
@@ -26,7 +26,7 @@ class CircuitType(Base):
     )
 
 
-class Circuit(Base, NameMixin, TimestampMixin):
+class Circuit(Base, NameMixin, TimestampMixin, AuditLogMixin):
     __tablename__ = "circuit"
     id = Column(Integer, primary_key=True)
     cid = Column(String, unique=True, nullable=True)
@@ -73,7 +73,7 @@ class Circuit(Base, NameMixin, TimestampMixin):
     )
 
 
-class CircuitTermination(Base):
+class CircuitTermination(Base, AuditLogMixin):
     __tablename__ = "circuit_termination"
     __table_args__ = (UniqueConstraint("circuit_id", "term_side"),)
     id = Column(Integer, primary_key=True)
@@ -121,7 +121,7 @@ class CircuitTermination(Base):
     )
 
 
-class Provider(Base):
+class Provider(Base, AuditLogMixin):
     __tablename__ = "circuit_provider"
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, unique=True)

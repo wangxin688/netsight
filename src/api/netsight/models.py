@@ -2,7 +2,7 @@ from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from src.db.db_base import Base
-from src.db.db_mixin import NameMixin
+from src.db.db_mixin import AuditLogMixin, NameMixin
 
 __all__ = (
     "SiteContact",
@@ -11,7 +11,7 @@ __all__ = (
 )
 
 
-class Department(Base, NameMixin):
+class Department(Base, NameMixin, AuditLogMixin):
     __tablename__ = "department"
     id = id = Column(Integer, primary_key=True)
     dcim_device = relationship(

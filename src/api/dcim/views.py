@@ -1149,7 +1149,7 @@ class PlatformCBV:
         return_info = ResponseMsg(data=id)
         return return_info
 
-    @router.delete("/platforms/deleteList")
+    @router.post("/platforms/deleteList")
     async def bulk_delete_platforms(
         self, platform: schemas.PlatformBulkDelete
     ) -> BaseResponse[List[int]]:

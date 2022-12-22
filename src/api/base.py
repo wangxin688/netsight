@@ -1,3 +1,6 @@
+"""Base class定义逻辑关系自顶向下, site->location->rack->device-interface, 关系设计不能反向
+   Base class定义顺序自下向顶, 层级最高定义位置在最后
+"""
 from datetime import datetime
 from typing import Generic, Optional, TypeVar
 
@@ -12,6 +15,7 @@ def default(obj):
 
 class BaseModel(pydantic.BaseModel):
     class Config:
+        orm_mode = True
         json_encoders = {
             datetime: lambda v: int(v.timestamp())
         }  # method for customer JSON encoding of datetime fields

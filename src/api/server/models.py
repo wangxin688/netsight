@@ -4,12 +4,12 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
 from src.db.db_base import Base
-from src.db.db_mixin import NameMixin, TimestampMixin
+from src.db.db_mixin import AuditLogMixin, NameMixin, TimestampMixin
 
 __all__ = ("Server", "Cluster")
 
 
-class Server(Base, NameMixin, TimestampMixin):
+class Server(Base, NameMixin, TimestampMixin, AuditLogMixin):
     __tablename__ = "server"
     id = Column(Integer, primary_key=True)
     status = Column(String, nullable=False)
@@ -45,7 +45,7 @@ class Server(Base, NameMixin, TimestampMixin):
     department = relationship("Department", back_populates="server", overlaps="server")
 
 
-class Cluster(Base, NameMixin, TimestampMixin):
+class Cluster(Base, NameMixin, TimestampMixin, AuditLogMixin):
     __tablename__ = "cluster"
     id = Column(Integer, primary_key=True)
     server = relationship("Server", back_populates="cluster", passive_deletes=True)
