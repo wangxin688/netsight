@@ -1,8 +1,8 @@
 """init db
 
-Revision ID: 2ba995c62f75
+Revision ID: 9568ec3fdfcf
 Revises: 
-Create Date: 2022-12-22 17:46:05.469223
+Create Date: 2022-12-25 14:01:36.579638
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '2ba995c62f75'
+revision = '9568ec3fdfcf'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -338,14 +338,12 @@ def upgrade() -> None:
     op.create_table('circuit_audit_log',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
     sa.Column('request_id', postgresql.UUID(), nullable=False),
     sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
+    sa.Column('change_data', postgresql.JSON(astext_type=sa.Text()), nullable=False),
+    sa.Column('parent_id', sa.Integer(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['circuit.id'], ),
+    sa.ForeignKeyConstraint(['parent_id'], ['circuit.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -356,73 +354,15 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['contact_id'], ['contact.id'], ),
     sa.PrimaryKeyConstraint('circuit_id', 'contact_id')
     )
-    op.create_table('circuit_provider_audit_log',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
-    sa.Column('request_id', postgresql.UUID(), nullable=False),
-    sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
-    sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['circuit_provider.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_table('circuit_type_audit_log',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
-    sa.Column('request_id', postgresql.UUID(), nullable=False),
-    sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
-    sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['circuit_type.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
-    sa.PrimaryKeyConstraint('id')
-    )
     op.create_table('cluster_audit_log',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
     sa.Column('request_id', postgresql.UUID(), nullable=False),
     sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
+    sa.Column('change_data', postgresql.JSON(astext_type=sa.Text()), nullable=False),
+    sa.Column('parent_id', sa.Integer(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['cluster.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_table('dcim_device_role_audit_log',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
-    sa.Column('request_id', postgresql.UUID(), nullable=False),
-    sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
-    sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['dcim_device_role.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_table('dcim_device_type_audit_log',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
-    sa.Column('request_id', postgresql.UUID(), nullable=False),
-    sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
-    sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['dcim_device_type.id'], ),
+    sa.ForeignKeyConstraint(['parent_id'], ['cluster.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -442,59 +382,15 @@ def upgrade() -> None:
     sa.UniqueConstraint('site_id', 'name')
     )
     op.create_index(op.f('ix_dcim_location_created_at'), 'dcim_location', ['created_at'], unique=False)
-    op.create_table('dcim_manufacturer_audit_log',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
-    sa.Column('request_id', postgresql.UUID(), nullable=False),
-    sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
-    sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['dcim_manufacturer.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_table('dcim_platform_audit_log',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
-    sa.Column('request_id', postgresql.UUID(), nullable=False),
-    sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
-    sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['dcim_platform.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_table('dcim_rack_role_audit_log',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
-    sa.Column('request_id', postgresql.UUID(), nullable=False),
-    sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
-    sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['dcim_rack_role.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
-    sa.PrimaryKeyConstraint('id')
-    )
     op.create_table('dcim_region_audit_log',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
     sa.Column('request_id', postgresql.UUID(), nullable=False),
     sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
+    sa.Column('change_data', postgresql.JSON(astext_type=sa.Text()), nullable=False),
+    sa.Column('parent_id', sa.Integer(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['dcim_region.id'], ),
+    sa.ForeignKeyConstraint(['parent_id'], ['dcim_region.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -508,14 +404,12 @@ def upgrade() -> None:
     op.create_table('dcim_site_audit_log',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
     sa.Column('request_id', postgresql.UUID(), nullable=False),
     sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
+    sa.Column('change_data', postgresql.JSON(astext_type=sa.Text()), nullable=False),
+    sa.Column('parent_id', sa.Integer(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['dcim_site.id'], ),
+    sa.ForeignKeyConstraint(['parent_id'], ['dcim_site.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -526,59 +420,39 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['site_id'], ['dcim_site.id'], ),
     sa.PrimaryKeyConstraint('site_id', 'contact_id')
     )
-    op.create_table('department_audit_log',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
-    sa.Column('request_id', postgresql.UUID(), nullable=False),
-    sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
-    sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['department.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
-    sa.PrimaryKeyConstraint('id')
-    )
     op.create_table('ipam_asn_audit_log',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
     sa.Column('request_id', postgresql.UUID(), nullable=False),
     sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
+    sa.Column('change_data', postgresql.JSON(astext_type=sa.Text()), nullable=False),
+    sa.Column('parent_id', sa.Integer(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['ipam_asn.id'], ),
+    sa.ForeignKeyConstraint(['parent_id'], ['ipam_asn.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('ipam_block_audit_log',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
     sa.Column('request_id', postgresql.UUID(), nullable=False),
     sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
+    sa.Column('change_data', postgresql.JSON(astext_type=sa.Text()), nullable=False),
+    sa.Column('parent_id', sa.Integer(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['ipam_block.id'], ),
+    sa.ForeignKeyConstraint(['parent_id'], ['ipam_block.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('ipam_ip_range_audit_log',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
     sa.Column('request_id', postgresql.UUID(), nullable=False),
     sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
+    sa.Column('change_data', postgresql.JSON(astext_type=sa.Text()), nullable=False),
+    sa.Column('parent_id', sa.Integer(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['ipam_ip_range.id'], ),
+    sa.ForeignKeyConstraint(['parent_id'], ['ipam_ip_range.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -597,31 +471,15 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_ipam_prefix_created_at'), 'ipam_prefix', ['created_at'], unique=False)
-    op.create_table('ipam_role_audit_log',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
-    sa.Column('request_id', postgresql.UUID(), nullable=False),
-    sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
-    sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['ipam_role.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
-    sa.PrimaryKeyConstraint('id')
-    )
     op.create_table('ipam_route_target_audit_log',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
     sa.Column('request_id', postgresql.UUID(), nullable=False),
     sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
+    sa.Column('change_data', postgresql.JSON(astext_type=sa.Text()), nullable=False),
+    sa.Column('parent_id', sa.Integer(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['ipam_route_target.id'], ),
+    sa.ForeignKeyConstraint(['parent_id'], ['ipam_route_target.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -646,56 +504,48 @@ def upgrade() -> None:
     op.create_table('ipam_vlan_group_audit_log',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
     sa.Column('request_id', postgresql.UUID(), nullable=False),
     sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
+    sa.Column('change_data', postgresql.JSON(astext_type=sa.Text()), nullable=False),
+    sa.Column('parent_id', sa.Integer(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['ipam_vlan_group.id'], ),
+    sa.ForeignKeyConstraint(['parent_id'], ['ipam_vlan_group.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('ipam_vrf_audit_log',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
     sa.Column('request_id', postgresql.UUID(), nullable=False),
     sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
+    sa.Column('change_data', postgresql.JSON(astext_type=sa.Text()), nullable=False),
+    sa.Column('parent_id', sa.Integer(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['ipam_vrf.id'], ),
+    sa.ForeignKeyConstraint(['parent_id'], ['ipam_vrf.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('server_audit_log',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
     sa.Column('request_id', postgresql.UUID(), nullable=False),
     sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
+    sa.Column('change_data', postgresql.JSON(astext_type=sa.Text()), nullable=False),
+    sa.Column('parent_id', sa.Integer(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['server.id'], ),
+    sa.ForeignKeyConstraint(['parent_id'], ['server.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('dcim_location_audit_log',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
     sa.Column('request_id', postgresql.UUID(), nullable=False),
     sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
+    sa.Column('change_data', postgresql.JSON(astext_type=sa.Text()), nullable=False),
+    sa.Column('parent_id', sa.Integer(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['dcim_location.id'], ),
+    sa.ForeignKeyConstraint(['parent_id'], ['dcim_location.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -730,28 +580,24 @@ def upgrade() -> None:
     op.create_table('ipam_prefix_audit_log',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
     sa.Column('request_id', postgresql.UUID(), nullable=False),
     sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
+    sa.Column('change_data', postgresql.JSON(astext_type=sa.Text()), nullable=False),
+    sa.Column('parent_id', sa.Integer(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['ipam_prefix.id'], ),
+    sa.ForeignKeyConstraint(['parent_id'], ['ipam_prefix.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('ipam_vlan_audit_log',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
     sa.Column('request_id', postgresql.UUID(), nullable=False),
     sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
+    sa.Column('change_data', postgresql.JSON(astext_type=sa.Text()), nullable=False),
+    sa.Column('parent_id', sa.Integer(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['ipam_vlan.id'], ),
+    sa.ForeignKeyConstraint(['parent_id'], ['ipam_vlan.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -798,28 +644,24 @@ def upgrade() -> None:
     op.create_table('dcim_rack_audit_log',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
     sa.Column('request_id', postgresql.UUID(), nullable=False),
     sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
+    sa.Column('change_data', postgresql.JSON(astext_type=sa.Text()), nullable=False),
+    sa.Column('parent_id', sa.Integer(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['dcim_rack.id'], ),
+    sa.ForeignKeyConstraint(['parent_id'], ['dcim_rack.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('dcim_device_audit_log',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
     sa.Column('request_id', postgresql.UUID(), nullable=False),
     sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
+    sa.Column('change_data', postgresql.JSON(astext_type=sa.Text()), nullable=False),
+    sa.Column('parent_id', sa.Integer(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['dcim_device.id'], ),
+    sa.ForeignKeyConstraint(['parent_id'], ['dcim_device.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -864,20 +706,6 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('circuit_id', 'term_side')
     )
-    op.create_table('dcim_interface_audit_log',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
-    sa.Column('request_id', postgresql.UUID(), nullable=False),
-    sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
-    sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['dcim_interface.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
-    sa.PrimaryKeyConstraint('id')
-    )
     op.create_table('ipam_ip_address',
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
@@ -896,31 +724,15 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_ipam_ip_address_address'), 'ipam_ip_address', ['address'], unique=False)
     op.create_index(op.f('ix_ipam_ip_address_created_at'), 'ipam_ip_address', ['created_at'], unique=False)
-    op.create_table('circuit_termination_audit_log',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
-    sa.Column('request_id', postgresql.UUID(), nullable=False),
-    sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
-    sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['circuit_termination.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
-    sa.PrimaryKeyConstraint('id')
-    )
     op.create_table('ipam_ip_address_audit_log',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
     sa.Column('request_id', postgresql.UUID(), nullable=False),
     sa.Column('action', postgresql.ENUM('create', 'update', 'delete', name='audit_action'), nullable=False),
-    sa.Column('pre_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('post_change_data', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-    sa.Column('audit_log_id', sa.Integer(), nullable=True),
+    sa.Column('change_data', postgresql.JSON(astext_type=sa.Text()), nullable=False),
+    sa.Column('parent_id', sa.Integer(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['audit_log_id'], ['ipam_ip_address.id'], ),
+    sa.ForeignKeyConstraint(['parent_id'], ['ipam_ip_address.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['auth_user.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -930,11 +742,9 @@ def upgrade() -> None:
 def downgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
     op.drop_table('ipam_ip_address_audit_log')
-    op.drop_table('circuit_termination_audit_log')
     op.drop_index(op.f('ix_ipam_ip_address_created_at'), table_name='ipam_ip_address')
     op.drop_index(op.f('ix_ipam_ip_address_address'), table_name='ipam_ip_address')
     op.drop_table('ipam_ip_address')
-    op.drop_table('dcim_interface_audit_log')
     op.drop_table('circuit_termination')
     op.drop_index(op.f('ix_dcim_interface_created_at'), table_name='dcim_interface')
     op.drop_table('dcim_interface')
@@ -957,27 +767,18 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_ipam_vlan_created_at'), table_name='ipam_vlan')
     op.drop_table('ipam_vlan')
     op.drop_table('ipam_route_target_audit_log')
-    op.drop_table('ipam_role_audit_log')
     op.drop_index(op.f('ix_ipam_prefix_created_at'), table_name='ipam_prefix')
     op.drop_table('ipam_prefix')
     op.drop_table('ipam_ip_range_audit_log')
     op.drop_table('ipam_block_audit_log')
     op.drop_table('ipam_asn_audit_log')
-    op.drop_table('department_audit_log')
     op.drop_table('dcim_site_contact_link')
     op.drop_table('dcim_site_audit_log')
     op.drop_table('dcim_site_asn_link')
     op.drop_table('dcim_region_audit_log')
-    op.drop_table('dcim_rack_role_audit_log')
-    op.drop_table('dcim_platform_audit_log')
-    op.drop_table('dcim_manufacturer_audit_log')
     op.drop_index(op.f('ix_dcim_location_created_at'), table_name='dcim_location')
     op.drop_table('dcim_location')
-    op.drop_table('dcim_device_type_audit_log')
-    op.drop_table('dcim_device_role_audit_log')
     op.drop_table('cluster_audit_log')
-    op.drop_table('circuit_type_audit_log')
-    op.drop_table('circuit_provider_audit_log')
     op.drop_table('circuit_contact_link')
     op.drop_table('circuit_audit_log')
     op.drop_table('auth_user_group_link')

@@ -172,7 +172,7 @@ class Location(Base, TimestampMixin, AuditLogMixin):
     )
 
 
-class RackRole(Base, AuditLogMixin):
+class RackRole(Base):
     __tablename__ = "dcim_rack_role"
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True, nullable=False)
@@ -236,7 +236,7 @@ class Rack(Base, NameMixin, TimestampMixin, AuditLogMixin):
     comments = Column(Text, nullable=True)
 
 
-class Manufacturer(Base, AuditLogMixin):
+class Manufacturer(Base):
     __tablename__ = "dcim_manufacturer"
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, unique=True)
@@ -252,7 +252,7 @@ class Manufacturer(Base, AuditLogMixin):
     )
 
 
-class DeviceType(Base, AuditLogMixin):
+class DeviceType(Base):
     __tablename__ = "dcim_device_type"
     __table_args__ = (UniqueConstraint("manufacturer_id", "name"),)
     id = Column(Integer, primary_key=True)
@@ -273,7 +273,7 @@ class DeviceType(Base, AuditLogMixin):
     rear_image = Column(UUID(as_uuid=True), nullable=True)
 
 
-class DeviceRole(Base, AuditLogMixin):
+class DeviceRole(Base):
     __tablename__ = "dcim_device_role"
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, unique=True)
@@ -287,7 +287,7 @@ class DeviceRole(Base, AuditLogMixin):
     )
 
 
-class Platform(Base, AuditLogMixin):
+class Platform(Base):
     __tablename__ = "dcim_platform"
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, unique=True)
@@ -387,7 +387,7 @@ class Device(Base, TimestampMixin, AuditLogMixin):
     )
 
 
-class Interface(Base, TimestampMixin, AuditLogMixin):
+class Interface(Base, TimestampMixin):
     __tablename__ = "dcim_interface"
     __table_args__ = (UniqueConstraint("device_id", "name"),)
     id = Column(Integer, primary_key=True)

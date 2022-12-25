@@ -16,7 +16,7 @@ from src.db.db_mixin import AuditLogMixin, NameMixin, TimestampMixin
 __all__ = ("CircuitType", "Circuit", "CircuitTermination", "Provider")
 
 
-class CircuitType(Base, AuditLogMixin):
+class CircuitType(Base):
     __tablename__ = "circuit_type"
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, unique=True)
@@ -73,7 +73,7 @@ class Circuit(Base, NameMixin, TimestampMixin, AuditLogMixin):
     )
 
 
-class CircuitTermination(Base, AuditLogMixin):
+class CircuitTermination(Base):
     __tablename__ = "circuit_termination"
     __table_args__ = (UniqueConstraint("circuit_id", "term_side"),)
     id = Column(Integer, primary_key=True)
@@ -121,7 +121,7 @@ class CircuitTermination(Base, AuditLogMixin):
     )
 
 
-class Provider(Base, AuditLogMixin):
+class Provider(Base):
     __tablename__ = "circuit_provider"
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, unique=True)

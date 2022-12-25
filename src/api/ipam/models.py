@@ -49,7 +49,7 @@ class Block(Base, TimestampMixin, AuditLogMixin):
     description = Column(String, nullable=True)
 
 
-class IPRole(Base, TimestampMixin, AuditLogMixin):
+class IPRole(Base, TimestampMixin):
     __tablename__ = "ipam_role"
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, unique=True)
