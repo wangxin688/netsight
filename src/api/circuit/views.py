@@ -11,8 +11,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.api.auth.models import User
 from src.api.base import BaseListResponse, BaseResponse, QueryParams
 from src.api.circuit import schemas
-from src.api.circuit.models import CircuitType, Provider
+from src.api.circuit.models import Circuit, CircuitType, Provider
 from src.api.deps import get_current_user, get_session
+from src.api.netsight.models import Contact
 from src.db.crud_base import CRUDBase
 from src.register.middleware import AuditRoute
 from src.utils.error_code import ERR_NUM_4004, ERR_NUM_4009, ResponseMsg
@@ -26,7 +27,7 @@ class ProviderCBV:
     current_user: User = Depends(get_current_user)
     crud = CRUDBase(Provider)
 
-    @router.post("providers")
+    @router.post("/providers")
     async def create_provider(
         self, provider: schemas.ProviderCreate
     ) -> BaseResponse[int]:
@@ -182,10 +183,10 @@ class CircuitTypeCBV:
     @router.post("/circuit-types/getList")
     async def get_circuit_types_filter(
         self, circuit_type: schemas.CircuitTypeQuery
-    ) -> BaseListResponse[List[CircuitType]]:
+    ) -> BaseListResponse[List[schemas.CircuitType]]:
         pass
 
-    @router.update("/circuit-types/{id}")
+    @router.put("/circuit-types/{id}")
     async def update_circuit_type(
         self, circuit_type: schemas.CircuitTypeUpdate
     ) -> BaseResponse[int]:
@@ -232,3 +233,86 @@ class CircuitTypeCBV:
             return return_info
         return_info = ResponseMsg(data=circuit_type.ids)
         return return_info
+
+
+@cbv(router)
+class CircuitCBV:
+    session: AsyncSession = Depends(get_session)
+    current_user: User = Depends(get_current_user)
+    crud = CRUDBase(Circuit)
+
+    @router.post("/circuits")
+    async def create_circuit(self, circuit: schemas.CircuitCreate) -> BaseResponse[int]:
+        if circuit.provider_id:
+            provider: Provider = await self.session.get(Provider, circuit.provider_id)
+            if not provider:
+                return_info = ERR_NUM_4004
+                return_info.msg = (
+                    f"Create circuit failed, circuit with provider #{id} not found"
+                )
+        new_circuit = Circuit(circuit.dict(exclude={"contact_id"}))
+        try:
+            self.session.add(new_circuit)
+            await self.session.commit()
+        except IntegrityError as e:
+            logger.error(e)
+            return_info = ERR_NUM_4009
+            return_info.msg = (
+                f"Create circuit failed, circuit with name {circuit.name} already exist"
+            )
+            return return_info
+        if circuit.contact_id:
+            contacts: List[Contact] = await self.crud.get_multi(
+                self.session, circuit.contact_id
+            )
+            if len(contacts) < circuit.contact_id or not contacts:
+                if not contacts:
+                    diff_contacts = circuit.contact_id
+                else:
+                    diff_contacts = set(circuit.contact_id) - set(
+                        [contact.id for contact in contacts]
+                    )
+                return_info = ERR_NUM_4004
+                return_info.msg = f"Create circuit failed, circuit with contact #{diff_contacts} not found"
+            new_circuit.contact.append(contacts)
+            await self.session.commit()
+        return_info = ResponseMsg(data=new_circuit.id)
+        return return_info
+
+    @router.get("/circuits/{id}")
+    async def get_circuit(self, id: int) -> BaseResponse[schemas.Circuit]:
+        pass
+
+    @router.get("/circuits")
+    async def get_circuits(
+        self, q: QueryParams = Depends(QueryParams)
+    ) -> BaseListResponse[List[schemas.Circuit]]:
+        pass
+
+    @router.post("/circuits/getList")
+    async def get_circuits_filter(
+        self, circuit: schemas.CircuitQuery
+    ) -> BaseListResponse[List[schemas.Circuit]]:
+        pass
+
+    @router.put("/circuits/{id}")
+    async def update_circuit(
+        self, id: int, circuit: schemas.CricuitUpdate
+    ) -> BaseResponse[int]:
+        pass
+
+    @router.post("/circuits/updateList")
+    async def update_circuits(
+        self, circuit: schemas.CircuitBulkUpdate
+    ) -> BaseResponse[List[int]]:
+        pass
+
+    @router.delete("/circuits/{id]")
+    async def delete_circuit(self, id: int) -> BaseResponse[int]:
+        pass
+
+    @router.post("/circuits/deleteList")
+    async def delete_circuits(
+        self, circuit: schemas.CircuitBulkDelete
+    ) -> BaseResponse[List[int]]:
+        pass

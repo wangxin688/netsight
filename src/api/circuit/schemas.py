@@ -2,9 +2,11 @@ from datetime import datetime
 from ipaddress import IPv4Network, IPv6Network
 from typing import List
 
-from pydantic import AnyHttpUrl, EmailStr
+from pydantic import AnyHttpUrl, EmailStr, root_validator
 
 from src.api.base import BaseModel, BaseQuery
+from src.api.circuit.constraints import CIRCUIT_STATUS
+from src.utils.validators import items_to_list
 
 
 class ProviderCreate(BaseModel):
@@ -85,8 +87,9 @@ class CircuitCreate(BaseModel):
     description: str | None
     cid: str
     provider_id: int
-    status: str
+    status: CIRCUIT_STATUS
     circuit_type_id: int
+    provider_id: int
     install_date: datetime | None
     purchase_term: str
     commit_rate: int | None
@@ -97,7 +100,17 @@ class CircuitCreate(BaseModel):
     vender_available_gateway: IPv4Network | List[IPv4Network] | IPv6Network | List[
         IPv6Network
     ] | None
-    contact_id: int | None
+    contact_id: List[int] | None
+
+    @root_validator(pre=False)
+    def ip_trans(cls, values):
+        if values["vender_available_ip"]:
+            values["vender_available_ip"] = items_to_list(values["vender_available_ip"])
+        if values["vender_available_gateway"]:
+            values["vender_available_gateway"] = items_to_list(
+                values["vender_available_gateway"]
+            )
+        return values
 
 
 class CricuitUpdate(BaseModel):
@@ -105,7 +118,8 @@ class CricuitUpdate(BaseModel):
     description: str | None
     cid: str | None
     provider_id: int
-    status: str | None
+    status: CIRCUIT_STATUS | None
+    provider_id: int | None
     circuit_type_id: int | None
     install_date: datetime | None
     purchase_term: str | None
@@ -117,7 +131,31 @@ class CricuitUpdate(BaseModel):
     vender_available_gateway: IPv4Network | List[
         IPv4Network
     ] | None | IPv6Network | List[IPv6Network]
-    contact_id: int | None
+    contact_id: List[int] | None
+
+    @root_validator(pre=False)
+    def ip_trans(cls, values):
+        if values["vender_available_ip"]:
+            values["vender_available_ip"] = items_to_list(values["vender_available_ip"])
+        if values["vender_available_gateway"]:
+            values["vender_available_gateway"] = items_to_list(
+                values["vender_available_gateway"]
+            )
+        return values
+
+
+class CircuitBulkUpdate(BaseModel):
+    ids: List[int]
+    description: str | None
+    status: CIRCUIT_STATUS | None
+    provider_id: int | None
+    circuit_type_id: int | None
+    commit_rate: int | None
+    contact_id: List[int] | None
+
+
+class CircuitBulkDelete(BaseModel):
+    ids: List[int]
 
 
 class CircuitQuery(BaseQuery):
@@ -144,9 +182,6 @@ class Circuit(BaseModel):
     ] | None | IPv6Network | List[IPv6Network] | None
     # contact: List[ContactBase] | None
     # circuit_termination: List[CircuitTerminationBase] | None
-
-    class Config:
-        orm_mode = True
 
 
 class CircuitBase(BaseModel):

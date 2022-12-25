@@ -21,26 +21,17 @@ class VRFBase(BaseModel):
     rd: str
     enforce_unique: bool
 
-    class Config:
-        orm_mode = True
-
 
 class RouteTargetBase(BaseModel):
     id: int
     name: str
     description: str | None
 
-    class Config:
-        orm_mode = True
-
 
 class ASNBase(BaseModel):
     id: int
     asn: int
     description: str | None
-
-    class Config:
-        orm_mode = True
 
 
 class VLANBase(BaseModel):
@@ -49,9 +40,6 @@ class VLANBase(BaseModel):
     description: str
     status: VLAN_STATUS
     vid: int
-
-    class Config:
-        orm_mode = True
 
 
 class IPRangeBase(BaseModel):
@@ -67,26 +55,17 @@ class VLANGroupBase(BaseModel):
     name: str
     description: str | None
 
-    class Config:
-        orm_mode = True
-
 
 class IPRoleBase(BaseModel):
     id: int
     name: str
     description: str | None
 
-    class Config:
-        orm_mode = True
-
 
 class IPRole(BaseModel):
     id: int
     name: str
     description: str | None
-
-    class Config:
-        orm_mode = True
 
 
 class RIRBase(BaseModel):
@@ -96,9 +75,6 @@ class RIRBase(BaseModel):
     is_private: bool
     created_at: datetime
     updated_at: datetime | None
-
-    class Config:
-        orm_mode = True
 
 
 class BlockBase(BaseModel):
@@ -126,9 +102,6 @@ class VLAN(BaseModel):
     ipam_role: IPRoleBase
     dcim_interface: List[InterfaceBase]
 
-    class Config:
-        orm_mode = True
-
 
 class RIR(BaseModel):
     id: int
@@ -139,9 +112,6 @@ class RIR(BaseModel):
     updated_at: datetime | None
     # ipam_block: List[Block] | None
 
-    class Config:
-        orm_mode = True
-
 
 class VLANGroup(BaseModel):
     id: int
@@ -149,18 +119,12 @@ class VLANGroup(BaseModel):
     description: str | None
     ipam_vlan: List[VLANBase]
 
-    class Config:
-        orm_mode = True
-
 
 class Block(BaseModel):
     id: int
     block: IPv4Network | IPv6Network
     description: str | None
     ipam_rir: RIRBase
-
-    class Config:
-        orm_mode = True
 
 
 class Prefix(BaseModel):
