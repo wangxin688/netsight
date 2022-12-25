@@ -150,7 +150,9 @@ class RegionCBV:
     ) -> BaseResponse[List[int]]:
         """bulk update a list of regions"""
         local_regions = await self.crud.get_multi(self.session, region.ids)
-        diff_region: set = set(region.ids) - set(local_regions)
+        diff_region: set = set(region.ids) - set(
+            [region.id for region in local_regions]
+        )
         if diff_region:
             return_info = ERR_NUM_4004
             return_info.msg = (
@@ -159,7 +161,7 @@ class RegionCBV:
             return return_info
         await self.session.execute(
             update(Region)
-            .where(Region.id.in_(region.region_ids))
+            .where(Region.id.in_(region.ids))
             .values(region.dict(exclude={"ids"}, exclude_none=True))
             .execute_options(synchronize_session="fetch")
         )
@@ -350,10 +352,10 @@ class SiteCBV:
         self, site: schemas.SiteBulkDelete
     ) -> BaseResponse[List[int]]:
         """bulk delete sites"""
-        local_sites: List[Site] = await self.curd.get_multi(self.session, site.ids)
+        local_sites: List[Site] = await self.curd.delete_multi(self.session, site.ids)
         if local_sites is None:
             return_info = ERR_NUM_4004
-            return_info.msg = f"Bulk delete sites failed, sites #{id} not found"
+            return_info.msg = f"Bulk delete sites failed, sites #{site.ids} not found"
             return return_info
         return_info = ResponseMsg(data=[d.id for d in local_sites])
         return return_info

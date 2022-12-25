@@ -45,6 +45,10 @@ class InterfaceBulkUpdate(BaseModel):
     vlan_id: int | None
 
 
+class InterfaceBulkDelete(BaseModel):
+    ids: List[int]
+
+
 class InterfaceBase(InterfaceCreate):
     id: int
 
@@ -429,6 +433,7 @@ class RegionUpdate(RegionCreate):
 
 
 class RegionBulkUpdate(BaseModel):
+    ids: List[int]
     description: str | None
     parent_id: int | None
 

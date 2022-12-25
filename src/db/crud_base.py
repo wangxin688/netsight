@@ -108,14 +108,14 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self,
         session: AsyncSession,
         *,
-        db_obj: ModelType,
+        id: int | UUID4,
         obj_in: UpdateSchemaType,
         excludes: set = None
     ) -> ModelType:
         await session.execute(
             update(self.model)
-            .where(self.model.id == db_obj.id)
+            .where(self.model.id == id)
             .values(obj_in.dict(exclude_none=True, exclude=excludes))
         ).execute_options(synchronize_session="fetch")
         await session.commit()
-        return db_obj
+        return id

@@ -117,7 +117,7 @@ class AuditLogMixin:
     individual tables. each one generates to persist those objects on behalf of
     a particular parent class.
     Since a lot of objects are created and change logs are bottleneck in our env.
-    I strongly agree with zzzeek(sqlalchemy author) that django ROR is not much good
+    I strongly agree with zzzeek(sqlalchemy author) that django, ROR is not much good
     choice for huge data. It's better to separate tables by objects for better performance and management.
     Ses: https://stackoverflow.com/questions/17703239/sqlalchemy-generica-foreign-key-like-in-django-orm
     """

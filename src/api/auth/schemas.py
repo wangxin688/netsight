@@ -23,9 +23,6 @@ class AuthPermission(BaseModel):
     url: str | None
     action: str
 
-    class Config:
-        orm_mode = True
-
 
 class AuthRole(BaseModel):
     id: int
@@ -33,17 +30,11 @@ class AuthRole(BaseModel):
     description: str | None
     auth_permission: Optional[List[AuthPermission]]
 
-    class Config:
-        orm_mode = True
-
 
 class AuthRoleBase(BaseModel):
     id: int
     name: str
     description: str | None
-
-    class Config:
-        orm_mode = True
 
 
 class AuthUserBase(BaseModel):
@@ -54,9 +45,6 @@ class AuthUserBase(BaseModel):
     is_active: bool
     created_at: datetime
     updated_at: Optional[datetime]
-
-    class Config:
-        orm_mode = True
 
 
 class AuthUser(BaseModel):
@@ -69,9 +57,6 @@ class AuthUser(BaseModel):
     updated_at: Optional[datetime]
     auth_role: Optional[AuthRole]
 
-    class Config:
-        orm_mode = True
-
 
 class AuthGroup(BaseModel):
     id: int
@@ -79,17 +64,11 @@ class AuthGroup(BaseModel):
     description: str | None
     auth_user: Optional[List[AuthUserBase]]
 
-    class Config:
-        orm_mode = True
-
 
 class AuthGroupBase(BaseModel):
     id: int
     name: str
     description: str | None
-
-    class Config:
-        orm_mode = True
 
 
 class AuthUserCreate(BaseModel):
