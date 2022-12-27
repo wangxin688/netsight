@@ -1,6 +1,5 @@
-from datetime import datetime
 from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network
-from typing import List, Optional
+from typing import List
 
 from pydantic import Field, root_validator
 
@@ -12,6 +11,179 @@ from src.api.ipam.constraints import (
     IPADDRESS_STATUS,
     VLAN_STATUS,
 )
+
+
+class IPRoleCreate(BaseModel):
+    name: str
+    description: str | None
+
+
+class IPRoleQuery(BaseQuery):
+    pass
+
+
+class IPRoleUpdate(BaseModel):
+    name: str | None
+    description: str | None
+
+
+class IPRoleBulkDelete(BaseModel):
+    ids: List[int]
+
+
+class IPRoleBase(BaseModel):
+    id: int
+    name: str
+    description: str | None
+
+
+class IPRole(BaseModel):
+    id: int
+    name: str
+    description: str | None
+
+
+class PrefixCreate(BaseModel):
+    prefix: IPv4Network | IPv6Network
+    status: IPADDRESS_STATUS
+    site_id: int
+    role_id: int
+    is_pool: bool = False
+    is_full: bool = False
+
+
+class PrefixQuery(BaseQuery):
+    pass
+
+
+class PrefixUpdate(BaseModel):
+    prefix: IPv4Network | IPv6Network | None
+    status: IPADDRESS_STATUS | None
+    site_id: int | None
+    role_id: int | None
+    is_pool: bool | None
+    is_full: bool | None
+
+
+class PrefixBulkUpdate(BaseModel):
+    status: IPADDRESS_STATUS | None
+    site_id: int | None
+    role_id: int | None
+    is_pool: bool | None
+    is_full: bool | None
+
+
+class PrefixBulkDelete(BaseModel):
+    ids: List[int]
+
+
+class PrefixBase(PrefixCreate):
+    id: int
+
+
+class Prefix(PrefixCreate):
+    id: int
+    dcim_site: SiteBase
+    ipam_role: IPRoleBase
+
+
+class RIRCreate(BaseModel):
+    name: IPv4Network | IPv6Network
+    description: str | None
+    is_private: bool
+
+
+class RIRQuery(BaseQuery):
+    pass
+
+
+class RIRUpdate(BaseModel):
+    name: IPv4Network | IPv6Network | None
+    description: str | None
+    is_private: bool | None
+
+
+class RIRBase(RIRCreate):
+    id: int
+
+
+class RIR(RIRCreate):
+    id: int
+    # ipam_block: List[BlockBase]
+
+
+class VLANCreate(BaseModel):
+    name: str
+    description: str | None
+    status: VLAN_STATUS
+    site_id: int
+    vlan_group_id: int | None
+    vid: int
+    role_id: int
+
+
+class VLANQuery(BaseQuery):
+    pass
+
+
+class VLANUpdate(BaseModel):
+    name: str | None
+    status: VLAN_STATUS | None
+    site_id: int | None
+    vid: int | None
+    role_id: int | None
+
+
+class VLANBulkDelete(BaseModel):
+    ids: List[int]
+
+
+class VLANBase(VLANCreate):
+    id: int
+
+
+class VLAN(BaseModel):
+    id: int
+    name: str
+    description: str
+    status: VLAN_STATUS
+    dcim_site: SiteBase
+    # ipam_vlan_group: Optional[VLANGroupBase]
+    vid: int
+    ipam_role: IPRoleBase
+    dcim_interface: List[InterfaceBase]
+
+
+class VLANBulkUpdate(BaseModel):
+    description: str | None
+    status: VLAN_STATUS | None
+    site_id: int | None
+    vlan_group_id: int | None
+    vid: int | None
+    role_id: int | None
+
+
+class VLANGroupCreate(BaseModel):
+    name: str
+    description: str | None
+
+
+class VLANGroupQuery(BaseQuery):
+    pass
+
+
+class VLANGroupUpdate(BaseModel):
+    name: str | None
+    description: str | None
+
+
+class VLANGroupBase(VLANGroupCreate):
+    id: int
+
+
+class VLANGroup(VLANGroupCreate):
+    id: int
+    ipam_vlan: List[VLANBase]
 
 
 class VRFBase(BaseModel):
@@ -50,74 +222,10 @@ class IPRangeBase(BaseModel):
     description: str | None
 
 
-class VLANGroupBase(BaseModel):
-    id: int
-    name: str
-    description: str | None
-
-
-class IPRoleBase(BaseModel):
-    id: int
-    name: str
-    description: str | None
-
-
-class IPRole(BaseModel):
-    id: int
-    name: str
-    description: str | None
-
-
-class RIRBase(BaseModel):
-    id: int
-    name: str
-    description: str | None
-    is_private: bool
-    created_at: datetime
-    updated_at: datetime | None
-
-
 class BlockBase(BaseModel):
     id: int
     block: IPv4Network | IPv6Network
     description: str | None
-
-
-class PrefixBase(BaseModel):
-    id: int
-    prefix: IPv4Network | IPv6Network
-    status: IPADDRESS_STATUS
-    is_pool: bool
-    is_full: bool
-
-
-class VLAN(BaseModel):
-    id: int
-    name: str
-    description: str
-    status: VLAN_STATUS
-    dcim_site: SiteBase
-    ipam_vlan_group: Optional[VLANGroupBase]
-    vid: int
-    ipam_role: IPRoleBase
-    dcim_interface: List[InterfaceBase]
-
-
-class RIR(BaseModel):
-    id: int
-    name: str
-    description: str | None
-    is_private: bool
-    created_at: datetime
-    updated_at: datetime | None
-    # ipam_block: List[Block] | None
-
-
-class VLANGroup(BaseModel):
-    id: int
-    name: str
-    description: str | None
-    ipam_vlan: List[VLANBase]
 
 
 class Block(BaseModel):
@@ -125,16 +233,6 @@ class Block(BaseModel):
     block: IPv4Network | IPv6Network
     description: str | None
     ipam_rir: RIRBase
-
-
-class Prefix(BaseModel):
-    id: int
-    prefix: IPv4Network | IPv6Network
-    status: IPADDRESS_STATUS
-    dcim_site: SiteBase
-    ipam_role: IPRoleBase
-    is_pool: bool
-    is_full: bool
 
 
 class ASN(BaseModel):
@@ -176,22 +274,6 @@ class IPAddressBase(BaseModel):
     owners: str | None
 
 
-class RIRCreate(BaseModel):
-    name: IPv4Network | IPv6Network
-    description: str | None
-    is_private: bool
-
-
-class RIRUpdate(BaseModel):
-    name: IPv4Network | IPv6Network | None
-    description: str | None
-    is_private: bool | None
-
-
-class RIRQuery(BaseQuery):
-    pass
-
-
 class RIRBulkDelete(BaseModel):
     ids: List[int]
 
@@ -213,58 +295,6 @@ class BlockQuery(BaseQuery):
 
 
 class BlockBulkDelete(BaseModel):
-    ids: List[int]
-
-
-class IPRoleCreate(BaseModel):
-    name: str
-    description: str | None
-
-
-class IPRoleUpdate(BaseModel):
-    name: str | None
-    description: str | None
-
-
-class IPRoleQuery(BaseQuery):
-    pass
-
-
-class IPRoleBulkDelete(BaseModel):
-    ids: List[int]
-
-
-class PrefixCreate(BaseModel):
-    prefix: IPv4Network | IPv6Network
-    status: IPADDRESS_STATUS
-    site_id: int
-    role_id: int
-    is_pool: bool = False
-    is_full: bool = False
-
-
-class PrefixUpdate(BaseModel):
-    prefix: IPv4Network | IPv6Network | None
-    status: IPADDRESS_STATUS | None
-    site_id: int | None
-    role_id: int | None
-    is_pool: bool | None
-    is_full: bool | None
-
-
-class PrefixBulkUpdate(BaseModel):
-    status: IPADDRESS_STATUS | None
-    site_id: int | None
-    role_id: int | None
-    is_pool: bool | None
-    is_full: bool | None
-
-
-class PrefixQuery(BaseQuery):
-    pass
-
-
-class PrefixBulkDelete(BaseModel):
     ids: List[int]
 
 

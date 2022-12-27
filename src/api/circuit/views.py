@@ -281,7 +281,13 @@ class CircuitCBV:
 
     @router.get("/circuits/{id}")
     async def get_circuit(self, id: int) -> BaseResponse[schemas.Circuit]:
-        pass
+        local_circuit: Circuit = await self.session.get(Circuit, id)
+        if not local_circuit:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Circuit #{id} not found"
+            return return_info
+        return_info = ResponseMsg(data=local_circuit)
+        return return_info
 
     @router.get("/circuits")
     async def get_circuits(
