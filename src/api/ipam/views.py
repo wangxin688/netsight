@@ -295,7 +295,7 @@ class IPRoleCBV:
         return_info = ResponseMsg(data={"count": count, "results": results})
         return return_info
 
-    @router.update("/roles/{id}")
+    @router.put("/roles/{id}")
     async def update_ipam_role(
         self, id: int, role: schemas.IPRoleUpdate
     ) -> BaseResponse[int]:
