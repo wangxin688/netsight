@@ -10,9 +10,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.auth.models import User
 from src.api.base import BaseListResponse, BaseResponse, QueryParams
+from src.api.dcim.models import Site
 from src.api.deps import get_current_user, get_session
 from src.api.ipam import schemas
-from src.api.ipam.models import ASN, RIR, Block, IPRole
+from src.api.ipam.models import ASN, RIR, Block, IPRole, Prefix, VLANGroup
 from src.db.crud_base import CRUDBase
 from src.register.middleware import AuditRoute
 from src.utils.error_code import ERR_NUM_4004, ERR_NUM_4009, ResponseMsg
@@ -338,4 +339,221 @@ class IPRoleCBV:
             )
             return return_info
         return_info = ResponseMsg(data=[result.id for result in results])
+        return return_info
+
+
+class PrefixCBV:
+    session: AsyncSession = Depends(get_session)
+    current_user: User = Depends(get_current_user)
+    crud = CRUDBase(Prefix)
+
+    @router.post("/prefixes")
+    async def create_prefix(self, prefix: schemas.PrefixCreate) -> BaseResponse[int]:
+        return_info = ERR_NUM_4004
+        site: Site = await self.session.get(Site, prefix.site_id)
+        if not site:
+            return_info.msg = f"Create prefix failed, site #{prefix.site_id} not found"
+            return return_info
+        ipam_role: IPRole = await self.session.get(IPRole, prefix.role_id)
+        if not ipam_role:
+            return_info.msg = f"Create prefix failed, role #{id} not found"
+            return return_info
+        new_prefix = Prefix(**prefix.dict())
+        self.session.add(prefix)
+        await self.session.commit()
+        return_info = ResponseMsg(data=new_prefix.id)
+        return return_info
+
+    @router.get("/prefixes/{id}")
+    async def get_prefix(self, id: int) -> BaseResponse[schemas.Prefix]:
+        local_prefix: Prefix = await self.session.get(Prefix, id)
+        if not local_prefix:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Prefix #{id} not found"
+            return return_info
+        return_info = ResponseMsg(data=local_prefix)
+        return return_info
+
+    @router.get("/prefixes")
+    async def get_prefixes(
+        self, q: QueryParams = Depends(QueryParams)
+    ) -> BaseListResponse[List[schemas.Prefix]]:
+        results = await self.crud.get_all(self.session, q.limit, q.offset)
+        count: int = (
+            await self.session.execute(select(func.count(Prefix.id)))
+        ).scalar()
+        return_info = ResponseMsg(data={"count": count, "results": results})
+        return return_info
+
+    @router.post("/prefixes/getList")
+    async def get_prefix_filter(
+        self, prefix: schemas.PrefixQuery
+    ) -> BaseListResponse[List[schemas.Prefix]]:
+        pass
+
+    @router.put("/prefixes/{id}")
+    async def update_prefix(
+        self, id: int, prefix: schemas.PrefixUpdate
+    ) -> BaseResponse[int]:
+        return_info = ERR_NUM_4004
+        local_prefix: Prefix = await self.session.get(Prefix, id)
+        if not local_prefix:
+            return_info.msg = f"Prefix update failed, prefix #{id} not found"
+            return return_info
+        if prefix.site_id:
+            site: Site = await self.session.get(Site, prefix.site_id)
+            if not site:
+                return_info.msg = (
+                    f"Update prefix failed, site #{prefix.site_id} not found"
+                )
+                return return_info
+        if prefix.role_id:
+            ipam_role: IPRole = await self.session.get(IPRole, prefix.role_id)
+            if not ipam_role:
+                return_info.msg = f"Update prefix failed, role #{id} not found"
+                return return_info
+        await self.crud.update(self.session, id, prefix)
+        return_info = ResponseMsg(data=id)
+        return return_info
+
+    @router.post("/prefixes/updateList")
+    async def update_prefixes(
+        self, prefix: schemas.PrefixBulkUpdate
+    ) -> BaseResponse[List[int]]:
+        results = await self.crud.get_multi(self.session, prefix.ids)
+        return_info = ERR_NUM_4004
+        if not results:
+            return_info.msg = f"Update prefix failed, prefix #{prefix.ids} not found"
+            return return_info
+        if len(results) < len(set(prefix.ids)):
+            diff_ids = set(prefix.ids) - set([result.id for result in results])
+            return_info = ERR_NUM_4004
+            return_info.msg = (
+                f"Update prefix failed, prefix #{list(diff_ids)} not found"
+            )
+            return return_info
+        await self.crud.update_multi(
+            self.session,
+            prefix.ids,
+            prefix,
+            excludes={
+                "ids",
+            },
+        )
+        return_info = ResponseMsg(data=prefix.ids)
+        return return_info
+
+    @router.delete("/prefixes/{id}")
+    async def delete_prefix(self, id: int):
+        result = await self.crud.delete(self.session, id)
+        if not result:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Delete prefix failed, prefix #{id} not found"
+            return return_info
+        return_info = ResponseMsg(data=id)
+        return return_info
+
+    @router.post("/prefixes/deleteList")
+    async def delete_prefixes(self, prefix: schemas.PrefixBulkDelete):
+        results = await self.crud.delete_multi(self.session, prefix.ids)
+        if not results:
+            return_info = ERR_NUM_4004
+            return_info.msg = (
+                f"Delete prefixes failed, prefixes #{prefix.ids} not found"
+            )
+            return return_info
+        return_info = ResponseMsg(data=prefix.ids)
+        return return_info
+
+
+@cbv(router)
+class VLANGroup:
+    session: AsyncSession = Depends(get_session)
+    current_user: User = Depends(get_current_user)
+    crud = CRUDBase(VLANGroup)
+
+    @router.post("/vlan-groups")
+    async def create_vlan_group(
+        self, vlan_group: schemas.VLANGroupCreate
+    ) -> BaseResponse[int]:
+        local_vlan_group = await self.crud.get_by_field(
+            self.session, "name", vlan_group.name
+        )
+        if local_vlan_group:
+            return_info = ERR_NUM_4009
+            return_info.msg = f"Create vlan group failed, vlan group with name `{vlan_group.name}` already exists"
+            return return_info
+        new_vlan_group = VLANGroup(**vlan_group.dict())
+        self.session.add(new_vlan_group)
+        await self.session.commit()
+        return_info = ResponseMsg(data=new_vlan_group.id)
+        return return_info
+
+    @router.get("/vlan-groups/{id}")
+    async def get_vlan_group(self, id: int) -> BaseResponse[schemas.VLANGroup]:
+        local_vlan_group: VLANGroup = await self.session.get(VLANGroup, id)
+        if not local_vlan_group:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"VLAN group #{id} not found"
+            return return_info
+        return_info = ResponseMsg(data=local_vlan_group)
+        return return_info
+
+    @router.get("/vlan-groups")
+    async def get_vlan_groups(
+        self, q: QueryParams = Depends(QueryParams)
+    ) -> BaseListResponse[List[schemas.VLANGroup]]:
+        results = await self.crud.get_all(self.session, q.limit, q.offset)
+        count: int = (
+            await self.session.execute(select(func.count(VLANGroup.id)))
+        ).scalar()
+        return_info = ResponseMsg(data={"count": count, "results": results})
+        return return_info
+
+    @router.post("/vlan-groups/getList")
+    async def get_vlan_group_filter(
+        self, vlan_group: schemas.VLANGroupQuery
+    ) -> BaseListResponse[List[schemas.VLANGroup]]:
+        pass
+
+    @router.put("/vlan-groups/{id}")
+    async def update_vlan_group(
+        self, id: int, vlan_group: schemas.VLANGroupUpdate
+    ) -> BaseResponse[int]:
+        local_vlan_group: VLANGroup = await self.session.get(VLANGroup, id)
+        if not local_vlan_group:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Update vlan group failed, vlan group #{id} not found"
+            return return_info
+        try:
+            await self.crud.update(self.session, id, vlan_group)
+        except IntegrityError as e:
+            await self.session.rollback()
+            logger.error(e)
+            return_info = ERR_NUM_4009
+            return_info.msg = f"Update vlan group failed, vlan group with name {vlan_group.name} already exists"
+            return return_info
+        return_info = ResponseMsg(data=id)
+        return return_info
+
+    @router.delete("/vlan-groups/{id}")
+    async def delete_vlan_group(self, id) -> BaseResponse[int]:
+        result = await self.crud.delete(self.session, id)
+        if not result:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Delete vlan group failed, vlan group #{id} not found"
+            return return_info
+        return_info = ResponseMsg(data=id)
+        return return_info
+
+    @router.post("/vlan-groups/deleteList")
+    async def delete_vlan_groups(self, vlan_group: schemas.VLANGroupBulkDelete):
+        results = await self.crud.delete_multi(self.session, vlan_group.ids)
+        if not results:
+            return_info = ERR_NUM_4004
+            return_info.msg = (
+                f"Delete vlan groups failed, vlan groups #{vlan_group.ids} not found"
+            )
+            return return_info
+        return_info = ResponseMsg(data=vlan_group.ids)
         return return_info

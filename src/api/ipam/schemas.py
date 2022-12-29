@@ -66,6 +66,7 @@ class PrefixUpdate(BaseModel):
 
 
 class PrefixBulkUpdate(BaseModel):
+    ids: List[int]
     status: IPADDRESS_STATUS | None
     site_id: int | None
     role_id: int | None
@@ -175,6 +176,10 @@ class VLANGroupQuery(BaseQuery):
 class VLANGroupUpdate(BaseModel):
     name: str | None
     description: str | None
+
+
+class VLANGroupBulkDelete(BaseModel):
+    ids: List[int]
 
 
 class VLANGroupBase(VLANGroupCreate):

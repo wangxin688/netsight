@@ -111,7 +111,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         id: int | UUID4,
         obj_in: UpdateSchemaType,
         excludes: set = None
-    ) -> ModelType:
+    ) -> int | UUID4:
         await session.execute(
             update(self.model)
             .where(self.model.id == id)
@@ -119,3 +119,20 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         ).execute_options(synchronize_session="fetch")
         await session.commit()
         return id
+
+    async def update_multi(
+        self,
+        session: AsyncSession,
+        ids: List[int | UUID4],
+        obj_in: UpdateSchemaType,
+        excludes: set = None,
+    ) -> List[ModelType]:
+        await session.execute(
+            update(self.model)
+            .where(
+                self.model.id.in_(ids).values(
+                    obj_in.dict(exclude_none=True, exclude=excludes)
+                )
+            )
+            .execute_options(synchronize_session="fetch")
+        )
