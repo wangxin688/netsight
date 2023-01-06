@@ -87,7 +87,6 @@ class Prefix(Base, TimestampMixin, AuditLogMixin):
     is_full = Column(Boolean, server_default=expression.false())
 
 
-
 class ASN(Base, TimestampMixin, AuditLogMixin):
     __tablename__ = "ipam_asn"
     id = Column(Integer, primary_key=True)

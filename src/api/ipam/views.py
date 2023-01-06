@@ -749,29 +749,65 @@ class IPRangeCVB:
             return return_info
         return_info = ResponseMsg(data=result)
         return return_info
-    
+
     @router.get("/ip-ranges")
-    async def get_ip_ranges(self, q: QueryParams=Depends(QueryParams))->BaseListResponse[List[schemas.IPRange]]:
+    async def get_ip_ranges(
+        self, q: QueryParams = Depends(QueryParams)
+    ) -> BaseListResponse[List[schemas.IPRange]]:
         results = await self.crud.get_all(self.session, q.limit, q.offset)
-        count: int = (await self.session.execute(select(func.count(IPRange.id)))).scalar()
+        count: int = (
+            await self.session.execute(select(func.count(IPRange.id)))
+        ).scalar()
         return_info = ResponseMsg(data={"count": count, "results": results})
         return return_info
-    
+
     @router.post("/ip-ranges/getList")
-    async def get_ip_ranges_filter(self, ip_range: schemas.IPRangeQuery)->BaseListResponse[List[BaseResponse]]:
+    async def get_ip_ranges_filter(
+        self, ip_range: schemas.IPRangeQuery
+    ) -> BaseListResponse[List[BaseResponse]]:
         pass
 
     @router.put("/ip-ranges/{id}")
-    async def update_ip_ranges(self, ip_range: schemas.IPRangeUpdate)->BaseResponse[int]:
+    async def update_ip_range(
+        self, ip_range: schemas.IPRangeUpdate
+    ) -> BaseResponse[int]:
         local_ip_range: IPRange = await self.session.get(IPRange, id)
         return_info = ERR_NUM_4004
         if not local_ip_range:
             return_info.msg = f"Update ip range failed, ip range #{id} not found"
             return return_info
         if ip_range.role_id:
-            ip_role: IPR
-        try:
-            await self.crud.update(self.session, id, ip_range)
-        except IntegrityError as e:
+            ip_role: IPRole = await self.session.get(IPRole, id)
+            if not ip_role:
+                return_info.msg = f"Update ip range failed, ip role #{id} not found"
+                return return_info
+        if ip_range.vrf_id:
+            vrf: VRF = await self.session.get(VRF, id)
+            if not vrf:
+                return_info.msg = f"Update ip range failed, vrf #{id} not found"
+                return return_info
+        await self.crud.update(self.session, id, ip_range)
+        return_info = ResponseMsg(data=id)
+        return return_info
 
+    @router.post("/ip-ranges/updateList")
+    async def update_ip_ranges(self):
+        pass
 
+    @router.delete("/ip-ranges/{id}")
+    async def delete_ip_range(self, id: int) -> BaseResponse[int]:
+        result = await self.crud.delete(self.session, id)
+        if not result:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Delete ip range failed, ip range #{id} not found"
+            return return_info
+        return_info = ResponseMsg(data=id)
+        return return_info
+
+    @router.post("/ip-ranges/deleteList")
+    async def delete_ip_ranges(
+        self, ip_range: schemas.IPRangeBulkDelete
+    ) -> BaseResponse[List[int]]:
+        results = await self.crud.delete_multi(self.session, ip_range.ids)
+        return_info = ResponseMsg([result.id for result in results])
+        return return_info

@@ -181,35 +181,43 @@ class AuditLogMixin:
 
 class AuditUserMixin:
     """
-        AuditUserMixin
-        mixin for models, add create_user, user_id
+    AuditUserMixin
+    mixin for models, add create_user, user_id
     """
 
     @declared_attr
     def created_by_fk(cls):
         return Column(
-            Integer, ForeignKey("auth_user.id"), default=cls._get_user_id, nullable=False
+            Integer,
+            ForeignKey("auth_user.id"),
+            default=cls._get_user_id,
+            nullable=False,
         )
-    
+
     @declared_attr
     def created_by(cls):
         return relationship(
-            "User", primaryjoin="%s.created_by_fk==User.id" % cls.__name__,
-            enable_typechecks=False
+            "User",
+            primaryjoin="%s.created_by_fk==User.id" % cls.__name__,
+            enable_typechecks=False,
         )
-    
+
     @declared_attr
     def update_by_fk(cls):
         return Column(
-            Integer, ForeignKey("auth_user.id"), default=cls._get_user_id, nullable=False
+            Integer,
+            ForeignKey("auth_user.id"),
+            default=cls._get_user_id,
+            nullable=False,
         )
-    
+
     @declared_attr
     def update_by(cls):
         return relationship(
-            "User", primaryjoin="%s.updated_by_fk==User.id" % cls.__name__,
-            enable_typechecks=False
+            "User",
+            primaryjoin="%s.updated_by_fk==User.id" % cls.__name__,
+            enable_typechecks=False,
         )
-    
+
     def _get_user_id(request: Request):
         return request.current_user.id

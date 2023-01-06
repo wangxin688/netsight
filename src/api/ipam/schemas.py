@@ -230,13 +230,20 @@ class IPRangeCreate(BaseModel):
         _range = _IPRange(start=values["start_address"], end=values["end_address"])
         values["size"] = _range.size
 
+
 class IPRangeQuery(BaseQuery):
     pass
+
 
 class IPRangeUpdate(IPRangeCreate):
     start_address: IPv4Address | IPv6Address | None
     end_address: IPv4Address | IPv6Address | None
     status: VLAN_STATUS | None
+
+
+class IPRangeBulkDelete(BaseModel):
+    ids: List[int]
+
 
 class IPRangeBase(BaseModel):
     id: int
