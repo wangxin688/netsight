@@ -40,9 +40,11 @@ def audit_without_data(audit: bool = True) -> bool:
 
 async def get_current_user(
     request: Request,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = None,
     token: str = Depends(oauth2_scheme),
 ) -> User:
+    if not session:
+        session = Depends(get_session)
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[security.JWT_ALGORITHM]

@@ -1,6 +1,7 @@
 from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network
 from typing import List
 
+from netaddr import IPRange as _IPRange
 from pydantic import Field, root_validator
 
 from src.api.base import BaseModel, BaseQuery
@@ -104,6 +105,10 @@ class RIRUpdate(BaseModel):
     is_private: bool | None
 
 
+class RIRBulkDelete(BaseModel):
+    ids: List[int]
+
+
 class RIRBase(RIRCreate):
     id: int
 
@@ -156,11 +161,11 @@ class VLAN(BaseModel):
 
 
 class VLANBulkUpdate(BaseModel):
+    ids: List[int]
     description: str | None
     status: VLAN_STATUS | None
     site_id: int | None
     vlan_group_id: int | None
-    vid: int | None
     role_id: int | None
 
 
@@ -211,13 +216,27 @@ class ASNBase(BaseModel):
     description: str | None
 
 
-class VLANBase(BaseModel):
-    id: int
-    name: str
-    description: str
+class IPRangeCreate(BaseModel):
+    start_address: IPv4Address | IPv6Address
+    end_address: IPv4Address | IPv6Address
     status: VLAN_STATUS
-    vid: int
+    description: str | None
+    size: int | None = None
+    vrf_id: int | None
+    role_id: int | None
 
+    @root_validator(pre=False)
+    def ip_range_size(cls, values):
+        _range = _IPRange(start=values["start_address"], end=values["end_address"])
+        values["size"] = _range.size
+
+class IPRangeQuery(BaseQuery):
+    pass
+
+class IPRangeUpdate(IPRangeCreate):
+    start_address: IPv4Address | IPv6Address | None
+    end_address: IPv4Address | IPv6Address | None
+    status: VLAN_STATUS | None
 
 class IPRangeBase(BaseModel):
     id: int
@@ -225,26 +244,6 @@ class IPRangeBase(BaseModel):
     end_address: IPv4Address | IPv6Address
     status: VLAN_STATUS
     description: str | None
-
-
-class BlockBase(BaseModel):
-    id: int
-    block: IPv4Network | IPv6Network
-    description: str | None
-
-
-class Block(BaseModel):
-    id: int
-    block: IPv4Network | IPv6Network
-    description: str | None
-    ipam_rir: RIRBase
-
-
-class ASN(BaseModel):
-    id: int
-    asn: int
-    description: str | None
-    dcim_site: List[SiteBase]
 
 
 class IPRange(BaseModel):
@@ -255,6 +254,42 @@ class IPRange(BaseModel):
     ipam_vrf: VRFBase | None
     ipam_role: IPRoleBase | None
     description: str | None
+
+
+class ASNCreate(BaseModel):
+    asn: int = Field(
+        gte=0, description="AS number, 64512~65534 as private, RFC4893, RFC1771"
+    )
+    description: str | None
+    site_id: List[int] | None
+
+
+class ASNQuery(BaseQuery):
+    pass
+
+
+class ASNUpdate(BaseModel):
+    ans: int | None = Field(
+        gte=0, description="AS number, 64512~65534 as private, RFC4893, RFC1771"
+    )
+    description: str | None
+    site_id: List[int] | None
+
+
+class ASNBulkUpdate(BaseModel):
+    description: str | None
+    site_id: List[int] | None
+
+
+class ASNBulkDelete(BaseModel):
+    ids: List[int]
+
+
+class ASN(BaseModel):
+    id: int
+    asn: int
+    description: str | None
+    dcim_site: List[SiteBase]
 
 
 class IPAddress(BaseModel):
@@ -279,10 +314,6 @@ class IPAddressBase(BaseModel):
     owners: str | None
 
 
-class RIRBulkDelete(BaseModel):
-    ids: List[int]
-
-
 class BlockCreate(BaseModel):
     block: IPv4Network | IPv6Network
     rir_id: int
@@ -303,33 +334,17 @@ class BlockBulkDelete(BaseModel):
     ids: List[int]
 
 
-class ASNCreate(BaseModel):
-    asn: int = Field(
-        gte=0, description="AS number, 64512~65534 as private, RFC4893, RFC1771"
-    )
+class BlockBase(BaseModel):
+    id: int
+    block: IPv4Network | IPv6Network
     description: str | None
-    site_id: List[int] | None
 
 
-class ASNUpdate(BaseModel):
-    ans: int | None = Field(
-        gte=0, description="AS number, 64512~65534 as private, RFC4893, RFC1771"
-    )
+class Block(BaseModel):
+    id: int
+    block: IPv4Network | IPv6Network
     description: str | None
-    site_id: List[int] | None
-
-
-class ASNBulkUpdate(BaseModel):
-    description: str | None
-    site_id: List[int] | None
-
-
-class ASNQuery(BaseQuery):
-    pass
-
-
-class ASNBulkDelete(BaseModel):
-    ids: List[int]
+    ipam_rir: RIRBase
 
 
 class IPAddressCreate(BaseModel):

@@ -13,7 +13,17 @@ from src.api.base import BaseListResponse, BaseResponse, QueryParams
 from src.api.dcim.models import Site
 from src.api.deps import get_current_user, get_session
 from src.api.ipam import schemas
-from src.api.ipam.models import ASN, RIR, Block, IPRole, Prefix, VLANGroup
+from src.api.ipam.models import (
+    ASN,
+    RIR,
+    VLAN,
+    VRF,
+    Block,
+    IPRange,
+    IPRole,
+    Prefix,
+    VLANGroup,
+)
 from src.db.crud_base import CRUDBase
 from src.register.middleware import AuditRoute
 from src.utils.error_code import ERR_NUM_4004, ERR_NUM_4009, ResponseMsg
@@ -467,7 +477,7 @@ class PrefixCBV:
 
 
 @cbv(router)
-class VLANGroup:
+class VLANGroupCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
     crud = CRUDBase(VLANGroup)
@@ -557,3 +567,211 @@ class VLANGroup:
             return return_info
         return_info = ResponseMsg(data=vlan_group.ids)
         return return_info
+
+
+@cbv(router)
+class VLANCBV:
+    session: AsyncSession = Depends(get_session)
+    current_user: User = Depends(get_current_user)
+    crud = CRUDBase(VLAN)
+
+    @router.post("/vlans")
+    async def create_vlan(self, vlan: schemas.VLANCreate) -> BaseResponse[int]:
+        return_info = ERR_NUM_4004
+        if vlan.site_id:
+            site: Site = await self.session.get(VLAN, vlan.site_id)
+            if not site:
+                return_info.msg = f"Create VLAN failed, site #{vlan.site_id} not found"
+                return return_info
+        if vlan.role_id:
+            role: IPRole = await self.session.get(VLAN, vlan.role_id)
+            if not role:
+                return_info.msg = (
+                    f"Create VLAN failed, ip role #{vlan.role_id} not found"
+                )
+                return return_info
+        new_vlan = VLAN(**vlan.dict())
+        try:
+            self.session.add(new_vlan)
+            await self.session.commit()
+        except IntegrityError as e:
+            logger.error(e)
+            await self.session.rollback()
+            return_info = ERR_NUM_4009
+            return_info.msg = (
+                f"Create VLAN failed, vlan id #{vlan.vlan_id} already exists"
+            )
+            return return_info
+        return_info = ResponseMsg(data=new_vlan.id)
+        return return_info
+
+    @router.get("/vlans/{id}")
+    async def get_vlan(self, id: int) -> BaseResponse[schemas.VLAN]:
+        local_vlan: VLAN = await self.session.get(VLAN, id)
+        if not local_vlan:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"VLAN #{id} not found"
+            return return_info
+        return_info = ResponseMsg(data=local_vlan)
+        return return_info
+
+    @router.get("/vlans")
+    async def get_vlans(
+        self, q: QueryParams = Depends(QueryParams)
+    ) -> BaseListResponse[List[schemas.VLAN]]:
+        results = await self.crud.get_all(self.session, q.limit, q.offset)
+        count: int = (await self.session.execute(select(func.count(VLAN.id)))).scalar()
+        return_info = ResponseMsg(data={"count": count, "results": results})
+        return return_info
+
+    @router.post("/vlans/getList")
+    async def get_vlans_filter(
+        self, vlan: schemas.VLANQuery
+    ) -> BaseListResponse[List[schemas.VLAN]]:
+        pass
+
+    @router.put("/vlans/{id}")
+    async def update_vlan(self, id: int, vlan: schemas.VLANUpdate) -> BaseResponse[int]:
+        return_info = ERR_NUM_4004
+        if vlan.site_id:
+            site: Site = await self.session.get(VLAN, vlan.site_id)
+            if not site:
+                return_info.msg = f"Update VLAN failed, site #{vlan.site_id} not found"
+                return return_info
+        if vlan.role_id:
+            role: IPRole = await self.session.get(VLAN, vlan.role_id)
+            if not role:
+                return_info.msg = (
+                    f"Update VLAN failed, ip role #{vlan.role_id} not found"
+                )
+                return return_info
+        try:
+            await self.crud.update(self.session, id, vlan)
+        except Exception as e:
+            logger.error(e)
+            await self.session.rollback()
+            return_info = ERR_NUM_4009
+            return_info.msg = (
+                f"Update VLAN failed, vlan id #{vlan.vlan_id} already exists"
+            )
+            return return_info
+        return_info = ResponseMsg(data=id)
+        return return_info
+
+    @router.post("/vlans/updateList")
+    async def update_vlans(
+        self, vlan: schemas.VLANBulkUpdate
+    ) -> BaseResponse[List[int]]:
+        results = await self.crud.get_multi(self.session, vlan.ids)
+        return_info = ERR_NUM_4004
+        if not results:
+            return_info.msg = f"Update VLAN failed, vlan id #{vlan.ids} not found"
+        if len(results) < set(vlan.ids):
+            diff_ids = set(vlan.ids) - set([result.id for result in results])
+            return_info.msg = f"Update VLAN failed, vlan id #{list(diff_ids)} not found"
+            return return_info
+        if vlan.site_id:
+            site: Site = await self.session.get(VLAN, vlan.site_id)
+            if not site:
+                return_info.msg = f"Update VLAN failed, site #{vlan.site_id} not found"
+                return return_info
+        if vlan.role_id:
+            role: IPRole = await self.session.get(VLAN, vlan.role_id)
+            if not role:
+                return_info.msg = (
+                    f"Update VLAN failed, ip role #{vlan.role_id} not found"
+                )
+                return return_info
+        await self.crud.update_multi(self.session, vlan.ids, vlan, excludes={"ids"})
+        return_info = ResponseMsg(data=vlan.ids)
+        return return_info
+
+    @router.delete("/vlans/{id}")
+    async def delete_vlan(self, id: int) -> BaseResponse[int]:
+        result = await self.crud.delete(self.session, id)
+        if not result:
+            result_info = ERR_NUM_4004
+            result_info.msg = f"Delete VLAN failed, vlan #{id} not found"
+            return result_info
+        result_info = ResponseMsg(data=id)
+        return result_info
+
+    @router.post("/vlans/deleteList")
+    async def delete_vlans(
+        self, vlan: schemas.VLANBulkDelete
+    ) -> BaseResponse[List[int]]:
+        results = await self.crud.delete_multi(self.session, vlan.ids)
+        if not results:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"Delete VLAN failed, vlan #{vlan.ids} not found"
+            return return_info
+        return_info = ResponseMsg(data=[result.id for result in results])
+        return return_info
+
+
+@cbv(router)
+class IPRangeCVB:
+    session: AsyncSession = Depends(get_session)
+    current_user: User = Depends(get_current_user(session=session))
+    crud = CRUDBase(IPRange)
+
+    @router.post("/ip-ranges")
+    async def create_ip_range(
+        self, ip_range: schemas.IPRangeCreate
+    ) -> BaseResponse[int]:
+        return_info = ERR_NUM_4004
+        if ip_range.vrf_id:
+            vrf: VRF = await self.session.get(VRF, id)
+            if not vrf:
+                return_info.msg = (
+                    f"Create ip range failed, vrf #{ip_range.vrf_id} not found"
+                )
+                return return_info
+        if ip_range.role_id:
+            role: IPRole = await self.session.get(IPRole, id)
+            if not role:
+                return_info.msg = (
+                    f"Create ip range failed, role #{ip_range.role_id} not found"
+                )
+                return return_info
+        new_ip_range = IPRange(**ip_range.dict())
+        self.session.add(new_ip_range)
+        await self.session.commit()
+        return_info = ResponseMsg(data=new_ip_range.id)
+        return return_info
+
+    @router.get("/ip-ranges/{id}")
+    async def get_ip_range(self, id: int) -> BaseResponse[schemas.IPRange]:
+        result: IPRange = await self.session.get(IPRange, id)
+        if not result:
+            return_info = ERR_NUM_4004
+            return_info.msg = f"IP range #{id} not found"
+            return return_info
+        return_info = ResponseMsg(data=result)
+        return return_info
+    
+    @router.get("/ip-ranges")
+    async def get_ip_ranges(self, q: QueryParams=Depends(QueryParams))->BaseListResponse[List[schemas.IPRange]]:
+        results = await self.crud.get_all(self.session, q.limit, q.offset)
+        count: int = (await self.session.execute(select(func.count(IPRange.id)))).scalar()
+        return_info = ResponseMsg(data={"count": count, "results": results})
+        return return_info
+    
+    @router.post("/ip-ranges/getList")
+    async def get_ip_ranges_filter(self, ip_range: schemas.IPRangeQuery)->BaseListResponse[List[BaseResponse]]:
+        pass
+
+    @router.put("/ip-ranges/{id}")
+    async def update_ip_ranges(self, ip_range: schemas.IPRangeUpdate)->BaseResponse[int]:
+        local_ip_range: IPRange = await self.session.get(IPRange, id)
+        return_info = ERR_NUM_4004
+        if not local_ip_range:
+            return_info.msg = f"Update ip range failed, ip range #{id} not found"
+            return return_info
+        if ip_range.role_id:
+            ip_role: IPR
+        try:
+            await self.crud.update(self.session, id, ip_range)
+        except IntegrityError as e:
+
+

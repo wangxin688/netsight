@@ -1,12 +1,24 @@
-from typing import List, TypeVar, Union
+from typing import List, overload
 
-InputItemDataT = TypeVar("InputItemDataT", int, str, float)
-ItemsDataT = TypeVar("ItemsDataT", bound=List[Union[str, float, int]])
+
+@overload
+def items_to_list(input: int | List[int]) -> List[int]:
+    ...
+
+
+@overload
+def items_to_list(input: str | List[str]) -> List[str]:
+    ...
+
+
+@overload
+def items_to_list(input: float | List[float]) -> List[float]:
+    ...
 
 
 def items_to_list(
-    input: InputItemDataT | ItemsDataT,
-) -> ItemsDataT:
+    input: str | float | int | List[str | float | int],
+) -> List[str | float | int]:
     if isinstance(input, (int, str, float)):
         return [
             input,
