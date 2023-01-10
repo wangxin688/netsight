@@ -5,10 +5,10 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 from loguru import logger
 
-from src.api import deps
-from src.api.auth.models import User
-from src.api.base import BaseListResponse
-from src.api.netsight import schemas
+from src.app import deps
+from src.app.auth.models import User
+from src.app.base import BaseListResponse
+from src.app.netsight import schemas
 from src.utils.error_code import ERR_NUM_500, ERR_NUM_2002, ResponseMsg
 
 router = APIRouter()

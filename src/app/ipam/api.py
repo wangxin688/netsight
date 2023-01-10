@@ -8,12 +8,12 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.auth.models import User
-from src.api.base import BaseListResponse, BaseResponse, QueryParams
-from src.api.dcim.models import Site
-from src.api.deps import get_current_user, get_session
-from src.api.ipam import schemas
-from src.api.ipam.models import (
+from src.app.auth.models import User
+from src.app.base import BaseListResponse, BaseResponse, QueryParams
+from src.app.dcim.models import Site
+from src.app.deps import get_current_user, get_session
+from src.app.ipam import schemas
+from src.app.ipam.models import (
     ASN,
     RIR,
     VLAN,

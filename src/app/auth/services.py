@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncResult
 from sqlalchemy.orm import selectinload
 
-from src.api.auth.models import Role
+from src.app.auth.models import Role
 from src.db.db_session import async_session
 
 

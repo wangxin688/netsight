@@ -4,8 +4,8 @@ from typing import List
 
 from pydantic import AnyHttpUrl, EmailStr, root_validator
 
-from src.api.base import BaseModel, BaseQuery
-from src.api.circuit.constraints import CIRCUIT_STATUS
+from app.circuit.const import CIRCUIT_STATUS
+from src.app.base import BaseModel, BaseQuery
 from src.utils.validators import items_to_list
 
 

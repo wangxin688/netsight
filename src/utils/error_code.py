@@ -12,6 +12,7 @@ Error_code is designed with four fields: code, en_msg, ch_msg, scope
 """
 from typing import Any, List, Optional
 
+from fastapi_babel import _
 from pydantic import BaseModel
 
 __all__ = (
@@ -38,7 +39,7 @@ __all__ = (
 
 class ResponseMsg(BaseModel):
     code: int = 0
-    msg: str = "success"
+    msg: str = _("success")
     data: Optional[Any] = None
 
     def __init__(self, code, msg, data=None) -> None:

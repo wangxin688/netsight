@@ -10,10 +10,10 @@ from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncResult, AsyncSession
 
-from src.api.auth import schemas
-from src.api.auth.models import User
-from src.api.base import BaseResponse
-from src.api.deps import get_session
+from src.app.auth import schemas
+from src.app.auth.models import User
+from src.app.base import BaseResponse
+from src.app.deps import get_session
 from src.core.config import settings
 from src.core.security import (
     JWT_ALGORITHM,

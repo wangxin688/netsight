@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from gunicorn.app.base import BaseApplication
 from loguru import logger
 
-from src.api.auth.services import permission_dict_generate
+from src.app.auth.services import permission_dict_generate
 from src.core.config import settings
 from src.register.exception_handler import exception_handlers
 from src.register.router import router

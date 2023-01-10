@@ -8,12 +8,12 @@ from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.auth.models import User
-from src.api.base import BaseListResponse, BaseResponse, QueryParams
-from src.api.circuit import schemas
-from src.api.circuit.models import Circuit, CircuitType, Provider
-from src.api.deps import get_current_user, get_session
-from src.api.netsight.models import Contact
+from src.app.auth.models import User
+from src.app.base import BaseListResponse, BaseResponse, QueryParams
+from src.app.circuit import schemas
+from src.app.circuit.models import Circuit, CircuitType, Provider
+from src.app.deps import get_current_user, get_session
+from src.app.netsight.models import Contact
 from src.db.crud_base import CRUDBase
 from src.register.middleware import AuditRoute
 from src.utils.error_code import ERR_NUM_4004, ERR_NUM_4009, ResponseMsg

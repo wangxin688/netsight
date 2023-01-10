@@ -9,10 +9,10 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncResult, AsyncSession
 from sqlalchemy.orm import selectinload
 
-from src.api.auth.models import User
-from src.api.base import BaseListResponse, BaseResponse, QueryParams
-from src.api.dcim import schemas
-from src.api.dcim.models import (
+from src.app.auth.models import User
+from src.app.base import BaseListResponse, BaseResponse, QueryParams
+from src.app.dcim import schemas
+from src.app.dcim.models import (
     DeviceRole,
     DeviceType,
     Interface,
@@ -24,9 +24,9 @@ from src.api.dcim.models import (
     Region,
     Site,
 )
-from src.api.deps import get_current_user, get_session
-from src.api.ipam.models import ASN
-from src.api.netsight.models import Contact
+from src.app.deps import get_current_user, get_session
+from src.app.ipam.models import ASN
+from src.app.netsight.models import Contact
 from src.db.crud_base import CRUDBase
 from src.register.middleware import AuditRoute
 from src.utils.error_code import ERR_NUM_4004, ERR_NUM_4009, ERR_NUM_4022, ResponseMsg

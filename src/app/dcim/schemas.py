@@ -3,8 +3,8 @@ from typing import List
 
 from pydantic import UUID4, Field, validator
 
-from src.api.base import BaseModel, BaseQuery
-from src.api.dcim import constraints
+from app.dcim import const
+from src.app.base import BaseModel, BaseQuery
 from src.utils.validators import items_to_list
 
 
@@ -13,7 +13,7 @@ class InterfaceCreate(BaseModel):
     description: str | None
     if_index: int | None
     speed: int | None
-    model: constraints.INTERFACE_MODE = Field(default="access")
+    model: const.INTERFACE_MODE = Field(default="access")
     mtu: int | None = Field(default=1500)
     enabled: bool | None = Field(default=True)
     device_id: int
@@ -36,7 +36,7 @@ class InterfaceBulkUpdate(BaseModel):
     ids: List[int]
     description: str | None
     speed: int | None
-    model: constraints.INTERFACE_MODE | None
+    model: const.INTERFACE_MODE | None
     mtu: int | None
     enabled: int | None
     lag_interface_id: int | None
@@ -86,7 +86,7 @@ class DeviceRole(DeviceRoleBase):
 class PlatformCreate(BaseModel):
     name: str
     description: str | None
-    netdev_platform: constraints.NETDEV_PLATFORM | None
+    netdev_platform: const.NETDEV_PLATFORM | None
 
 
 class PlatformQuery(BaseQuery):
@@ -99,7 +99,7 @@ class PlatformUpdate(PlatformCreate):
 
 class PlatformBulkUpdate(BaseModel):
     description: str | None
-    netdev_platform: constraints.NETDEV_PLATFORM | None
+    netdev_platform: const.NETDEV_PLATFORM | None
 
 
 class PlatformBulkDelete(BaseModel):
@@ -194,7 +194,7 @@ class DeviceCreate(BaseModel):
     position: float | None
     serial_num: str | None
     asset_tag: str | None
-    status: constraints.DEVICE_STATUS
+    status: const.DEVICE_STATUS
     cluster_id: int | None
     comments: str | None
     department_id: int | None
@@ -211,7 +211,7 @@ class DeviceUpdate(DeviceCreate):
     platform_id: int | None
     site_id: int | None
     manufacturer_id: int | None
-    status: constraints.DEVICE_STATUS | None
+    status: const.DEVICE_STATUS | None
 
 
 class DeviceBulkUpdate(BaseModel):
@@ -223,7 +223,7 @@ class DeviceBulkUpdate(BaseModel):
     location_id: int | None
     rack_id: int | None
     manufacturer_id: int | None
-    status: constraints.DEVICE_STATUS | None
+    status: const.DEVICE_STATUS | None
     cluster_id: int | None
     comments: str | None
     department_id: int | None
@@ -272,7 +272,7 @@ class RackCreate(BaseModel):
     facility_id: str | None
     site_id: int
     location_id: int | None
-    status: constraints.RACK_STATUS
+    status: const.RACK_STATUS
     serial_num: List[str] | None
     asset_tag: str | None
     width: int | None
@@ -293,7 +293,7 @@ class RackUpdate(RackCreate):
     name: str | None
     site_id: int | None
     device_ids: List[int] | None
-    status: constraints.RACK_STATUS | None
+    status: const.RACK_STATUS | None
     rack_role_id: int | None
     desc_units: bool | None
 
@@ -302,7 +302,7 @@ class RackBulkUpdate(BaseModel):
     description: str | None
     facility_id: str | None
     site_id: int | None
-    status: constraints.RACK_STATUS | None
+    status: const.RACK_STATUS | None
     width: int | None
     u_height: int | None
     rack_role_id: int
@@ -328,7 +328,7 @@ class Rack(BaseModel):
 class LocationCreate(BaseModel):
     name: str
     description: str | None
-    status: constraints.LOCATION_STATUS
+    status: const.LOCATION_STATUS
     parent_id: int | None
     site_id: int
 
@@ -340,7 +340,7 @@ class LocationQuery(BaseQuery):
 class LocationUpdate(LocationCreate):
     name: str | None
     site_id: int | None
-    status: constraints.LOCATION_STATUS | None
+    status: const.LOCATION_STATUS | None
 
 
 class LocationBulkDelete(BaseModel):
@@ -361,18 +361,18 @@ class SiteCreate(BaseModel):
     site_code: str = Field(
         description="Recommended use airport code of the city as prefix and auto-increment number as suffix, e.g. `CNCTU01`, `CNPEK01"
     )
-    status: constraints.SITE_STATUS
+    status: const.SITE_STATUS
     region_id: int = Field(
         description="cannot be empty, aims to build standard network"
     )
     facility: str | None
     ipam_asn_ids: List[int] | None
-    time_zone: constraints.ALL_TIME_ZONES
+    time_zone: const.ALL_TIME_ZONES
     physical_address: str
     shipping_address: str | None
     latitude: float | None
     longitude: float | None
-    classification: constraints.SITE_CLASSIFICATIONS
+    classification: const.SITE_CLASSIFICATIONS
     functions: List[str] | None = Field(
         description="a set of tags to mark the function of the sites, e.g.`RD`, `Sales`, `Mixed`"
     )
@@ -383,25 +383,25 @@ class SiteQuery(BaseQuery):
     ids: List[int] | None
     name: str | None
     site_code: str | None
-    status: constraints.SITE_STATUS | None
+    status: const.SITE_STATUS | None
 
 
 class SiteUpdate(SiteCreate):
     name: str | None
     site_code: str | None
-    status: constraints.SITE_STATUS | None
+    status: const.SITE_STATUS | None
     region_id: int | None
-    time_zone: constraints.ALL_TIME_ZONES | None
+    time_zone: const.ALL_TIME_ZONES | None
     physical_address: str | None
-    classification: constraints.SITE_CLASSIFICATIONS | None
+    classification: const.SITE_CLASSIFICATIONS | None
 
 
 class SiteBulkUpdate(BaseModel):
     ids: List[int]
-    status: constraints.SITE_STATUS | None
+    status: const.SITE_STATUS | None
     region_id: int | None
-    time_zone: constraints.ALL_TIME_ZONES | None
-    classification: constraints.SITE_CLASSIFICATIONS | None
+    time_zone: const.ALL_TIME_ZONES | None
+    classification: const.SITE_CLASSIFICATIONS | None
     functions: List[str] | None
     contact_ids: List[int] | None
 

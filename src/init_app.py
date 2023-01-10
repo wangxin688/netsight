@@ -1,6 +1,6 @@
 import asyncio
 
-from src.api.auth.models import Role, User
+from src.app.auth.models import Role, User
 from src.core.config import settings
 from src.core.security import get_password_hash
 from src.db.db_session import async_session

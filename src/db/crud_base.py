@@ -4,7 +4,7 @@ from pydantic import UUID4
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.base import BaseModel
+from src.app.base import BaseModel
 from src.db.db_base import Base
 
 ModelType = TypeVar("ModelType", bound=Base)

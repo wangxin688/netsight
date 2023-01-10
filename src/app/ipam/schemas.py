@@ -4,14 +4,9 @@ from typing import List
 from netaddr import IPRange as _IPRange
 from pydantic import Field, root_validator
 
-from src.api.base import BaseModel, BaseQuery
-from src.api.dcim.schemas import InterfaceBase, SiteBase
-from src.api.ipam.constraints import (
-    IP_STATUS,
-    IP_VERSION,
-    IPADDRESS_STATUS,
-    VLAN_STATUS,
-)
+from app.ipam.const import IP_STATUS, IP_VERSION, IPADDRESS_STATUS, VLAN_STATUS
+from src.app.base import BaseModel, BaseQuery
+from src.app.dcim.schemas import InterfaceBase, SiteBase
 
 
 class IPRoleCreate(BaseModel):

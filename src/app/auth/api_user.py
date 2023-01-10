@@ -7,10 +7,10 @@ from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncResult, AsyncSession
 from sqlalchemy.orm import selectinload
 
-from src.api.auth import schemas
-from src.api.auth.models import Group, Permission, Role, User
-from src.api.base import BaseListResponse, BaseResponse, QueryParams
-from src.api.deps import audit_without_data, get_current_user, get_session
+from src.app.auth import schemas
+from src.app.auth.models import Group, Permission, Role, User
+from src.app.base import BaseListResponse, BaseResponse, QueryParams
+from src.app.deps import audit_without_data, get_current_user, get_session
 from src.db.crud_base import CRUDBase
 from src.register.middleware import AuditRoute
 from src.utils.error_code import (

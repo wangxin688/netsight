@@ -3,7 +3,7 @@ from typing import List, Literal, Optional
 
 from pydantic import EmailStr, validator
 
-from src.api.base import BaseModel, BaseQuery
+from src.app.base import BaseModel, BaseQuery
 from src.utils.validators import items_to_list
 
 

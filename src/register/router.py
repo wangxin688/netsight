@@ -1,16 +1,16 @@
 from fastapi import APIRouter
 
-from src.api.auth import auth_views, user_views
-from src.api.circuit import views as circuit_views
-from src.api.dcim import views as dcim_views
-from src.api.ipam import views as ipam_views
-from src.api.netsight import views as netsight_views
+from app.auth import api_auth, api_user
+from app.circuit import api as circuit_views
+from app.dcim import api as dcim_views
+from app.ipam import api as ipam_views
+from app.netsight import api as netsight_views
 
 
 def register_router():
     root_router = APIRouter()
-    root_router.include_router(auth_views.router, prefix="/auth", tags=["Auth"])
-    root_router.include_router(user_views.router, prefix="/user", tags=["User"])
+    root_router.include_router(api_auth.router, prefix="/auth", tags=["Auth"])
+    root_router.include_router(api_user.router, prefix="/user", tags=["User"])
     root_router.include_router(
         netsight_views.router, prefix="/netsight", tags=["netsight"]
     )

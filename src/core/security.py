@@ -25,7 +25,7 @@ import jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 
-from src.api.auth.schemas import AccessToken
+from src.app.auth.schemas import AccessToken
 from src.core.config import settings
 
 JWT_ALGORITHM = "HS256"
