@@ -5,6 +5,7 @@ from asgi_correlation_id import CorrelationIdMiddleware
 from asgi_correlation_id.middleware import is_valid_uuid4
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi_babel.middleware import InternationalizationMiddleware
 from gunicorn.app.base import BaseApplication
 from loguru import logger
 
@@ -12,6 +13,7 @@ from src.app.auth.services import permission_dict_generate
 from src.core.config import settings
 from src.register.exception_handler import exception_handlers
 from src.register.router import router
+from src.utils.babel import babel
 from src.utils.loggers import GunicornLogger, configure_logger
 
 
@@ -77,6 +79,7 @@ def create_app():
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.add_middleware(InternationalizationMiddleware, babel=babel)
 
     @app.on_event("startup")
     async def startup_event():

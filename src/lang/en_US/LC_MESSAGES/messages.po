@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-01-11 00:02+0800\n"
-"PO-Revision-Date: 2023-01-11 00:02+0800\n"
+"POT-Creation-Date: 2023-01-12 00:10+0800\n"
+"PO-Revision-Date: 2023-01-12 00:10+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en_US\n"
 "Language-Team: en_US <LL@li.org>\n"
@@ -18,11 +18,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.11.0\n"
 
-#: src/utils/error_code.py:42
-msgid "success"
+#: src/main_test.py:14 src/utils/exceptions_i8n_test.py:21
+msgid "internal server error"
 msgstr ""
 
-#: src/utils/exceptions.py:21
-msgid "internal server error"
+#: src/utils/error_code.py:42
+msgid "success"
 msgstr ""
 

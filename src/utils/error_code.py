@@ -6,8 +6,8 @@ range: 10000, step 1000 for every sub app/service
 Error_code is designed with four fields: code, en_msg, ch_msg, scope
 - code: unique return code of api response, type: integer
 - msg: unique english return message of api response, type: string
-- scope: error code scope for services, all or services leve
-* service netisht:              0-10000(reserved)
+- scope: error code scope for services, all or services level
+* service netsight:              0-10000(reserved)
 * service auth:                 10001-11000
 """
 from typing import Any, List, Optional

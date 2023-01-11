@@ -32,7 +32,7 @@ class NetSightException(Exception):
 
 
 class TokenNotProvidedError(NetSightException):
-    pass
+    msg = "Token not provided"
 
 
 class TokenInvalidError(NetSightException):
@@ -64,3 +64,6 @@ class ResourceNotFoundError(NetSightException):
 
     def dict(self):
         return {"code": self.code, "data": self.data, "msg": self.msg}
+
+
+print(TokenNotProvidedError)
