@@ -47,9 +47,9 @@ class ResponseMsg(BaseModel):
 
 
 ERR_NUM_1 = ResponseMsg(
-    0, "Validation Error, please check requested params or body format"
+    0, _("Validation Error, please check requested params or body format")
 )
-ERR_NUM_500 = ResponseMsg(500, "Internal Server Error")
+ERR_NUM_500 = ResponseMsg(500, _("Internal Server Error"))
 ERR_NUM_2002 = ResponseMsg(2002, "Request not completed, in processing")
 ERR_NUM_4001 = ResponseMsg(
     4001, "Authenticated failed: Bearer token invalid or not provide"

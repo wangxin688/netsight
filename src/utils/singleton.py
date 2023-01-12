@@ -13,3 +13,14 @@ class SingleTon(type):
             if not hasattr(cls, "_instance"):
                 cls._instance = super().__call__(*args, **kwargs)
         return cls._instance
+
+
+def singleton(cls: type):
+    _instance = {}
+
+    def _singleton(*args, **kwargs):
+        if cls not in _instance:
+            _instance[cls] = cls(*args, **kwargs)
+        return _instance[cls]
+
+    return _singleton

@@ -811,3 +811,10 @@ class IPRangeCVB:
         results = await self.crud.delete_multi(self.session, ip_range.ids)
         return_info = ResponseMsg([result.id for result in results])
         return return_info
+
+
+@cbv(router)
+class IPAddressCBV:
+    session: AsyncSession = Depends(get_session)
+    current_user: User = Depends(get_current_user(session=session))
+    crud = CRUDBase(IPRange)
