@@ -1,6 +1,7 @@
 ## Network Infrastructure Management System
 > This project is inspired by Netbox, to separate backend and frontend development, built backend with FastAPI&Sqlalchemy and full async support for database, HTTP, etc.
 
+
 ## Notice
 This project is still in development and not release a beta version. Changes will be made without
 any notifications, especially for database E-R. It mostly depends on my spare time to update the
@@ -33,12 +34,15 @@ For following features, are only my ideas and not related to the current environ
 9. x-request-id, x-process-time in header
 10. python 3.10+ support, with full type-hint and Pydantic validation control
 11. RESTful but not too much RESTful
+12. i18n support for backend
 ```
 """
 Since restful is not convenient to make batch requests or bulk operations, and
 GET, DELETE will ignore request body by default in browsers, also with url length
 limitations, after doing a lot of investigation and project experience, use POST by default for bulk operations.
 Regular Operations
+
+I guess graphql will be a good way to solve the restful issue. but fastapi with strawberry is not much good to start.
 
 GET /objects/ Gets all Objects
 
@@ -64,6 +68,7 @@ POST /objects/updateList Update a List based on custom query in body
 ```
 
 ### How to start?
+> before you start the project, make sure you have install postgresql and redis with docker or install these two instance directly.
 1. pull the project from GitHub
 2. `chmod +x init.sh pre-push.sh` and  execute `init.sh`
 3. execute `touch .env` in the project root path, and add environment variables, which define in `src/core/config.py Settings class`, you can always refer to Pydantic docs. also, I add some comments in this file.
