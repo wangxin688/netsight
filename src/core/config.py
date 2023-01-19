@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: list[AnyHttpUrl] = []
     ALLOWED_HOSTS: list[str] = ["localhost"]
     LOG_LEVEL: Literal["DEBUG", "INFO", "ERROR"] = "INFO"
-    ENABLE_JSON_LOG: bool = "False"
+    ENABLE_JSON_LOG: bool = False
     JSON_LOGS: bool = False
     WORKERS: int = multiprocessing.cpu_count() * 2
 
@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     REDIS_PORT: str
     REDIS_PASSWORD: str
 
-    # REDIS_DSN: str
+    REDIS_DSN: str
 
     # # CELERY
     # BROKER_URL: AmqpDsn

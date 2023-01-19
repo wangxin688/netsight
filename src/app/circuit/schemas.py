@@ -114,24 +114,24 @@ class CircuitCreate(BaseModel):
 
 
 class CricuitUpdate(BaseModel):
-    name: str | None
-    description: str | None
-    cid: str | None
-    provider_id: int
-    status: CIRCUIT_STATUS | None
-    provider_id: int | None
-    circuit_type_id: int | None
-    install_date: datetime | None
-    purchase_term: str | None
-    commit_rate: int | None
-    comments: str | None
+    name: str | None = None
+    description: str | None = None
+    cid: str | None = None
+    provider_id: int | None = None
+    status: CIRCUIT_STATUS | None = None
+    provider_id: int | None = None
+    circuit_type_id: int | None = None
+    install_date: datetime | None = None
+    purchase_term: str | None = None
+    commit_rate: int | None = None
+    comments: str | None = None
     vender_available_ip: IPv4Network | List[IPv4Network] | None | IPv6Network | List[
         IPv6Network
-    ]
+    ] = None
     vender_available_gateway: IPv4Network | List[
         IPv4Network
-    ] | None | IPv6Network | List[IPv6Network]
-    contact_id: List[int] | None
+    ] | None | IPv6Network | List[IPv6Network] = None
+    contact_id: List[int] | None = None
 
     @root_validator(pre=False)
     def ip_trans(cls, values):
@@ -146,12 +146,12 @@ class CricuitUpdate(BaseModel):
 
 class CircuitBulkUpdate(BaseModel):
     ids: List[int]
-    description: str | None
-    status: CIRCUIT_STATUS | None
-    provider_id: int | None
-    circuit_type_id: int | None
-    commit_rate: int | None
-    contact_id: List[int] | None
+    description: str | None = None
+    status: CIRCUIT_STATUS | None = None
+    provider_id: int | None = None
+    circuit_type_id: int | None = None
+    commit_rate: int | None = None
+    contact_id: List[int] | None = None
 
 
 class CircuitBulkDelete(BaseModel):

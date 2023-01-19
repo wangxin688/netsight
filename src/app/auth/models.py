@@ -38,11 +38,11 @@ class User(Base, TimestampMixin):
     """auth user table"""
 
     __tablename__ = "auth_user"
-    id: int = Column(Integer, primary_key=True)
-    username: str = Column(String, nullable=False)
-    email: str = Column(String, nullable=False, unique=True)
-    hashed_password: str = Column(String, nullable=False)
-    is_active: bool = Column(Boolean, server_default=expression.true(), nullable=False)
+    id = Column(Integer, primary_key=True)
+    username = Column(String, nullable=False)
+    email = Column(String, nullable=False, unique=True)
+    hashed_password = Column(String, nullable=False)
+    is_active = Column(Boolean, server_default=expression.true(), nullable=False)
     role_id = Column(
         Integer, ForeignKey("auth_role.id", ondelete="SET NULL"), nullable=True
     )

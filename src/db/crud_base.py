@@ -23,25 +23,23 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self.model = model
 
     async def get(
-        self, session: AsyncSession, id: int | UUID4, options: Sequence = None
+        self, session: AsyncSession, id: int | UUID4, options: Sequence | None = None
     ) -> ModelType | None:
         result: ModelType | None = await session.get(self.model, id, options=options)
         return result
 
     async def get_by_field(
         self, session: AsyncSession, field: str, value: Any
-    ) -> ModelType | List[ModelType] | None:
+    ) -> List[ModelType] | None:
         results: List[ModelType] | None = (
             (
-                await self.session.execute(
+                await session.execute(
                     select(self.model).where(getattr(self.model, field) == value)
                 )
             )
             .scalars()
             .all()
         )
-        if len(results) == 1:
-            return results[0]
         return results
 
     async def filter(
@@ -110,13 +108,14 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         *,
         id: int | UUID4,
         obj_in: UpdateSchemaType,
-        excludes: set = None
+        excludes: set | None = None
     ) -> int | UUID4:
         await session.execute(
             update(self.model)
             .where(self.model.id == id)
             .values(obj_in.dict(exclude_none=True, exclude=excludes))
-        ).execute_options(synchronize_session="fetch")
+            .execute_options(synchronize_session="fetch")
+        )
         await session.commit()
         return id
 
@@ -125,8 +124,8 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         session: AsyncSession,
         ids: List[int | UUID4],
         obj_in: UpdateSchemaType,
-        excludes: set = None,
-    ) -> List[ModelType]:
+        excludes: set | None = None,
+    ) -> List[int | UUID4]:
         await session.execute(
             update(self.model)
             .where(
@@ -136,3 +135,4 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             )
             .execute_options(synchronize_session="fetch")
         )
+        return ids

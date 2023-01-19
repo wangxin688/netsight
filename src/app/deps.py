@@ -40,7 +40,7 @@ def audit_without_data(audit: bool = True) -> bool:
 
 async def get_current_user(
     request: Request,
-    session: AsyncSession = None,
+    session: AsyncSession | None = None,
     token: str = Depends(oauth2_scheme),
 ) -> User:
     if not session:

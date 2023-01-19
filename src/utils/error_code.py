@@ -42,7 +42,7 @@ class ResponseMsg(BaseModel):
     msg: str = _("success")
     data: Optional[Any] = None
 
-    def __init__(self, code, msg, data=None) -> None:
+    def __init__(self, code: int = code, msg: str = msg, data=data) -> None:
         super().__init__(code=code, msg=msg, data=data)
 
 

@@ -54,7 +54,7 @@ class BaseListResponse(GenericModel, Generic[DataT]):
 class QueryParams:
     def __init__(
         self,
-        limit: int = 20,
+        limit: int | None = 20,
         offset: int | None = 0,
     ):
         self.limit = limit

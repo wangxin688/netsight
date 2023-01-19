@@ -1,9 +1,9 @@
 """this file defined the common algorithm for data processing
 """
-from typing import Any, List, Mapping
+from typing import Any, Dict, List
 
 
-def list_to_tree(data: List[Mapping[str, str | int]]) -> Mapping[str, Any]:
+def list_to_tree(data: List[Dict[str, str | int]]) -> List[Dict[str, Any]]:
     """Adjacency list to tree representation for frontend data processing"""
     output = {}
     for element in data:
