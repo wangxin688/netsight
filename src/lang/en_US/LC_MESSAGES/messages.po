@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-01-12 23:22+0800\n"
-"PO-Revision-Date: 2023-01-12 00:10+0800\n"
+"POT-Creation-Date: 2023-01-20 19:08+0800\n"
+"PO-Revision-Date: 2023-01-20 19:09+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en_US\n"
 "Language-Team: en_US <LL@li.org>\n"
@@ -24,12 +24,9 @@ msgstr "success"
 
 #: src/utils/error_code.py:50
 msgid "Validation Error, please check requested params or body format"
-msgstr "校验错误"
+msgstr "validation error"
 
 #: src/utils/error_code.py:52
 msgid "Internal Server Error"
-msgstr "服务器错误"
-
-#~ msgid "internal server error"
-#~ msgstr "error"
+msgstr "internal server error"
 
