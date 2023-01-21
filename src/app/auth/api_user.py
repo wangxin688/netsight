@@ -10,10 +10,12 @@ from sqlalchemy.orm import selectinload
 from src.app.auth import schemas
 from src.app.auth.models import Group, Permission, Role, User
 from src.app.base import BaseListResponse, BaseResponse, QueryParams
-from src.app.deps import audit_without_data, get_current_user, get_session
+from src.app.deps import audit_without_data, get_current_user, get_locale, get_session
+from src.app.netsight.const import LOCALE
 from src.db.crud_base import CRUDBase
 from src.register.middleware import AuditRoute
 from src.utils.error_code import (
+    ERR_NUM_4004,
     ERR_NUM_10004,
     ERR_NUM_10005,
     ERR_NUM_10006,
@@ -22,6 +24,7 @@ from src.utils.error_code import (
     ERR_NUM_10009,
     ResponseMsg,
 )
+from src.utils.i18n_loaders import _
 
 router = InferringRouter(route_class=AuditRoute)
 
@@ -30,8 +33,9 @@ router = InferringRouter(route_class=AuditRoute)
 class AuthUserCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
-    audit = Depends(audit_without_data)
+    audit: bool = Depends(audit_without_data)
     crud = CRUDBase(User)
+    locale: LOCALE = Depends(get_locale)
 
     @router.get("/users/{id}")
     async def get_user(self, id: int) -> BaseResponse[schemas.AuthUser]:
@@ -40,7 +44,19 @@ class AuthUserCBV:
             User, id, options=(selectinload(User.auth_role),)
         )
         if not local_user:
-            return ERR_NUM_10004.dict()
+            return_info = ResponseMsg(
+                code=ERR_NUM_4004.code,
+                data=None,
+                locale=self.locale,
+                message=_(
+                    ERR_NUM_4004.message,
+                    self.locale,
+                    object="user",
+                    name="#id",
+                    value=id,
+                ),
+            )
+            return return_info
         return_info = ResponseMsg(data=local_user)
         return return_info
 

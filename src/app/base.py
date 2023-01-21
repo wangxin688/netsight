@@ -2,7 +2,7 @@
    Base class定义顺序自下向顶, 层级最高定义位置在最后
 """
 from datetime import datetime
-from typing import Generic, Optional, TypeVar
+from typing import Generic, NamedTuple, Optional, TypeVar
 
 import pydantic
 from pydantic.generics import GenericModel
@@ -51,14 +51,9 @@ class BaseListResponse(GenericModel, Generic[DataT]):
         }  # method for customer JSON encoding of datetime fields
 
 
-class QueryParams:
-    def __init__(
-        self,
-        limit: int | None = 20,
-        offset: int | None = 0,
-    ):
-        self.limit = limit
-        self.offset = offset
+class QueryParams(NamedTuple):
+    limit: int | None = 20
+    offset: int | None = 0
 
 
 class BaseQuery(BaseModel):

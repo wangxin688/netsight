@@ -712,7 +712,7 @@ class VLANCBV:
 @cbv(router)
 class IPRangeCVB:
     session: AsyncSession = Depends(get_session)
-    current_user: User = Depends(get_current_user(session=session))
+    current_user: User = Depends(get_current_user)
     crud = CRUDBase(IPRange)
 
     @router.post("/ip-ranges")
@@ -816,5 +816,5 @@ class IPRangeCVB:
 @cbv(router)
 class IPAddressCBV:
     session: AsyncSession = Depends(get_session)
-    current_user: User = Depends(get_current_user(session=session))
+    current_user: User = Depends(get_current_user)
     crud = CRUDBase(IPRange)

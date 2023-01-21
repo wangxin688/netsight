@@ -9,3 +9,5 @@ CONTACT_CATEGORIES = Literal[
     "Service Desk",
     "Low Voltage",
 ]
+
+LOCALE = Literal["en_US", "zh_CN"]

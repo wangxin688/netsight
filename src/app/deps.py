@@ -1,5 +1,5 @@
 import time
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Literal
 
 import jwt
 from fastapi import Depends, Request
@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.auth.const import USER_WHITE_LIST
+from src.app.auth.const import USER_WHITE_LIST
 from src.app.auth.models import User
 from src.app.auth.plugins import auth_plugins
 from src.app.auth.services import url_match
@@ -38,13 +38,17 @@ def audit_without_data(audit: bool = True) -> bool:
     return audit
 
 
+def get_locale(
+    request: Request,
+) -> Literal["en_US", "zh_CN"]:
+    return request.headers.get("Accept-Language", "en_US")
+
+
 async def get_current_user(
     request: Request,
-    session: AsyncSession | None = None,
+    session: AsyncSession = Depends(get_session),
     token: str = Depends(oauth2_scheme),
 ) -> User:
-    if not session:
-        session = Depends(get_session)
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[security.JWT_ALGORITHM]
@@ -59,12 +63,17 @@ async def get_current_user(
     now = int(time.time())
     if now < token_data.issued_at or now > token_data.expires_at:
         raise TokenExpiredError
-    result = await session.execute(
-        select(User)
-        .where(User.id == int(token_data.sub))
-        .options(selectinload(User.auth_role))
+    user: User = (
+        (
+            await session.execute(
+                select(User)
+                .where(User.id == int(token_data.sub))
+                .options(selectinload(User.auth_role))
+            )
+        )
+        .scalars()
+        .first()
     )
-    user: User | None = result.scalars().first()
 
     if not user:
         raise ResourceNotFoundError

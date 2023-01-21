@@ -4,8 +4,8 @@ from typing import List
 
 from pydantic import AnyHttpUrl, EmailStr, root_validator
 
-from app.circuit.const import CIRCUIT_STATUS
 from src.app.base import BaseModel, BaseQuery
+from src.app.circuit.const import CIRCUIT_STATUS
 from src.utils.validators import items_to_list
 
 
@@ -67,11 +67,6 @@ class CircuitTypeUpdate(BaseModel):
 
 class CircuitTypeBulkDelete(BaseModel):
     ids: List[int]
-
-
-class CricuitTypeUpdate(BaseModel):
-    name: str | None
-    description: str | None
 
 
 class CircuitTypeBase(CircuitTypeCreate):

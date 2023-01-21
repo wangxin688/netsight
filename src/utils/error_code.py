@@ -10,10 +10,12 @@ Error_code is designed with four fields: code, en_msg, ch_msg, scope
 * service netsight:              0-10000(reserved)
 * service auth:                 10001-11000
 """
-from typing import Any, List, Optional
+from typing import Any, Dict, List, NamedTuple, Optional
 
-from fastapi_babel import _
-from pydantic import BaseModel
+from pydantic import BaseModel, root_validator
+
+from src.app.netsight.const import LOCALE
+from src.utils.i18n_loaders import _
 
 __all__ = (
     "ERR_NUM_1",
@@ -39,54 +41,57 @@ __all__ = (
 
 class ResponseMsg(BaseModel):
     code: int = 0
-    msg: str = _("success")
     data: Optional[Any] = None
+    locale: LOCALE = "en_US"
+    message: Optional[str] = "netsight.response_success_msg"
 
-    def __init__(self, code: int = code, msg: str = msg, data=data) -> None:
-        super().__init__(code=code, msg=msg, data=data)
+    @root_validator(pre=False)
+    def i18n_msg(cls, values):
+        _message: str = _(values["message"], values["locale"])
+        values["message"] = _message
+        return values
 
 
-ERR_NUM_1 = ResponseMsg(
-    0, _("Validation Error, please check requested params or body format")
-)
-ERR_NUM_500 = ResponseMsg(500, _("Internal Server Error"))
-ERR_NUM_2002 = ResponseMsg(2002, "Request not completed, in processing")
-ERR_NUM_4001 = ResponseMsg(
-    4001, "Authenticated failed: Bearer token invalid or not provide"
-)
-ERR_NUM_4002 = ResponseMsg(4001, "Authenticated failed: Bearer token expired")
-ERR_NUM_4011 = ResponseMsg(4011, "Unauthenticated: Bearer token is refresh token")
+class ErrCode(NamedTuple):
+    code: int
+    message: str
 
-ERR_NUM_4003 = ResponseMsg(
-    4003, "Permission Denied: Privilege limited, Operation not permit"
-)
-ERR_NUM_4004 = ResponseMsg(4004, "Resource not found: Requested data not existed")
-ERR_NUM_4009 = ResponseMsg(4009, "Resource already exists")
-ERR_NUM_4022 = ResponseMsg(4022, "Unprocessable Entity")
-ERR_NUM_10001 = ResponseMsg(10001, "Cannot use this email, already exists")
-ERR_NUM_10002 = ResponseMsg(10002, "Incorrect email for user, not found")
-ERR_NUM_10003 = ResponseMsg(10003, "Incorrect password")
-ERR_NUM_10004 = ResponseMsg(10004, "User not found")
-ERR_NUM_10005 = ResponseMsg(10005, "User with same email already existed")
-ERR_NUM_10006 = ResponseMsg(10006, "Group with same name already existed")
-ERR_NUM_10007 = ResponseMsg(10007, "Group not found")
-ERR_NUM_10008 = ResponseMsg(10008, "Role with same name already existed")
-ERR_NUM_10009 = ResponseMsg(10009, "Role not found")
+
+ERR_NUM_1: ErrCode = ErrCode(1, "validation_error")
+ERR_NUM_500: ErrCode = ErrCode(500, "server_error")
+ERR_NUM_2002: ErrCode = ErrCode(202, "in_process")
+ERR_NUM_4001: ErrCode = ErrCode(401, "token_invalid_not_provided")
+ERR_NUM_4002: ErrCode = ErrCode(402, "token_expired")
+ERR_NUM_4011: ErrCode = ErrCode(411, "refresh_token")
+
+ERR_NUM_4003: ErrCode = ErrCode(403, "permission_denied")
+ERR_NUM_4004: ErrCode = ErrCode(404, "Resource not found: Requested data not existed")
+ERR_NUM_4009: ErrCode = ErrCode(409, "Resource already exists")
+ERR_NUM_4022: ErrCode = ErrCode(422, "Unprocessable Entity")
+ERR_NUM_10001: ErrCode = ErrCode(10001, "Cannot use this email, already exists")
+ERR_NUM_10002: ErrCode = ErrCode(10002, "Incorrect email for user, not found")
+ERR_NUM_10003: ErrCode = ErrCode(10003, "Incorrect password")
+ERR_NUM_10004: ErrCode = ErrCode(10004, "User not found")
+ERR_NUM_10005: ErrCode = ErrCode(10005, "User with same email already existed")
+ERR_NUM_10006: ErrCode = ErrCode(10006, "Group with same name already existed")
+ERR_NUM_10007: ErrCode = ErrCode(10007, "Group not found")
+ERR_NUM_10008: ErrCode = ErrCode(10008, "Role with same name already existed")
+ERR_NUM_10009: ErrCode = ErrCode(10009, "Role not found")
 
 
 def __getattr__(name: str) -> ResponseMsg:
-    raise AttributeError("module {__name__} has not attribute '{name}'")
+    raise AttributeError(f"module {__name__} has not attribute '{name}'")
 
 
-def get_code_all() -> List[dict]:
+def get_code_all(locale: LOCALE) -> List[Dict[str, Any]]:
     """Get all error code"""
     codes = [
-        {"name": k, "value": v.dict()}
+        {"code": v.code, "message": _(v.message, locale)}
         for k, v in globals().items()
         if k.startswith("ERR_NUM")
     ]
     return codes
 
 
-def __dir__():
+def __dir__() -> list:
     return sorted(list(__all__))
