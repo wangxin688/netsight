@@ -108,7 +108,7 @@ class CircuitCreate(BaseModel):
         return values
 
 
-class CricuitUpdate(BaseModel):
+class CircuitUpdate(BaseModel):
     name: str | None = None
     description: str | None = None
     cid: str | None = None

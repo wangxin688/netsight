@@ -1,7 +1,7 @@
 from typing import Any, Dict, Generic, List, Sequence, Type, TypeVar
 
 from pydantic import UUID4
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.base import BaseModel
@@ -21,6 +21,10 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         * `schema`: A Pydantic model (schema) class
         """
         self.model = model
+
+    async def count_all(self, session: AsyncSession) -> int:
+        count: int = (await session.execute(select(func.count(self.model.id)))).scalar()
+        return count
 
     async def get(
         self, session: AsyncSession, id: int | UUID4, options: Sequence | None = None

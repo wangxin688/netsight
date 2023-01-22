@@ -5,16 +5,18 @@ from typing import Callable, Union
 
 from src.app.netsight.const import LOCALE
 from src.utils.i18n_trans import locale
+from src.utils.singleton import singleton
 
 
+@singleton
 class I18n:
     def __init__(self, locales: dict = locale) -> None:
         self.locales = locales
 
     def gettext(
-        self, path: str, language: LOCALE = "en_US", **kwargs
+        self, path: str, locale: LOCALE = "en_US", **kwargs
     ) -> Union[dict, str]:
-        founded: Union[dict, str] = self._find(language, path)
+        founded: Union[dict, str] = self._find(locale, path)
 
         if len(kwargs) > 0 and isinstance(founded, str):
             try:

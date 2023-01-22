@@ -8,12 +8,12 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.security import OAuth2PasswordRequestForm
 from loguru import logger
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncResult, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.auth import schemas
 from src.app.auth.models import User
 from src.app.base import BaseResponse
-from src.app.deps import get_session
+from src.app.deps import get_locale, get_session
 from src.core.config import settings
 from src.core.security import (
     JWT_ALGORITHM,
@@ -23,14 +23,10 @@ from src.core.security import (
     verify_password,
 )
 from src.register.middleware import AuditRoute
-from src.utils.error_code import (
-    ERR_NUM_10001,
-    ERR_NUM_10002,
-    ERR_NUM_10003,
-    ResponseMsg,
-)
+from src.utils.error_code import ERR_NUM_404, ERR_NUM_10003, ResponseMsg, error_404_409
 from src.utils.exceptions import TokenInvalidForRefreshError
 from src.utils.external.lark_api import LarkClient
+from src.utils.i18n_loaders import _
 
 router = APIRouter(route_class=AuditRoute)
 
@@ -47,10 +43,14 @@ async def register_new_user(
     bg_task: BackgroundTasks,
     auth_user: schemas.AuthUserCreate,
     session: AsyncSession = Depends(get_session),
+    locale=Depends(get_locale),
 ):
     result = await session.execute(select(User).where(User.email == auth_user.email))
     if result.scalars().first() is not None:
-        return ERR_NUM_10001
+        return_info = error_404_409(
+            ERR_NUM_404, locale, "user", "email", auth_user.email
+        )
+        return return_info
     user = User(
         username=auth_user.username,
         hashed_password=get_password_hash(auth_user.password),
@@ -58,7 +58,7 @@ async def register_new_user(
     )
     session.add(user)
     await session.commit()
-    return_info = ResponseMsg(data=user.id)
+    return_info = ResponseMsg(data=user.id, locale=locale)
     bg_task.add_task(bg_task1)
     return return_info
 
@@ -67,17 +67,27 @@ async def register_new_user(
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(get_session),
+    locale=Depends(get_locale),
 ):
-    result: AsyncResult = await session.execute(
-        select(User).where(User.email == form_data.username)
+    user: User = (
+        (await session.execute(select(User).where(User.email == form_data.username)))
+        .scalars()
+        .first()
     )
-    user: User | None = result.scalars().first()
-    if not user:
-        return ERR_NUM_10002.dict()
+    if user is None:
+        return_info = error_404_409(
+            ERR_NUM_404, locale, "user", "username", form_data.username
+        )
+        return return_info
     if not verify_password(form_data.password, user.hashed_password):
-        return ERR_NUM_10003.dict()
+        return_info = ResponseMsg(
+            code=ERR_NUM_10003.code,
+            data=None,
+            message=_(ERR_NUM_10003.message, locale=locale),
+        )
+        return return_info
     token = generate_access_token_response(str(user.id))
-    return_info = ResponseMsg(data=token)
+    return_info = ResponseMsg(data=token, locale=locale)
     user.last_login = datetime.now()
     session.add(user)
     await session.commit()
@@ -88,6 +98,7 @@ async def login(
 async def refresh_token(
     refresh_token: str,
     session: AsyncSession = Depends(get_session),
+    locale=Depends(get_locale),
 ):
     """OAuth2 compatible token, get an access token for future requests using refresh token"""
     try:
@@ -108,16 +119,17 @@ async def refresh_token(
     if now < token_data.issued_at or now > token_data.expires_at:
         raise TokenInvalidForRefreshError
 
-    result: AsyncResult = await session.execute(
-        select(User).where(User.id == token_data.sub)
+    user: User = (
+        (await session.execute(select(User).where(User.id == token_data.sub)))
+        .scalars()
+        .first()
     )
-    user: User | None = result.scalars().first()
 
     if user is None:
-        return ERR_NUM_10001.dict()
-
+        return_info = error_404_409(ERR_NUM_404, locale, "user", "#id", token_data.sub)
+        return return_info
     token = generate_access_token_response(str(user.id))
-    return_info = ResponseMsg(data=token)
+    return_info = ResponseMsg(data=token, locale=locale)
     return return_info
 
 

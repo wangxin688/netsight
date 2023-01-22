@@ -41,7 +41,14 @@ def audit_without_data(audit: bool = True) -> bool:
 def get_locale(
     request: Request,
 ) -> Literal["en_US", "zh_CN"]:
-    return request.headers.get("Accept-Language", "en_US")
+    locale = request.headers.get("Accept-Language")
+    if not locale:
+        locale = "en_US"
+    elif locale not in ["en_US", "zh_CN"]:
+        locale = "en_US"
+    else:
+        locale = locale
+    return locale
 
 
 async def get_current_user(

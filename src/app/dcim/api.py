@@ -24,12 +24,12 @@ from src.app.dcim.models import (
     Region,
     Site,
 )
-from src.app.deps import get_current_user, get_session
+from src.app.deps import get_current_user, get_locale, get_session
 from src.app.ipam.models import ASN
 from src.app.netsight.models import Contact
 from src.db.crud_base import CRUDBase
 from src.register.middleware import AuditRoute
-from src.utils.error_code import ERR_NUM_4004, ERR_NUM_4009, ERR_NUM_4022, ResponseMsg
+from src.utils.error_code import ERR_NUM_404, ERR_NUM_409, ResponseMsg, error_404_409
 
 router = InferringRouter(route_class=AuditRoute)
 
@@ -39,6 +39,7 @@ class RegionCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
     crud = CRUDBase(Region)
+    locale = Depends(get_locale)
 
     @router.post("/regions")
     async def create_region(self, region: schemas.RegionCreate) -> BaseResponse[int]:
@@ -46,8 +47,9 @@ class RegionCBV:
         if region.parent_id:
             local_region = self.session.get(Region, region.parent_id)
             if not local_region:
-                return_info = ERR_NUM_4004
-                return_info.msg = f"Created region failed, region with parent_id #{region.parent_id} not found"
+                return_info = error_404_409(
+                    ERR_NUM_404, self.locale, "region", "parent_id", id
+                )
                 return return_info
         new_region = Region(**region.dict(exclude_none=True))
         self.session.add(new_region)
@@ -56,13 +58,12 @@ class RegionCBV:
         except IntegrityError as e:
             logger.error(e)
             await self.session.rollback()
-            return_info = ERR_NUM_4009
-            return_info.msg = (
-                f"Create region failed, region with name: `{region.name}` already exists in the same level",
+            return_info = error_404_409(
+                ERR_NUM_409, self.locale, "region", "name", region.name
             )
             return return_info
         await self.session.flush()
-        return_info = ResponseMsg(data=new_region.id)
+        return_info = ResponseMsg(data=new_region.id, locale=self.locale)
         return return_info
 
     @router.get("/regions/{id}")
@@ -70,10 +71,9 @@ class RegionCBV:
         """get a region"""
         local_region = await self.session.get(Region, id)
         if local_region is None:
-            return_info = ERR_NUM_4004
-            return_info.msg = f"Region #{id} not found"
+            return_info = error_404_409(ERR_NUM_404, self.locale, "region", "#id", id)
             return return_info
-        return_info = ResponseMsg(data=local_region)
+        return_info = ResponseMsg(data=local_region, locale=self.locale)
         return return_info
 
     @router.get("/regions")
@@ -82,8 +82,10 @@ class RegionCBV:
     ) -> BaseListResponse[List[schemas.RegionBase]]:
         """get regions without custom parameters"""
         local_regions = await self.crud.get_all(self.session, q.limit, q.offset)
-        count = (await self.session.execute(select(func.count(Region.id)))).scalar()
-        return_info = ResponseMsg(data={"count": count, "results": local_regions})
+        count = await self.crud.count_all(self.session)
+        return_info = ResponseMsg(
+            data={"count": count, "results": local_regions}, locale=self.locale
+        )
         return return_info
 
     @router.post("/regions/getList")
@@ -107,7 +109,9 @@ class RegionCBV:
         stmt = stmt.slice(region.offset, region.offset + region.limit)
         results = (await self.session.execute(stmt)).scalars().all()
         count = (await self.session.execute(count_stmt)).scalar()
-        return_info = ResponseMsg(data={"count": count, "results": results})
+        return_info = ResponseMsg(
+            data={"count": count, "results": results}, locale=self.locale
+        )
         return return_info
 
     @router.put("/regions/{id}")
@@ -117,29 +121,23 @@ class RegionCBV:
         """update a region"""
         local_region: Region | None = await self.session.get(Region, id)
         if not local_region:
-            return_info = ERR_NUM_4004
-            return_info.msg = f"Update region failed, region #{id} not found"
+            return_info = error_404_409(ERR_NUM_404, self.locale, "region", "#id", "id")
             return return_info
         if region.parent_id:
             parent_region = self.session.get(Region, region.parent_id)
             if not parent_region:
-                return_info = ERR_NUM_4004
-                return_info.msg = f"Update region failed, region with parent_id #{region.parent_id} not found"
-                return return_info
-        stmt = (
-            update(Region)
-            .where(Region.id == id)
-            .values(**region.dict(exclude_none=True))
-            .execute_options(synchronize_session="fetch")
-        )
-        await self.session.execute(stmt)
+                return_info = error_404_409(
+                    ERR_NUM_404, self.locale, "region", "parent_id", "id"
+                )
+            return return_info
         try:
-            await self.session.commit()
+            await self.crud.update(self.session, id, region)
         except IntegrityError as e:
             logger.error(e)
             await self.session.rollback()
-            return_info = ERR_NUM_4009
-            return_info.msg = f"Update region failed, region with name `{region.name}` already exists in the same level"
+            return_info = error_404_409(
+                ERR_NUM_409, self.locale, "region", "name in same level", region.name
+            )
             return return_info
         return_info = ResponseMsg(data=id)
         return return_info
@@ -154,19 +152,12 @@ class RegionCBV:
             [region.id for region in local_regions]
         )
         if diff_region:
-            return_info = ERR_NUM_4004
-            return_info.msg = (
-                f"Bulk update region failed, region #{list(diff_region)} not found"
+            return_info = error_404_409(
+                ERR_NUM_404, self.locale, "region", "#ids", diff_region
             )
             return return_info
-        await self.session.execute(
-            update(Region)
-            .where(Region.id.in_(region.ids))
-            .values(region.dict(exclude={"ids"}, exclude_none=True))
-            .execute_options(synchronize_session="fetch")
-        )
-        await self.session.commit()
-        return_info = ResponseMsg(data=region.ids)
+        await self.crud.update_multi(self.session, region.ids, region, excludes={"ids"})
+        return_info = ResponseMsg(data=region.ids, locale=self.locale)
         return return_info
 
     @router.delete("/regions/{id}")
@@ -174,10 +165,9 @@ class RegionCBV:
         """delete a region"""
         local_region: Region | None = await self.crud.delete(self.session, id)
         if local_region is None:
-            return_info = ERR_NUM_4004
-            return_info.msg = f"Delete region failed, region #{id} not found"
+            return_info = error_404_409(ERR_NUM_404, self.locale, "region", "#id", "id")
             return return_info
-        return_info = ResponseMsg(data=id)
+        return_info = ResponseMsg(data=id, locale=self.locale)
         return return_info
 
     @router.post("/regions/deleteList")
@@ -187,11 +177,13 @@ class RegionCBV:
         """bulk delete regions"""
         local_regions = await self.crud.delete_multi(self.session, region.ids)
         if not local_regions:
-            return_info = ERR_NUM_4004
-            return_info.msg = (
-                f"Bulk delete regions failed, regions #{region.ids} not found"
+            return_info = error_404_409(
+                ERR_NUM_404, self.locale, "region", "#ids", region.ids
             )
-        return_info = ResponseMsg(data=[d.id for d in local_regions])
+            return return_info
+        return_info = ResponseMsg(
+            data=[d.id for d in local_regions], locale=self.locale
+        )
         return return_info
 
 
@@ -199,7 +191,7 @@ class RegionCBV:
 class SiteCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
-    curd = CRUDBase(Site)
+    crud = CRUDBase(Site)
 
     @router.post("/sites")
     async def create_site(
@@ -208,6 +200,8 @@ class SiteCBV:
         """Create a new site"""
         contact_crud = CRUDBase(Contact)
         new_site = Site(**site.dict(exclude={"contact_ids"}))
+        await self.crud.get_by_field(self.session, "name", site.name)
+        await self.crud.get_by_field(self.session, "site_code", site.site_code)
         try:
             await self.session.add(new_site)
             await self.session.flush()

@@ -27,7 +27,8 @@ DataT = TypeVar("DataT", bound=BaseModel)
 class BaseResponse(GenericModel, Generic[DataT]):
     code: int
     data: Optional[DataT] = None
-    msg: str
+    locale: str
+    message: str
 
     class Config:
         json_encoders = {
@@ -43,7 +44,8 @@ class ListData(GenericModel, Generic[DataT]):
 class BaseListResponse(GenericModel, Generic[DataT]):
     code: int
     data: ListData
-    msg: str
+    locale: str
+    message: str
 
     class Config:
         json_encoders = {

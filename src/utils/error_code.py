@@ -18,37 +18,33 @@ from src.app.netsight.const import LOCALE
 from src.utils.i18n_loaders import _
 
 __all__ = (
-    "ERR_NUM_1",
+    "ERR_NUM_422",
     "ERR_NUM_500",
-    "ERR_NUM_2002",
-    "ERR_NUM_4001",
-    "ERR_NUM_4002",
-    "ERR_NUM_4011",
-    "ERR_NUM_4003",
-    "ERR_NUM_4004",
-    "ERR_NUM_4022",
+    "ERR_NUM_202",
+    "ERR_NUM_401",
+    "ERR_NUM_402",
+    "ERR_NUM_411",
+    "ERR_NUM_403",
+    "ERR_NUM_404",
+    "ERR_NUM_422",
     "ERR_NUM_10001",
     "ERR_NUM_10002",
     "ERR_NUM_10003",
-    "ERR_NUM_10004",
-    "ERR_NUM_10005",
-    "ERR_NUM_10006",
-    "ERR_NUM_10007",
-    "ERR_NUM_10008",
-    "ERR_NUM_10009",
 )
 
 
 class ResponseMsg(BaseModel):
-    code: int = 0
+    code: Optional[int] = 0
     data: Optional[Any] = None
-    locale: LOCALE = "en_US"
-    message: Optional[str] = "netsight.response_success_msg"
+    locale: Optional[LOCALE] = "en_US"
+    message: Optional[str] = "netsight.success"
 
     @root_validator(pre=False)
     def i18n_msg(cls, values):
-        _message: str = _(values["message"], values["locale"])
-        values["message"] = _message
+        if values["code"] == 0:
+            _message: str = _(path=values["message"], locale=values["locale"])
+            values["message"] = _message
+            return values
         return values
 
 
@@ -57,26 +53,19 @@ class ErrCode(NamedTuple):
     message: str
 
 
-ERR_NUM_1: ErrCode = ErrCode(1, "validation_error")
-ERR_NUM_500: ErrCode = ErrCode(500, "server_error")
-ERR_NUM_2002: ErrCode = ErrCode(202, "in_process")
-ERR_NUM_4001: ErrCode = ErrCode(401, "token_invalid_not_provided")
-ERR_NUM_4002: ErrCode = ErrCode(402, "token_expired")
-ERR_NUM_4011: ErrCode = ErrCode(411, "refresh_token")
+ERR_NUM_422: ErrCode = ErrCode(1, "netsight.validation_error")
+ERR_NUM_500: ErrCode = ErrCode(500, "netsight.server_error")
+ERR_NUM_202: ErrCode = ErrCode(202, "netsight.in_process")
+ERR_NUM_401: ErrCode = ErrCode(401, "auth.token_invalid_not_provided")
+ERR_NUM_402: ErrCode = ErrCode(402, "auth.token_expired")
+ERR_NUM_411: ErrCode = ErrCode(411, "auth.refresh_token")
 
-ERR_NUM_4003: ErrCode = ErrCode(403, "permission_denied")
-ERR_NUM_4004: ErrCode = ErrCode(404, "Resource not found: Requested data not existed")
-ERR_NUM_4009: ErrCode = ErrCode(409, "Resource already exists")
-ERR_NUM_4022: ErrCode = ErrCode(422, "Unprocessable Entity")
+ERR_NUM_403: ErrCode = ErrCode(403, "auth.permission_denied")
+ERR_NUM_404: ErrCode = ErrCode(404, "netsight.not_found")
+ERR_NUM_409: ErrCode = ErrCode(409, "netsight.already_exists")
 ERR_NUM_10001: ErrCode = ErrCode(10001, "Cannot use this email, already exists")
 ERR_NUM_10002: ErrCode = ErrCode(10002, "Incorrect email for user, not found")
-ERR_NUM_10003: ErrCode = ErrCode(10003, "Incorrect password")
-ERR_NUM_10004: ErrCode = ErrCode(10004, "User not found")
-ERR_NUM_10005: ErrCode = ErrCode(10005, "User with same email already existed")
-ERR_NUM_10006: ErrCode = ErrCode(10006, "Group with same name already existed")
-ERR_NUM_10007: ErrCode = ErrCode(10007, "Group not found")
-ERR_NUM_10008: ErrCode = ErrCode(10008, "Role with same name already existed")
-ERR_NUM_10009: ErrCode = ErrCode(10009, "Role not found")
+ERR_NUM_10003: ErrCode = ErrCode(10003, "auth.incorrect_password")
 
 
 def __getattr__(name: str) -> ResponseMsg:
@@ -95,3 +84,17 @@ def get_code_all(locale: LOCALE) -> List[Dict[str, Any]]:
 
 def __dir__() -> list:
     return sorted(list(__all__))
+
+
+def error_404_409(
+    code: ErrCode,
+    locale: LOCALE,
+    object: str,
+    field: str,
+    value: Any,
+):
+    return ResponseMsg(
+        code=code.code,
+        locale=locale,
+        message=_(code.message, locale, object, field, value),
+    )

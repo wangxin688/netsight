@@ -8,19 +8,20 @@ from loguru import logger
 from src.app import deps
 from src.app.auth.models import User
 from src.app.base import BaseListResponse
+from src.app.deps import get_locale
 from src.app.netsight import schemas
-from src.utils.error_code import ERR_NUM_500, ERR_NUM_2002, ResponseMsg
+from src.utils.error_code import ERR_NUM_202, ERR_NUM_500, ResponseMsg, get_code_all
 
 router = APIRouter()
 
 
-@router.get("/tasks/result/{task_id}")
+@router.get("/tasks/{task_id}")
 async def get_task_result(
     task_id: str, current_user: User = Depends(deps.get_current_user)
 ):
     task = AsyncResult(task_id)
     if not task.ready():
-        return JSONResponse(status_code=200, content=ERR_NUM_2002.dict())
+        return JSONResponse(status_code=200, content=ERR_NUM_202.dict())
     state = task.state
     if state == "FAILURE":
         traceback_info = task.traceback
@@ -35,13 +36,19 @@ async def get_task_result(
     return return_info
 
 
-@router.get(
-    "/netsight/endpoints", response_model=BaseListResponse[List[schemas.Endpoint]]
-)
-def inspect_endpoints(request: Request):
+@router.get("/endpoints", response_model=BaseListResponse[List[schemas.Endpoint]])
+def inspect_endpoints(request: Request, locale=Depends(get_locale)):
     endpoints = [
         {"name": route.name, "url": route.path, "action": route.methods}
         for route in request.app.routes
     ]
-    return_info = ResponseMsg(data={"count": len(endpoints), "results": endpoints})
+    return_info = ResponseMsg(
+        data={"count": len(endpoints), "results": endpoints}, locale=locale
+    )
     return return_info
+
+
+@router.get("/errorcodes")
+def get_error_codes(locale=Depends(get_locale)):
+    codes = get_code_all(locale=locale)
+    return codes

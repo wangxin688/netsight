@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Literal, Optional
 
-from pydantic import EmailStr, validator
+from pydantic import EmailStr, Field, validator
 
 from src.app.base import BaseModel, BaseQuery
 from src.utils.validators import items_to_list
@@ -115,7 +115,9 @@ class AuthUserBulkDelete(BaseModel):
 class AuthGroupCreate(BaseModel):
     name: str
     description: str | None
-    auth_user_ids: int | List[int] | None
+    auth_user_ids: int | List[int] | None = Field(
+        default=None, description="add users to current group"
+    )
 
     @validator("auth_user_ids")
     def auth_user_id_trans(cls, v):

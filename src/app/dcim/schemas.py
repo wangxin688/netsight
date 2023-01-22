@@ -3,8 +3,8 @@ from typing import List
 
 from pydantic import UUID4, Field, validator
 
-from app.dcim import const
 from src.app.base import BaseModel, BaseQuery
+from src.app.dcim import const
 from src.utils.validators import items_to_list
 
 
