@@ -144,8 +144,8 @@ class AuthGroupCBV:
             await self.session.commit()
             return_info = ResponseMsg(data=id, locale=self.locale)
             return return_info
-        user_curd = CRUDBase(User)
-        users = await user_curd.get_multi(self.session, group.auth_user_ids)
+        user_crud = CRUDBase(User)
+        users = await user_crud.get_multi(self.session, group.auth_user_ids)
         for user in users:
             new_group.auth_user.append(user)
         self.session.add(new_group)
