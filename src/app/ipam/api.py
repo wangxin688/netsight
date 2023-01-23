@@ -818,3 +818,14 @@ class IPAddressCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
     crud = CRUDBase(IPRange)
+
+    @router.post("/ip-addresses")
+    async def create_ip_address(self, ip_address: schemas.IPAddressCreate)->BaseResponse[int]:
+        pass
+
+    @router.get("ip-addresses/{id}")
+    async def get_ip_address(self, id: int)->BaseResponse[schemas.IPAddress]:
+        pass
+
+    @router.get("/ip-addresses")
+    async def get_ip_addresses(self, q: schemas.IPAddress)

@@ -600,35 +600,27 @@ class RackCBV:
                 Location, rack.location_id
             )
             if local_location is None:
-                return_info = ERR_NUM_4004
-                return_info.msg = f"Create rack failed, rack with location #{rack.location_id} not found"
+                return_info = error_404_409(ERR_NUM_404, self.locale, "location", "#id", rack.location_id)
                 return return_info
         if local_rack is not None:
-            return_info = ERR_NUM_4009
-            return_info.msg = (
-                f"Create rack failed, rack with name `{rack.name}` already exists"
-            )
+            return_info = error_404_409(ERR_NUM_409, self.locale, "rack", "name", rack.name)
             return return_info
         if local_site is None:
-            return_info = ERR_NUM_4004
-            return_info.msg = (
-                f"Create rack failed, rack with site #{rack.site_id} not found"
-            )
+            return_info = error_404_409(ERR_NUM_404, self.locale, "site", "#id", rack.site_id)
             return return_info
         new_rack = Rack(**rack.dict())
         await self.session.add(new_rack)
         await self.session.commit()
-        return_info = ResponseMsg(data=id)
+        return_info = ResponseMsg(data=id, locale=self.locale)
         return return_info
 
     @router.get("/racks/{id}")
     async def get_rack(self, id: int) -> BaseResponse[schemas.RackBase]:
         local_rack: Rack = await self.session.get(Rack, id)
         if not local_rack:
-            return_info = ERR_NUM_4004
-            return_info.msg = f"Rack #{id} not found"
+            return_info = error_404_409(ERR_NUM_409, self.locale, "rack", "#id", id)
             return return_info
-        return_info = ResponseMsg(data=local_rack)
+        return_info = ResponseMsg(data=local_rack, locale=self.locale)
         return return_info
 
     @router.get("/racks")
@@ -637,8 +629,8 @@ class RackCBV:
     ) -> BaseListResponse[schemas.RackBase]:
         """get rack without custom parameters"""
         results: List[Rack] = await self.crud.get_all(self.session, q.limit, q.offset)
-        count: int = (await self.session.execute(func.count(select(Rack.id)))).scalar()
-        return_info = ResponseMsg(data={"count": count, "results": results})
+        count: await self.crud.count_all(self.session)
+        return_info = ResponseMsg(data={"count": count, "results": results}, locale=self.locale)
         return return_info
 
     @router.post("/racks/getList")
@@ -655,10 +647,9 @@ class RackCBV:
     async def delete_rack(self, id: int) -> BaseResponse[int]:
         local_rack: Rack = self.crud.delete(self.session, id)
         if not local_rack:
-            return_info = ERR_NUM_4004
-            return_info.msg = f"Delete rack failed, rack with id #{id} not found"
+            return_info = error_404_409(ERR_NUM_409, self.locale, "rack", "#id", id)
             return return_info
-        return_info = ResponseMsg(data=id)
+        return_info = ResponseMsg(data=id, locale=self.locale)
         return return_info
 
     @router.delete("/racks/deleteList")
@@ -666,12 +657,10 @@ class RackCBV:
         self, rack: schemas.RackBulkDelete
     ) -> BaseListResponse[List[int]]:
         racks: List[Rack] = await self.crud.delete_multi(self.session, rack.ids)
-
         if not racks:
-            return_info = ERR_NUM_4004
-            return_info.msg = f"Bulk delete racks failed, racks #{rack.ids} not found"
+            return_info = error_404_409(ERR_NUM_404, self.locale, "rack", "#ids", rack.ids)
             return return_info
-        return_info = ResponseMsg(data=[d.id for d in racks])
+        return_info = ResponseMsg(data=[d.id for d in racks], locale=self.locale)
         return return_info
 
 
@@ -689,8 +678,7 @@ class ManufacturerCBV:
             self.session, "name", manufacturer.name
         )
         if local_manufacturer is not None:
-            return_info = ERR_NUM_4009
-            return_info.msg = f"Create manufacturer failed, manufacturer with name {manufacturer.name} already exists"
+            return_info = error_404_409(ERR_NUM_409, self.locale, "manufacturer", "name", manufacturer.name)
             return return_info
         new_manufacturer = Manufacturer(
             **manufacturer.dict(exclude={"device_type_ids"})
@@ -707,7 +695,7 @@ class ManufacturerCBV:
                         device_type.manufacturer_id = new_manufacturer.id
                         await self.session.add(device_type)
         await self.session.commit()
-        return_info = ResponseMsg(data=new_manufacturer.id)
+        return_info = ResponseMsg(data=new_manufacturer.id, locale=self.locale)
         return return_info
 
     @router.get("/manufacturers/{id}")
@@ -716,9 +704,9 @@ class ManufacturerCBV:
             Manufacturer, id
         )
         if not local_manufacturer:
-            return_info = ERR_NUM_4004
-            return_info.msg = f"Manufacturer #{id} not found"
-        return_info = ResponseMsg(data=local_manufacturer)
+            return_info = error_404_409(ERR_NUM_409, self.locale, "manufacturer", "#id", id)
+            return return_info
+        return_info = ResponseMsg(data=local_manufacturer, locale=self.locale)
         return return_info
 
     @router.get("/manufacturers")
@@ -728,8 +716,8 @@ class ManufacturerCBV:
         results: List[Manufacturer] = await self.crud.get_all(
             self.session, q.limit, q.offset
         )
-        count: int = (await self.session.execute(func.count(Manufacturer.id))).scalar()
-        return_info = ResponseMsg(data={"count": count, "results": results})
+        count = await self.crud.count_all(self.session)
+        return_info = ResponseMsg(data={"count": count, "results": results}, locale=self.locale)
         return return_info
 
     @router.post("/manufacturers/getList")
@@ -746,17 +734,14 @@ class ManufacturerCBV:
             Manufacturer, id, options=(selectinload(Manufacturer.dcim_device_type))
         )
         if not local_manufacturer:
-            return_info = ERR_NUM_4004
-            return_info.msg = (
-                f"Updated manufacturer failed, manufacturer #{id} not found "
-            )
+            return_info = error_404_409(ERR_NUM_404, self.locale, "manufacturer", "#id", id)
             return return_info
-        await self.session.execute(
-            update(Manufacturer)
-            .where(manufacturer.id == id)
-            .values(**manufacturer.dict(exclude={"device_type_ids"}))
-            .execute_options(synchronize_session="fetch")
-        )
+        if manufacturer.name is not None:
+            exist_name = await self.crud.get_by_field(self.session, "name", manufacturer.name)
+            if exist_name:
+                return_info = error_404_409(ERR_NUM_409, self.locale, "manufacturer", "name", manufacturer.name)
+                return return_info
+
         if manufacturer.device_type_ids is not None:
             device_type_crud = CRUDBase(DeviceType)
             device_types: List[DeviceType] | None = await device_type_crud.get_multi(
@@ -767,8 +752,8 @@ class ManufacturerCBV:
                     if device_type.manufacturer_id != id:
                         device_type.manufacturer_id = id
                         await self.session.add(device_type)
-        await self.session.commit()
-        return_info = ResponseMsg(data=id)
+        await self.curd.update(self.session, id, manufacture, exclude={"device_type_ids"})
+        return_info = ResponseMsg(data=id, locale=self.locale)
         return return_info
 
     @router.delete("/manufacturers/{id}")
@@ -777,12 +762,9 @@ class ManufacturerCBV:
             self.session, id
         )
         if not local_manufacturer:
-            return_info = ERR_NUM_4004
-            return_info.msg = (
-                f"Delete manufacturer failed, manufacturer #{id} not found"
-            )
+            return_info = error_404_409(ERR_NUM_404, self.locale, "manufacturer", "#id", id)
             return return_info
-        return_info = ResponseMsg(data=id)
+        return_info = ResponseMsg(data=id, locale=self.locale)
         return return_info
 
     @router.post("/manufacturers/deleteList")
@@ -793,12 +775,9 @@ class ManufacturerCBV:
             self.session, manufacturer.ids
         )
         if not results:
-            return_info = ERR_NUM_4004
-            return_info.msg = (
-                f"Bulk delete manufacturer failed, manufacturer #{id} not found"
-            )
+            return_info = error_404_409(ERR_NUM_404, self.locale, "manufacturer", "#id", id)
             return return_info
-        return_info = ResponseMsg(data=[d.id for d in results])
+        return_info = ResponseMsg(data=[d.id for d in results], locale=self.locale)
         return return_info
 
 
@@ -807,6 +786,7 @@ class DeviceTypeCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
     crud = CRUDBase(DeviceType)
+    locale=Depends(get_locale)
 
     @router.post("/device-types")
     async def create_device_type(
@@ -816,8 +796,7 @@ class DeviceTypeCBV:
             self.session, "name", device_type.name
         )
         if local_device_type is not None:
-            return_info = ERR_NUM_4009
-            return_info.msg = f"Create device type failed, device Type with name `{device_type.name}` already existed"
+            return_info = error_404_409(ERR_NUM_409, self.locale, "manufacturer", "#id", id)
             return return_info
         if device_type.manufacturer_id is not None:
             manufacture: Manufacturer | None = await self.session.get(

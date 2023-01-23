@@ -30,7 +30,7 @@ locale = {
             "validation_error": "路径参数或请求体数据校验错误, 请确认请求参数是否合法",  # 1
             "server_error": "服务器内部错误, 请求ID:{request_id}, 请将问题升级至平台管理员",  #
             "in_process": "请求未完成, 处理中",  # 202
-            "not_found": "{object}: {field} {value}未找到}",  # 404
+            "not_found": "{object}: {field} {value}不存在}",  # 404
             "already_exists": "{object}: {field}: {value}已存在",  # 409
         },
         "auth": {
