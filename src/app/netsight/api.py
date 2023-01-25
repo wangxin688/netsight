@@ -2,7 +2,6 @@ from typing import List
 
 from celery.result import AsyncResult
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import JSONResponse
 from loguru import logger
 
 from src.app import deps
@@ -11,28 +10,41 @@ from src.app.base import BaseListResponse
 from src.app.deps import get_locale
 from src.app.netsight import schemas
 from src.utils.error_code import ERR_NUM_202, ERR_NUM_500, ResponseMsg, get_code_all
+from src.utils.i18n_loaders import _
 
 router = APIRouter()
 
 
 @router.get("/tasks/{task_id}")
 async def get_task_result(
-    task_id: str, current_user: User = Depends(deps.get_current_user)
+    task_id: str,
+    current_user: User = Depends(deps.get_current_user),
+    locale=Depends(get_locale),
 ):
     task = AsyncResult(task_id)
     if not task.ready():
-        return JSONResponse(status_code=200, content=ERR_NUM_202.dict())
+        return ResponseMsg(
+            code=ERR_NUM_202.code,
+            data=None,
+            locale=locale,
+            message=_(ERR_NUM_202.message),
+        )
     state = task.state
     if state == "FAILURE":
         traceback_info = task.traceback
         logger.error(f"celery task id: {task_id} execute failed" + traceback_info)
         error_msg = task.result
-        return_info = ERR_NUM_500.dict()
-        return_info.update({"data": error_msg})
-        return JSONResponse(status_code=200, content=return_info)
+        return ResponseMsg(
+            code=ERR_NUM_500.code,
+            data=error_msg,
+            locale=locale,
+            message=_(ERR_NUM_500.message),
+        )
     result = task.get()
 
-    return_info = ResponseMsg(data={"task_id": str(task_id), "results": result})
+    return_info = ResponseMsg(
+        data={"task_id": str(task_id), "results": result}, locale=locale
+    )
     return return_info
 
 

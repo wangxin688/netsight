@@ -98,12 +98,18 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return results
 
     async def create(
-        self, session: AsyncSession, *, obj_in: CreateSchemaType
+        self,
+        session: AsyncSession,
+        *,
+        obj_in: CreateSchemaType,
+        excludes: set | None = None
     ) -> ModelType:
-        new_obj = self.model(**obj_in.dict())  # type: ignore
+        new_obj: ModelType = self.model(
+            **obj_in.dict(exclude_none=True, exclude=excludes)
+        )
         session.add(new_obj)
         await session.commit()
-        await session.flush(new_obj)
+        await session.flush()
         return new_obj
 
     async def update(

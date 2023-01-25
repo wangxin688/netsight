@@ -380,8 +380,10 @@ class IPAddressBulkCreate(BaseModel):
         values["version"] = values["address"].version
         return values
 
+
 class IPAddressQuery(BaseQuery):
     pass
+
 
 class IPAddressUpdate(BaseModel):
     address: IPv4Address | IPv6Address | None

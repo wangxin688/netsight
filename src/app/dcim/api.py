@@ -4,7 +4,7 @@ from fastapi import Depends
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 from loguru import logger
-from sqlalchemy import func, select, update
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncResult, AsyncSession
 from sqlalchemy.orm import selectinload
@@ -29,7 +29,13 @@ from src.app.ipam.models import ASN
 from src.app.netsight.models import Contact
 from src.db.crud_base import CRUDBase
 from src.register.middleware import AuditRoute
-from src.utils.error_code import ERR_NUM_404, ERR_NUM_409, ResponseMsg, error_404_409
+from src.utils.error_code import (
+    ERR_NUM_404,
+    ERR_NUM_409,
+    ERR_NUM_422,
+    ResponseMsg,
+    error_404_409,
+)
 
 router = InferringRouter(route_class=AuditRoute)
 
@@ -51,10 +57,8 @@ class RegionCBV:
                     ERR_NUM_404, self.locale, "region", "parent_id", id
                 )
                 return return_info
-        new_region = Region(**region.dict(exclude_none=True))
-        self.session.add(new_region)
         try:
-            await self.session.commit()
+            new_region = await self.crud.create(self.session, region)
         except IntegrityError as e:
             logger.error(e)
             await self.session.rollback()
@@ -62,7 +66,6 @@ class RegionCBV:
                 ERR_NUM_409, self.locale, "region", "name", region.name
             )
             return return_info
-        await self.session.flush()
         return_info = ResponseMsg(data=new_region.id, locale=self.locale)
         return return_info
 
@@ -199,8 +202,6 @@ class SiteCBV:
         self, site: schemas.SiteCreate
     ) -> BaseListResponse[List[schemas.Region]]:
         """Create a new site"""
-        contact_crud = CRUDBase(Contact)
-        new_site = Site(**site.dict(exclude={"contact_ids"}))
         exist_name = await self.crud.get_by_field(self.session, "name", site.name)
         if exist_name:
             return_info = error_404_409(
@@ -215,9 +216,9 @@ class SiteCBV:
                 ERR_NUM_409, self.locale, "site", "site_code", site.site_code
             )
             return return_info
-        await self.session.add(new_site)
-        await self.session.flush()
+        new_site = await self.crud.create(self.session, site, excludes={"contact_ids"})
         if site.contact_ids:
+            contact_crud = CRUDBase(Contact)
             contacts: List[Contact] = await contact_crud.get_multi(
                 self.session, site.contact_ids
             )
@@ -382,15 +383,13 @@ class LocationCBV:
         if not site:
             return_info = error_404_409(ERR_NUM_404, self.locale, "site", "#id", id)
             return return_info
-        exsit_name = await self.crud.get_by_field(self.session, "name", location.name)
-        if exsit_name:
+        exist_name = await self.crud.get_by_field(self.session, "name", location.name)
+        if exist_name:
             return_info = error_404_409(
                 ERR_NUM_409, self.locale, "location", "name", location.name
             )
             return return_info
-        new_location = Location(**location.dict(exclude_none=True))
-        await self.session.add(new_location)
-        await self.session.commit()
+        new_location = self.crud.create(self.session, location)
         return_info = ResponseMsg(data=new_location.id, locale=self.locale)
         return return_info
 
@@ -496,9 +495,7 @@ class RackRoleCBV:
                 ERR_NUM_409, self.locale, "rack-role", "name", rack_role.name
             )
             return return_info
-        new_rack_role = RackRole(**rack_role.dict())
-        await self.session.add(new_rack_role)
-        await self.session.commit()
+        new_rack_role = await self.crud.create(self.session, rack_role)
         return_info = ResponseMsg(data=new_rack_role.id, locale=self.locale)
         return return_info
 
@@ -600,25 +597,29 @@ class RackCBV:
                 Location, rack.location_id
             )
             if local_location is None:
-                return_info = error_404_409(ERR_NUM_404, self.locale, "location", "#id", rack.location_id)
+                return_info = error_404_409(
+                    ERR_NUM_404, self.locale, "location", "#id", rack.location_id
+                )
                 return return_info
         if local_rack is not None:
-            return_info = error_404_409(ERR_NUM_409, self.locale, "rack", "name", rack.name)
+            return_info = error_404_409(
+                ERR_NUM_409, self.locale, "rack", "name", rack.name
+            )
             return return_info
         if local_site is None:
-            return_info = error_404_409(ERR_NUM_404, self.locale, "site", "#id", rack.site_id)
+            return_info = error_404_409(
+                ERR_NUM_404, self.locale, "site", "#id", rack.site_id
+            )
             return return_info
-        new_rack = Rack(**rack.dict())
-        await self.session.add(new_rack)
-        await self.session.commit()
-        return_info = ResponseMsg(data=id, locale=self.locale)
+        new_rack = await self.crud.create(self.session, rack)
+        return_info = ResponseMsg(data=new_rack.id, locale=self.locale)
         return return_info
 
     @router.get("/racks/{id}")
     async def get_rack(self, id: int) -> BaseResponse[schemas.RackBase]:
         local_rack: Rack = await self.session.get(Rack, id)
         if not local_rack:
-            return_info = error_404_409(ERR_NUM_409, self.locale, "rack", "#id", id)
+            return_info = error_404_409(ERR_NUM_404, self.locale, "rack", "#id", id)
             return return_info
         return_info = ResponseMsg(data=local_rack, locale=self.locale)
         return return_info
@@ -629,8 +630,10 @@ class RackCBV:
     ) -> BaseListResponse[schemas.RackBase]:
         """get rack without custom parameters"""
         results: List[Rack] = await self.crud.get_all(self.session, q.limit, q.offset)
-        count: await self.crud.count_all(self.session)
-        return_info = ResponseMsg(data={"count": count, "results": results}, locale=self.locale)
+        count = await self.crud.count_all(self.session)
+        return_info = ResponseMsg(
+            data={"count": count, "results": results}, locale=self.locale
+        )
         return return_info
 
     @router.post("/racks/getList")
@@ -658,7 +661,9 @@ class RackCBV:
     ) -> BaseListResponse[List[int]]:
         racks: List[Rack] = await self.crud.delete_multi(self.session, rack.ids)
         if not racks:
-            return_info = error_404_409(ERR_NUM_404, self.locale, "rack", "#ids", rack.ids)
+            return_info = error_404_409(
+                ERR_NUM_404, self.locale, "rack", "#ids", rack.ids
+            )
             return return_info
         return_info = ResponseMsg(data=[d.id for d in racks], locale=self.locale)
         return return_info
@@ -678,12 +683,13 @@ class ManufacturerCBV:
             self.session, "name", manufacturer.name
         )
         if local_manufacturer is not None:
-            return_info = error_404_409(ERR_NUM_409, self.locale, "manufacturer", "name", manufacturer.name)
+            return_info = error_404_409(
+                ERR_NUM_409, self.locale, "manufacturer", "name", manufacturer.name
+            )
             return return_info
-        new_manufacturer = Manufacturer(
-            **manufacturer.dict(exclude={"device_type_ids"})
+        new_manufacturer = await self.crud.create(
+            self.session, manufacturer, exclude={"device_type_ids"}
         )
-        await self.session.add(new_manufacturer)
         if manufacturer.device_type_ids:
             device_type_crud = CRUDBase(DeviceType)
             device_types: List[DeviceType] | None = await device_type_crud.get_multi(
@@ -704,7 +710,9 @@ class ManufacturerCBV:
             Manufacturer, id
         )
         if not local_manufacturer:
-            return_info = error_404_409(ERR_NUM_409, self.locale, "manufacturer", "#id", id)
+            return_info = error_404_409(
+                ERR_NUM_409, self.locale, "manufacturer", "#id", id
+            )
             return return_info
         return_info = ResponseMsg(data=local_manufacturer, locale=self.locale)
         return return_info
@@ -717,7 +725,9 @@ class ManufacturerCBV:
             self.session, q.limit, q.offset
         )
         count = await self.crud.count_all(self.session)
-        return_info = ResponseMsg(data={"count": count, "results": results}, locale=self.locale)
+        return_info = ResponseMsg(
+            data={"count": count, "results": results}, locale=self.locale
+        )
         return return_info
 
     @router.post("/manufacturers/getList")
@@ -734,12 +744,18 @@ class ManufacturerCBV:
             Manufacturer, id, options=(selectinload(Manufacturer.dcim_device_type))
         )
         if not local_manufacturer:
-            return_info = error_404_409(ERR_NUM_404, self.locale, "manufacturer", "#id", id)
+            return_info = error_404_409(
+                ERR_NUM_404, self.locale, "manufacturer", "#id", id
+            )
             return return_info
         if manufacturer.name is not None:
-            exist_name = await self.crud.get_by_field(self.session, "name", manufacturer.name)
+            exist_name = await self.crud.get_by_field(
+                self.session, "name", manufacturer.name
+            )
             if exist_name:
-                return_info = error_404_409(ERR_NUM_409, self.locale, "manufacturer", "name", manufacturer.name)
+                return_info = error_404_409(
+                    ERR_NUM_409, self.locale, "manufacturer", "name", manufacturer.name
+                )
                 return return_info
 
         if manufacturer.device_type_ids is not None:
@@ -752,7 +768,9 @@ class ManufacturerCBV:
                     if device_type.manufacturer_id != id:
                         device_type.manufacturer_id = id
                         await self.session.add(device_type)
-        await self.curd.update(self.session, id, manufacture, exclude={"device_type_ids"})
+        await self.curd.update(
+            self.session, id, manufacturer, exclude={"device_type_ids"}
+        )
         return_info = ResponseMsg(data=id, locale=self.locale)
         return return_info
 
@@ -762,7 +780,9 @@ class ManufacturerCBV:
             self.session, id
         )
         if not local_manufacturer:
-            return_info = error_404_409(ERR_NUM_404, self.locale, "manufacturer", "#id", id)
+            return_info = error_404_409(
+                ERR_NUM_404, self.locale, "manufacturer", "#id", id
+            )
             return return_info
         return_info = ResponseMsg(data=id, locale=self.locale)
         return return_info
@@ -775,7 +795,9 @@ class ManufacturerCBV:
             self.session, manufacturer.ids
         )
         if not results:
-            return_info = error_404_409(ERR_NUM_404, self.locale, "manufacturer", "#id", id)
+            return_info = error_404_409(
+                ERR_NUM_404, self.locale, "manufacturer", "#id", id
+            )
             return return_info
         return_info = ResponseMsg(data=[d.id for d in results], locale=self.locale)
         return return_info
@@ -786,7 +808,7 @@ class DeviceTypeCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
     crud = CRUDBase(DeviceType)
-    locale=Depends(get_locale)
+    locale = Depends(get_locale)
 
     @router.post("/device-types")
     async def create_device_type(
@@ -796,21 +818,20 @@ class DeviceTypeCBV:
             self.session, "name", device_type.name
         )
         if local_device_type is not None:
-            return_info = error_404_409(ERR_NUM_409, self.locale, "manufacturer", "#id", id)
+            return_info = error_404_409(
+                ERR_NUM_409, self.locale, "device-type", "name", device_type.name
+            )
             return return_info
         if device_type.manufacturer_id is not None:
             manufacture: Manufacturer | None = await self.session.get(
                 Manufacturer, device_type.manufacturer_id
             )
             if not manufacture:
-                return_info = ERR_NUM_4004
-                return_info.msg = (
-                    f"Create device type failed, manufacturer #{id} not found"
+                return_info = error_404_409(
+                    ERR_NUM_404, self.locale, "manufacturer", "#id", id
                 )
-                return return_info
-        new_device_type = DeviceType(**device_type.dict(exclude_none=True))
-        await self.session.add(new_device_type)
-        await self.session.commit()
+            return return_info
+        new_device_type = await self.crud.create(self.session, device_type)
         return_info = ResponseMsg(data=new_device_type.id)
         return return_info
 
@@ -818,10 +839,11 @@ class DeviceTypeCBV:
     async def get_device_type(self, id: int) -> BaseResponse[schemas.DeviceType]:
         local_device_type = await self.session.get(DeviceType, id)
         if not local_device_type:
-            return_info = ERR_NUM_4004
-            return_info.msg = f"Device type #{id} not found"
+            return_info = error_404_409(
+                ERR_NUM_404, self.locale, "device-type", "#id", id
+            )
             return return_info
-        return_info = ResponseMsg(data=local_device_type)
+        return_info = ResponseMsg(data=local_device_type, locale=self.locale)
         return return_info
 
     @router.get("/device-types")
@@ -831,10 +853,10 @@ class DeviceTypeCBV:
         results: List[DeviceType] = await self.crud.get_all(
             self.session, q.limit, q.offset
         )
-        count: int = await self.session.execute(
-            select(func.count(DeviceType.id))
-        ).scalar()
-        return_info = ResponseMsg(data={"count": count, "results": results})
+        count = await self.crud.count_all(self.session)
+        return_info = ResponseMsg(
+            data={"count": count, "results": results}, locale=self.locale
+        )
         return return_info
 
     @router.post("/device-types/getList")
@@ -845,41 +867,36 @@ class DeviceTypeCBV:
 
     @router.put("/device-types/{id}")
     async def update_device_type(
-        self, device_type: schemas.DeviceTypeUpdate
+        self, id: int, device_type: schemas.DeviceTypeUpdate
     ) -> BaseResponse[int]:
         local_device_type = await self.session.get(DeviceType, id)
         if not local_device_type:
-            return_info = ERR_NUM_4004
-            return_info.msg = f"Update device type failed, device type #{id} not found"
+            return_info = error_404_409(
+                ERR_NUM_404, self.locale, "device-type", "#id", id
+            )
             return return_info
         if device_type.manufacturer_id:
             manufacture: Manufacturer | None = await self.session.get(
                 Manufacturer, device_type.manufacturer_id
             )
             if not manufacture:
-                return_info = ERR_NUM_4004
-                return_info.msg = (
-                    f"Update device type failed, manufacturer #{id} not found"
+                return_info = error_404_409(
+                    ERR_NUM_404, self.locale, "manufacturer", "#id", id
                 )
                 return return_info
-        await self.session.execute(
-            update(DeviceType)
-            .where(DeviceType.id == id)
-            .values(**device_type.dict(exclude_none=True))
-            .execute_options(synchronize_session="fetch")
-        )
-        await self.session.commit()
-        return_info = ResponseMsg(data=id)
+        await self.crud.update(self.session, id, device_type)
+        return_info = ResponseMsg(data=id, locale=self.locale)
         return return_info
 
     @router.delete("/device-types/{id}")
     async def delete_device_type(self, id: int) -> BaseResponse[int]:
         local_device_type = await self.crud.delete(self.session, id)
         if not local_device_type:
-            return_info = ERR_NUM_4004
-            return_info.msg = f"Delete device type failed, device Type #{id} not found"
+            return_info = error_404_409(
+                ERR_NUM_404, self.locale, "device-type", "#id", id
+            )
             return return_info
-        return_info = ResponseMsg(data=id)
+        return_info = ResponseMsg(data=id, locale=self.locale)
         return return_info
 
     @router.post("/device-types/deleteList")
@@ -888,10 +905,13 @@ class DeviceTypeCBV:
     ) -> BaseListResponse[List[int]]:
         local_device_type = await self.crud.delete(self.session, device_type.ids)
         if not local_device_type:
-            return_info = ERR_NUM_4004
-            return_info.msg = f"Bulk delete device type failed, device Type #{device_type.ids} not found"
+            return_info = error_404_409(
+                ERR_NUM_404, self.locale, "device-type", "#ids", device_type.ids
+            )
             return return_info
-        return_info = ResponseMsg(data=[d.id for d in local_device_type])
+        return_info = ResponseMsg(
+            data=[d.id for d in local_device_type], locale=self.locale
+        )
         return return_info
 
 
@@ -900,6 +920,7 @@ class DeviceRoleCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
     crud = CRUDBase(DeviceRole)
+    locale = Depends(get_locale)
 
     @router.post("/device-roles")
     async def create_device_role(
@@ -909,23 +930,23 @@ class DeviceRoleCBV:
             self.session, "name", device_role.name
         )
         if local_device_role is not None:
-            return_info = ERR_NUM_4009
-            return_info.msg = f"Create device role failed, device role with name: `{device_role.name}` already exsits"
+            return_info = error_404_409(
+                ERR_NUM_409, self.locale, "device-role", "name", device_role.name
+            )
             return return_info
-        new_device_role = DeviceRole(**device_role.dict(exclude_none=True))
-        await self.session.add(new_device_role)
-        await self.session.commit(new_device_role)
-        return_info = ResponseMsg(data=new_device_role.id)
+        new_device_role = await self.crud.create(self.session, device_role)
+        return_info = ResponseMsg(data=new_device_role.id, locale=self.locale)
         return return_info
 
     @router.get("/device-roles/{id}")
     async def get_device_role(self, id: int) -> BaseResponse[schemas.DeviceRole]:
         local_device_role: DeviceRole | None = await self.session.get(DeviceRole, id)
         if local_device_role is None:
-            return_info = ERR_NUM_4004
-            return_info.msg = f"Device role #{id} not found"
+            return_info = error_404_409(
+                ERR_NUM_404, self.locale, "device-role", "#id", id
+            )
             return return_info
-        return_info = ResponseMsg(data=local_device_role)
+        return_info = ResponseMsg(data=local_device_role, locale=self.locale)
         return return_info
 
     @router.get("/device-roles")
@@ -935,8 +956,10 @@ class DeviceRoleCBV:
         results: List[DeviceRole] = await self.crud.get_all(
             self.session, q.limit, q.offset
         )
-        count: int = self.session.execute(select(func.count(DeviceRole.id))).scalar()
-        return_info = ResponseMsg(data={"count": count, "results": results})
+        count = await self.crud.count_all(self.session)
+        return_info = ResponseMsg(
+            data={"count": count, "results": results}, locale=self.locale
+        )
         return return_info
 
     @router.post("/device-roles/getList")
@@ -951,36 +974,31 @@ class DeviceRoleCBV:
     ) -> BaseResponse[int]:
         local_device_role: DeviceRole | None = await self.session.get(DeviceRole, id)
         if local_device_role is None:
-            return_info = ERR_NUM_4004
-            return_info.msg = f"Device role #{id} not found"
+            return_info = error_404_409(
+                ERR_NUM_404, self.locale, "device-role", "#id", id
+            )
             return return_info
         try:
-            await self.session.execute(
-                update(DeviceRole)
-                .where(DeviceRole.id == id)
-                .values(**device_role.dict(exclude_none=True))
-                .execute_options(synchronize_session="fetch")
-            )
-            await self.session.commit()
+            await self.crud.update(self.session, id, device_role)
         except SQLAlchemyError as e:
             await self.session.rollback()
             logger.error(e)
-            return_info = ERR_NUM_4009
-            return_info.msg = (
-                f"Device Role with name `{device_role.name}` already exists"
+            return_info = error_404_409(
+                ERR_NUM_409, self.locale, "device-role", "name", device_role.name
             )
             return return_info
-        return_info = ResponseMsg(data=id)
+        return_info = ResponseMsg(data=id, locale=self.locale)
         return return_info
 
     @router.delete("/device-roles/{id}")
     async def delete_device_role(self, id: int) -> BaseResponse[int]:
         local_device_role: DeviceRole | None = await self.crud.delete(self.session, id)
         if local_device_role is None:
-            return_info = ERR_NUM_4004
-            return_info.msg = f"Delete device role failed, device role #{id} not found"
+            return_info = error_404_409(
+                ERR_NUM_404, self.locale, "device-role", "#id", id
+            )
             return return_info
-        return_info = ResponseMsg(data=id)
+        return_info = ResponseMsg(data=id, locale=self.locale)
         return return_info
 
     @router.delete("/device-roles/deleteList")
@@ -991,10 +1009,11 @@ class DeviceRoleCBV:
             self.session, device_role.ids
         )
         if not results:
-            return_info = ERR_NUM_4004
-            return_info.msg = f"Bulk device device role failed, device role #{device_role.ids} not found"
+            return_info = error_404_409(
+                ERR_NUM_409, self.locale, "device-role", "#ids", device_role.ids
+            )
             return return_info
-        return_info = ResponseMsg(data=[d.id for d in results])
+        return_info = ResponseMsg(data=[d.id for d in results], locale=self.locale)
         return return_info
 
 
@@ -1003,33 +1022,45 @@ class InterfaceCBV:
     session: AsyncSession = Depends(get_session)
     current_user: User = Depends(get_current_user)
     crud = CRUDBase(Interface)
+    locale = Depends(get_locale)
 
     @router.post("/interfaces")
     async def create_interface(
         self, interface: schemas.InterfaceCreate
     ) -> BaseResponse[int]:
-        new_interface = Interface(**interface.dict())
+        exist_name = await self.crud.filter(
+            self.session,
+            filter={"device_id": interface.device_id, "name": interface.name},
+        )
+        if exist_name:
+            return_info = error_404_409(
+                ERR_NUM_409, self.locale, "interface", "name", interface.name
+            )
+            return return_info
         try:
-            await self.session.add(new_interface)
-            await self.session.commit()
+            new_interface = await self.crud.create(self.session, interface)
         except IntegrityError as e:
             await self.session.rollback()
             logger.error(e)
-            return_info = ERR_NUM_4022
-            return_info.data = str(e)
-            return_info.msg = "Error creating interface, params error"
-            return return_info
-        return_info = ResponseMsg(data=new_interface.id)
+            return_info = ResponseMsg(
+                code=ERR_NUM_422.code,
+                data=str(e),
+                locale=self.locale,
+                message=ERR_NUM_422.message,
+            )
+
+        return_info = ResponseMsg(data=new_interface.id, locale=self.locale)
         return return_info
 
     @router.get("/interfaces/{id}")
     async def get_interface(self, id: int) -> BaseResponse[schemas.InterfaceBase]:
         local_interface = await self.crud.get(self.session, id)
         if not local_interface:
-            return_info = ERR_NUM_4004
-            return_info.msg = f"Interface #{id} not found"
+            return_info = error_404_409(
+                ERR_NUM_404, self.locale, "interface", "#id", id
+            )
             return return_info
-        return_info = ResponseMsg(data=local_interface)
+        return_info = ResponseMsg(data=local_interface, locale=self.locale)
         return return_info
 
     @router.get("/interfaces")
@@ -1037,10 +1068,10 @@ class InterfaceCBV:
         self, q: QueryParams = Depends(QueryParams)
     ) -> BaseListResponse[List[schemas.InterfaceBase]]:
         results = await self.crud.get_all(self.session, q.limit, q.offset)
-        count: int = await self.session.execute(
-            select(func.count(Interface.id))
-        ).scalar()
-        return_info = ResponseMsg(data={"count": count, "results": results})
+        count = await self.crud.count_all(self.session)
+        return_info = ResponseMsg(
+            data={"count": count, "results": results}, locale=self.locale
+        )
         return return_info
 
     @router.post("/interfaces/getList")
@@ -1059,8 +1090,9 @@ class InterfaceCBV:
     async def delete_interface(self, id: int) -> BaseResponse[int]:
         local_interface: Interface = self.crud.delete(self.session, id)
         if not local_interface:
-            return_info = ERR_NUM_4004
-            return_info.msg = f"Delete interface failed, interface #{id} not found"
+            return_info = error_404_409(
+                ERR_NUM_404, self.locale, "interface", "#id", id
+            )
             return return_info
         return_info = ResponseMsg(data=id)
         return return_info
@@ -1071,10 +1103,13 @@ class InterfaceCBV:
     ) -> BaseResponse[List[int]]:
         local_interface = await self.crud.delete_multi(self.session, interface.ids)
         if not local_interface:
-            return_info = ERR_NUM_4004
-            return_info.msg = f"Bulk delete interface failed, interface #{id} not found"
+            return_info = error_404_409(
+                ERR_NUM_404, self.locale, "interface", "#ids", interface.ids
+            )
             return return_info
-        return_info = ResponseMsg(data=[d.id for d in local_interface])
+        return_info = ResponseMsg(
+            data=[d.id for d in local_interface], locale=self.locale
+        )
         return return_info
 
 
@@ -1089,28 +1124,23 @@ class PlatformCBV:
         self, platform: schemas.PlatformCreate
     ) -> BaseResponse[int]:
         new_platform = Platform(**platform.dict(exclude_none=True))
-        try:
-            await self.session.add(new_platform)
-            await self.session.commit()
-        except IntegrityError as e:
-            await self.session.rollback()
-            logger.error(e)
-            return_info = ERR_NUM_4009
-            return_info.msg = (
-                f"Created platform failed, platform with {platform.name} already exists"
+        exist_name = await self.crud.get_by_field(self.session, "name", platform.name)
+        if exist_name:
+            return_info = error_404_409(
+                ERR_NUM_409, self.locale, "platform", "name", platform.name
             )
             return return_info
-        return_info = ResponseMsg(new_platform.id)
+        new_platform = await self.crud.create(self.session, platform)
+        return_info = ResponseMsg(new_platform.id, locale=self.locale)
         return return_info
 
     @router.get("/platforms/id")
     async def get_platform(self, id: int) -> BaseResponse[schemas.PlatformBase]:
         local_platform = await self.crud.get(self.session, id)
         if not local_platform:
-            return_info = ERR_NUM_4004
-            return_info.msg = f"Platform #{id} not found"
+            return_info = error_404_409(ERR_NUM_404, self.locale, "platform", "#id", id)
             return return_info
-        return_info = ResponseMsg(local_platform)
+        return_info = ResponseMsg(local_platform, locale=self.locale)
         return return_info
 
     @router.get("/platforms")
@@ -1118,8 +1148,10 @@ class PlatformCBV:
         self, q: QueryParams = Depends(QueryParams)
     ) -> BaseListResponse[List[schemas.PlatformBase]]:
         results = await self.crud.get_all(self.session, q.limit, q.offset)
-        count = await self.session.execute(select(func.count(Platform.id))).scalar()
-        return_info = ResponseMsg(data={"count": count, "results": results})
+        count = await self.crud.count_all(self.session)
+        return_info = ResponseMsg(
+            data={"count": count, "results": results}, locale=self.locale
+        )
         return return_info
 
     @router.post("/platforms/getList")
@@ -1138,8 +1170,7 @@ class PlatformCBV:
     async def delete_platform(self, id: int) -> BaseResponse[int]:
         local_platform = await self.crud.delete(self.session, id)
         if not local_platform:
-            return_info = ERR_NUM_4004
-            return_info.msg = f"Delete platform failed, platform #{id} not found"
+            return_info = error_404_409(ERR_NUM_404, self.locale, "platform", "#id", id)
             return return_info
         return_info = ResponseMsg(data=id)
         return return_info
@@ -1150,11 +1181,10 @@ class PlatformCBV:
     ) -> BaseResponse[List[int]]:
         results = await self.crud.delete_multi(self.session, platform.ids)
         if results is None:
-            return_info = ERR_NUM_4004
-            return_info.msg = (
-                f"Bulk delete platform failed, platform #{platform.ids} not found"
+            return_info = error_404_409(
+                ERR_NUM_404, self.locale, "platform", "#ids", platform.ids
             )
             return return_info
-        return_info = ResponseMsg(data=[d.id for d in results])
+        return_info = ResponseMsg(data=[d.id for d in results], locale=self.locale)
         return_info.data = platform.ids
         return return_info
