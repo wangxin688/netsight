@@ -10,16 +10,12 @@ DEFAULT_RESPONSE_HEADER = "X-Cache"
 
 
 async def init_redis_pool(db: int) -> redis.Redis:
-    redis_c = await redis.from_url(
-        settings.REDIS_DSN, encoding="utf-8", db=db, decode_responses=True
-    )
+    redis_c = await redis.from_url(settings.REDIS_DSN, encoding="utf-8", db=db, decode_responses=True)
     return redis_c
 
 
 class RedisClient:
-    def __init__(
-        self, redis: redis.Redis, response_header: str | None = DEFAULT_RESPONSE_HEADER
-    ) -> None:
+    def __init__(self, redis: redis.Redis, response_header: str | None = DEFAULT_RESPONSE_HEADER) -> None:
         self._redis = redis
         self.response_header = response_header
 

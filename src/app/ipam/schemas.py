@@ -259,9 +259,7 @@ class IPRange(BaseModel):
 
 
 class ASNCreate(BaseModel):
-    asn: int = Field(
-        gte=0, description="AS number, 64512~65534 as private, RFC4893, RFC1771"
-    )
+    asn: int = Field(gte=0, description="AS number, 64512~65534 as private, RFC4893, RFC1771")
     description: str | None
     site_id: List[int] | None
 
@@ -271,9 +269,7 @@ class ASNQuery(BaseQuery):
 
 
 class ASNUpdate(BaseModel):
-    ans: int | None = Field(
-        gte=0, description="AS number, 64512~65534 as private, RFC4893, RFC1771"
-    )
+    ans: int | None = Field(gte=0, description="AS number, 64512~65534 as private, RFC4893, RFC1771")
     description: str | None
     site_id: List[int] | None
 

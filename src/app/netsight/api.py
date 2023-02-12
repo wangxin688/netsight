@@ -42,21 +42,14 @@ async def get_task_result(
         )
     result = task.get()
 
-    return_info = ResponseMsg(
-        data={"task_id": str(task_id), "results": result}, locale=locale
-    )
+    return_info = ResponseMsg(data={"task_id": str(task_id), "results": result}, locale=locale)
     return return_info
 
 
 @router.get("/endpoints", response_model=BaseListResponse[List[schemas.Endpoint]])
 def inspect_endpoints(request: Request, locale=Depends(get_locale)):
-    endpoints = [
-        {"name": route.name, "url": route.path, "action": route.methods}
-        for route in request.app.routes
-    ]
-    return_info = ResponseMsg(
-        data={"count": len(endpoints), "results": endpoints}, locale=locale
-    )
+    endpoints = [{"name": route.name, "url": route.path, "action": route.methods} for route in request.app.routes]
+    return_info = ResponseMsg(data={"count": len(endpoints), "results": endpoints}, locale=locale)
     return return_info
 
 

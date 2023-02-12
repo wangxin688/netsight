@@ -34,9 +34,7 @@ def cache(*, expire: int = 3600):
             ttl = expire
             cached = redis_cache.add_to_cache(key, response_data, ttl)
             if cached:
-                redis_cache.set_response_headers(
-                    response, cache_hit=False, response_data=response_data, ttl=ttl
-                )
+                redis_cache.set_response_headers(response, cache_hit=False, response_data=response_data, ttl=ttl)
                 return (
                     Response(
                         content=response_data,
@@ -55,8 +53,4 @@ def cache(*, expire: int = 3600):
 
 async def get_api_response_async(func, *args, **kwargs):
     """Helper function that allows decorator to work with both async and non-async functions."""
-    return (
-        await func(*args, **kwargs)
-        if asyncio.iscoroutinefunction(func)
-        else func(*args, **kwargs)
-    )
+    return await func(*args, **kwargs) if asyncio.iscoroutinefunction(func) else func(*args, **kwargs)

@@ -14,9 +14,7 @@ async_engine = create_async_engine(
     pool_pre_ping=True,
     future=True,
 )
-async_session = sessionmaker(
-    async_engine, autoflush=False, expire_on_commit=False, class_=AsyncSession
-)  # type: ignore
+async_session = sessionmaker(async_engine, autoflush=False, expire_on_commit=False, class_=AsyncSession)  # type: ignore
 
 if TYPE_CHECKING:
     async_session: sessionmaker[AsyncSession]  # type: ignore

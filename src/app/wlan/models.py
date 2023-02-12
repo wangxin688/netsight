@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Integer, String
+from sqlalchemy.orm import mapped_column
 
 from src.db.db_base import Base
 from src.db.db_mixin import NameMixin
@@ -6,17 +7,17 @@ from src.db.db_mixin import NameMixin
 
 class AccessPointGroup(Base):
     __tablename__ = "wlan_access_point_group"
-    id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False, unique=True)
-    description = Column(String, nullable=True)
+    id = mapped_column(Integer, primary_key=True)
+    name = mapped_column(String, nullable=False, unique=True)
+    description = mapped_column(String, nullable=True)
 
 
 class AccessPoint(Base, NameMixin):
     __tablename__ = "wlan_access_point"
-    id = Column(Integer, primary_key=True)
-    status = Column()
+    id = mapped_column(Integer, primary_key=True)
+    status = mapped_column()
 
 
 class SSID(Base, NameMixin):
     __tablename__ = "wlan_ssid"
-    id = Column(Integer, primary_key=True)
+    id = mapped_column(Integer, primary_key=True)

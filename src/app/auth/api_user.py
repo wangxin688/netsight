@@ -29,9 +29,7 @@ class AuthUserCBV:
     @router.get("/users/{id}")
     async def get_user(self, id: int) -> BaseResponse[schemas.AuthUser]:
         """get the user"""
-        result: User = await self.session.get(
-            User, id, options=(selectinload(User.auth_role))
-        )
+        result: User = await self.session.get(User, id, options=(selectinload(User.auth_role)))
         if not result:
             return_info = error_404_409(ERR_NUM_404, self.locale, "user", "#id", id)
             return return_info
@@ -39,14 +37,10 @@ class AuthUserCBV:
         return return_info
 
     @router.get("/users")
-    async def get_users(
-        self, q: QueryParams = Depends(QueryParams)
-    ) -> BaseListResponse[List[schemas.AuthUserBase]]:
+    async def get_users(self, q: QueryParams = Depends(QueryParams)) -> BaseListResponse[List[schemas.AuthUserBase]]:
         results = await self.crud.get_all(self.session, q.limit, q.offset)
         count = await self.crud.count_all(self.session)
-        return_info = ResponseMsg(
-            data={"count": count, "results": results}, locale=self.locale
-        )
+        return_info = ResponseMsg(data={"count": count, "results": results}, locale=self.locale)
         return return_info
 
     @router.post("/users/getList")
@@ -62,18 +56,14 @@ class AuthUserCBV:
         id: int,
         user: schemas.AuthUserUpdate,
     ) -> BaseResponse[int]:
-        result: User = await self.session.get(
-            User, id, options=(selectinload(User.auth_group),)
-        )
+        result: User = await self.session.get(User, id, options=(selectinload(User.auth_group),))
         if not result:
             return_info = error_404_409(ERR_NUM_404, self.locale, "user", "#id", id)
             return return_info
         if user.email is not None:
             existed = await self.crud.get_by_field(self.session, "email", user.email)
             if existed:
-                return_info = error_404_409(
-                    ERR_NUM_404, self.locale, "user", "email", user.email
-                )
+                return_info = error_404_409(ERR_NUM_404, self.locale, "user", "email", user.email)
                 return return_info
         if user.auth_group_ids:
             groups: List[Group] = result.auth_group
@@ -89,9 +79,7 @@ class AuthUserCBV:
         if not user.password:
             await self.crud.update(self.session, id, user, excludes={"auth_group_ids"})
         else:
-            await self.crud.update(
-                self.session, id, user, excludes={"auth_group_ids", "password2"}
-            )
+            await self.crud.update(self.session, id, user, excludes={"auth_group_ids", "password2"})
         await self.session.commit()
         return_info = ResponseMsg(data=result.id, locale=self.locale)
         return return_info
@@ -106,14 +94,10 @@ class AuthUserCBV:
         return return_info
 
     @router.post("/users/deleteList")
-    async def delete_users(
-        self, user: schemas.AuthUserBulkDelete
-    ) -> BaseResponse[List[int]]:
+    async def delete_users(self, user: schemas.AuthUserBulkDelete) -> BaseResponse[List[int]]:
         results = await self.crud.delete_multi(self.session, user.ids)
         if not results:
-            return_info = error_404_409(
-                ERR_NUM_404, self.locale, "user", "#ids", user.ids
-            )
+            return_info = error_404_409(ERR_NUM_404, self.locale, "user", "#ids", user.ids)
             return return_info
         return_info = ResponseMsg(data=[d.id for d in results], locale=self.locale)
         return return_info
@@ -128,14 +112,10 @@ class AuthGroupCBV:
     locale: LOCALE = Depends(get_locale)
 
     @router.post("/groups")
-    async def create_group(
-        self, group: schemas.AuthGroupCreate
-    ) -> BaseResponse[int | None]:
+    async def create_group(self, group: schemas.AuthGroupCreate) -> BaseResponse[int | None]:
         result = await self.crud.get_by_field(self.session, "name", group.name)
         if result is not None:
-            return_info = error_404_409(
-                ERR_NUM_409, self.locale, "group", "name", group.name
-            )
+            return_info = error_404_409(ERR_NUM_409, self.locale, "group", "name", group.name)
             return return_info
         new_group = Group(**group.dict(exclude={"auth_user_ids"}))
         self.session.add(new_group)
@@ -155,9 +135,7 @@ class AuthGroupCBV:
 
     @router.get("/groups/{id}")
     async def get_group(self, id: int) -> BaseResponse[schemas.AuthGroup]:
-        local_group = await self.session.get(
-            Group, id, options=(selectinload(Group.auth_user),)
-        )
+        local_group = await self.session.get(Group, id, options=(selectinload(Group.auth_user),))
         if not local_group:
             return_info = error_404_409(ERR_NUM_404, self.locale, "group", "#id", id)
             return return_info
@@ -170,15 +148,11 @@ class AuthGroupCBV:
     ) -> BaseListResponse[List[schemas.AuthGroupBase]]:
         results = await self.crud.get_all(self.session, q.limit, q.offset)
         count: int = await self.crud.count_all()
-        return_info = ResponseMsg(
-            data={"count": count, "results": results}, locale=self.locale
-        )
+        return_info = ResponseMsg(data={"count": count, "results": results}, locale=self.locale)
         return return_info
 
     @router.post("/groups/getList")
-    async def get_groups(
-        self, group: schemas.AuthGroupQuery
-    ) -> BaseListResponse[List[schemas.AuthGroup]]:
+    async def get_groups(self, group: schemas.AuthGroupQuery) -> BaseListResponse[List[schemas.AuthGroup]]:
         pass
 
     @router.put("/groups/{id}")
@@ -187,18 +161,14 @@ class AuthGroupCBV:
         id: int,
         group: schemas.AuthGroupUpdate,
     ) -> BaseResponse[int]:
-        result = await self.session.get(
-            Group, id, options=(selectinload(Group.auth_user),)
-        )
+        result = await self.session.get(Group, id, options=(selectinload(Group.auth_user),))
         if not result:
             return_info = error_404_409(ERR_NUM_404, self.locale, "group", "#id", id)
             return return_info
         if group.name:
             exist = await self.crud.get_by_field(self.session, "name", group.name)
             if exist:
-                return_info = error_404_409(
-                    ERR_NUM_409, self.locale, "group", "name", group.name
-                )
+                return_info = error_404_409(ERR_NUM_409, self.locale, "group", "name", group.name)
                 return return_info
         if group.auth_user_ids:
             users: List[User] = result.auth_user
@@ -239,18 +209,14 @@ class AuthRoleCBV:
     ) -> BaseResponse[int]:
         local_role = await self.crud.get_by_field(self.session, "name", role.name)
         if local_role is not None:
-            return_info = error_404_409(
-                ERR_NUM_409, self.locale, "role", "name", role.name
-            )
+            return_info = error_404_409(ERR_NUM_409, self.locale, "role", "name", role.name)
             return return_info
         new_role = Role(**role.dict(exclude={"auth_user_ids", "auth_permission_ids"}))
         self.session.add(new_role)
         await self.session.flush()
         perm_crud = CRUDBase(Permission)
         if role.auth_permission_ids:
-            permissions: List[Permission] = perm_crud.get_multi(
-                self.session, role.auth_permission_ids
-            )
+            permissions: List[Permission] = perm_crud.get_multi(self.session, role.auth_permission_ids)
             if permissions:
                 for permission in permissions:
                     new_role.auth_permission.append(permission)
@@ -260,9 +226,7 @@ class AuthRoleCBV:
 
     @router.get("/roles/{id}")
     async def get_role(self, id: int) -> BaseResponse[schemas.AuthRole]:
-        role: Role = await self.session.get(
-            Role, id, options=(selectinload(Role.auth_permission),)
-        )
+        role: Role = await self.session.get(Role, id, options=(selectinload(Role.auth_permission),))
         if not role:
             return_info = error_404_409(ERR_NUM_404, self.locale, "role", "#id", id)
             return return_info
@@ -270,14 +234,10 @@ class AuthRoleCBV:
         return return_info
 
     @router.get("/roles")
-    async def get_roles(
-        self, q: QueryParams = Depends(QueryParams)
-    ) -> BaseListResponse[List[schemas.AuthRoleBase]]:
+    async def get_roles(self, q: QueryParams = Depends(QueryParams)) -> BaseListResponse[List[schemas.AuthRoleBase]]:
         local_roles = await self.crud.get_all(self.session, q.limit, q.offset)
         count: int = await self.crud.count_all(self.session)
-        return_info = ResponseMsg(
-            data={"count": count, "results": local_roles}, locale=self.locale
-        )
+        return_info = ResponseMsg(data={"count": count, "results": local_roles}, locale=self.locale)
         return return_info
 
     @router.post("/roles/getList")
@@ -293,9 +253,7 @@ class AuthRoleCBV:
         id: int,
         role: schemas.AuthRoleUpdate,
     ) -> BaseResponse[int]:
-        local_role = await self.crud.get(
-            Role, id, options=(selectinload(Role.auth_permission),)
-        )
+        local_role = await self.crud.get(Role, id, options=(selectinload(Role.auth_permission),))
         if not local_role:
             return_info = error_404_409(ERR_NUM_404, self.locale, "role", "#id", id)
             return return_info
@@ -307,9 +265,7 @@ class AuthRoleCBV:
                     local_role.auth_permission.remove(permission)
             for auth_permission_id in role.auth_permission_ids:
                 if auth_permission_id not in permission_ids:
-                    _auth_permission: Permission = self.session.get(
-                        Permission, auth_permission_id
-                    )
+                    _auth_permission: Permission = self.session.get(Permission, auth_permission_id)
                     if _auth_permission:
                         local_role.auth_user.append(_auth_permission)
         await self.crud.update(self.session, id, role, excludes={"auth_permission_ids"})
@@ -326,14 +282,10 @@ class AuthRoleCBV:
         return return_info
 
     @router.post("/roles/deleteList")
-    async def delete_roles(
-        self, role: schemas.AuthRoleBulkDelete
-    ) -> BaseResponse[List[int]]:
+    async def delete_roles(self, role: schemas.AuthRoleBulkDelete) -> BaseResponse[List[int]]:
         results = await self.crud.delete_multi(self.session, role.ids)
         if not results:
-            return_info = error_404_409(
-                ERR_NUM_404, self.locale, "role", "#ids", role.ids
-            )
+            return_info = error_404_409(ERR_NUM_404, self.locale, "role", "#ids", role.ids)
             return return_info
         return_info = ResponseMsg(data=[d.id for d in results], locale=self.locale)
         return return_info

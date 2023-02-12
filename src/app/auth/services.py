@@ -21,16 +21,8 @@ def url_match(path: str, method: str, permissions: dict) -> bool:
 async def permission_dict_generate():
     result = {}
     async with async_session() as session:
-        res: AsyncResult = await session.execute(
-            select(Role).options(selectinload(Role.auth_permission))
-        )
+        res: AsyncResult = await session.execute(select(Role).options(selectinload(Role.auth_permission)))
         for role in res.scalars():
             permissions = role.auth_permission
-            result.update(
-                {
-                    role.name: {
-                        permission.url: permission.action for permission in permissions
-                    }
-                }
-            )
+            result.update({role.name: {permission.url: permission.action for permission in permissions}})
     return result

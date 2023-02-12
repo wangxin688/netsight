@@ -28,9 +28,7 @@ class ProviderCBV:
     locale = Depends(get_locale)
 
     @router.post("/providers")
-    async def create_provider(
-        self, provider: schemas.ProviderCreate
-    ) -> BaseResponse[int]:
+    async def create_provider(self, provider: schemas.ProviderCreate) -> BaseResponse[int]:
         new_provider = Provider(**provider.dict())
         self.session.add(new_provider)
         try:
@@ -38,9 +36,7 @@ class ProviderCBV:
         except IntegrityError as e:
             logger.enable(e)
             await self.session.rollback()
-            return_info = error_404_409(
-                ERR_NUM_409, self.locale, "provider", "name", provider.name
-            )
+            return_info = error_404_409(ERR_NUM_409, self.locale, "provider", "name", provider.name)
             return return_info
         return_info = ResponseMsg(data=new_provider.id, locale=self.locale)
         return return_info
@@ -60,15 +56,11 @@ class ProviderCBV:
     ) -> BaseListResponse[List[schemas.ProviderBase]]:
         results = await self.crud.get_all(self.session, q.limit, q.offset)
         count = await self.crud.count_all(self.session)
-        return_info = ResponseMsg(
-            data={"count": count, "results": results}, locale=self.locale
-        )
+        return_info = ResponseMsg(data={"count": count, "results": results}, locale=self.locale)
         return return_info
 
     @router.post("/providers/getList")
-    async def get_providers_filter(
-        self, provider: schemas.ProviderQuery
-    ) -> BaseListResponse[List[schemas.Provider]]:
+    async def get_providers_filter(self, provider: schemas.ProviderQuery) -> BaseListResponse[List[schemas.Provider]]:
         pass
 
     @router.put("/providers/{id}")
@@ -78,30 +70,20 @@ class ProviderCBV:
             return_info = error_404_409(ERR_NUM_404, self.locale, "provider", "#id", id)
             return return_info
         if provider.name:
-            exist: Provider = await self.crud.get_by_field(
-                self.session, "name", provider.name
-            )
+            exist: Provider = await self.crud.get_by_field(self.session, "name", provider.name)
             if exist:
-                return_info = error_404_409(
-                    ERR_NUM_409, self.locale, "provider", "name", provider.name
-                )
+                return_info = error_404_409(ERR_NUM_409, self.locale, "provider", "name", provider.name)
                 return return_info
         await self.crud.update(self.session, id, provider)
         return_info = ResponseMsg(data=id, locale=self.locale)
         return return_info
 
     @router.post("/provider/updateList")
-    async def update_providers(
-        self, provider: schemas.ProviderBulkUpdate
-    ) -> BaseResponse[List[int]]:
+    async def update_providers(self, provider: schemas.ProviderBulkUpdate) -> BaseResponse[List[int]]:
         results = await self.crud.get_multi(self.session, provider.ids)
-        diff_provider: set = set(provider.ids) - set(
-            [provider.id for provider in results]
-        )
+        diff_provider: set = set(provider.ids) - set([provider.id for provider in results])
         if diff_provider:
-            return_info = error_404_409(
-                ERR_NUM_404, self.locale, "provider", "#ids", list(diff_provider)
-            )
+            return_info = error_404_409(ERR_NUM_404, self.locale, "provider", "#ids", list(diff_provider))
             return return_info
         await self.crud.update_multi(self.session, provider.ids, excludes={"ids"})
         return_info = ResponseMsg(data=provider.ids, locale=self.locale)
@@ -122,9 +104,7 @@ class ProviderCBV:
     ) -> BaseListResponse[List[schemas.ProviderBase]]:
         local_providers = await self.crud.delete_multi(self.session, provider.ids)
         if not local_providers:
-            return_info = error_404_409(
-                ERR_NUM_404, self.locale, "provider", "#ids", provider.ids
-            )
+            return_info = error_404_409(ERR_NUM_404, self.locale, "provider", "#ids", provider.ids)
             return return_info
         return_info = ResponseMsg(data=provider.ids, locale=self.locale)
         return return_info
@@ -137,14 +117,10 @@ class CircuitTypeCBV:
     crud = CRUDBase(CircuitType)
 
     @router.post("/circuit-types")
-    async def create_circuit_type(
-        self, circuit_type: schemas.CircuitTypeCreate
-    ) -> BaseResponse[int]:
+    async def create_circuit_type(self, circuit_type: schemas.CircuitTypeCreate) -> BaseResponse[int]:
         result = await self.crud.get_by_field(self.session, "name", circuit_type.name)
         if result is not None:
-            return_info = error_404_409(
-                ERR_NUM_409, self.locale, "circuit_type", "name", circuit_type.name
-            )
+            return_info = error_404_409(ERR_NUM_409, self.locale, "circuit_type", "name", circuit_type.name)
             return return_info
         new_circuit_type = CircuitType(**circuit_type.dict())
         await self.session.add(new_circuit_type)
@@ -156,9 +132,7 @@ class CircuitTypeCBV:
     async def get_circuit_type(self, id: int) -> BaseResponse[schemas.CircuitType]:
         result = await self.session.get(CircuitType, id)
         if not result:
-            return_info = error_404_409(
-                ERR_NUM_404, self.locale, "circuit_type", "#id", id
-            )
+            return_info = error_404_409(ERR_NUM_404, self.locale, "circuit_type", "#id", id)
             return return_info
         return_info = ResponseMsg(data=result, locale=self.locale)
         return return_info
@@ -169,9 +143,7 @@ class CircuitTypeCBV:
     ) -> BaseListResponse[List[schemas.CircuitType]]:
         results = await self.crud.get_all(self.session, q.limit, q.offset)
         count = await self.crud.count_all(self.session)
-        return_info = ResponseMsg(
-            data={"count": count, "results": results}, locale=self.locale
-        )
+        return_info = ResponseMsg(data={"count": count, "results": results}, locale=self.locale)
         return return_info
 
     @router.post("/circuit-types/getList")
@@ -181,23 +153,17 @@ class CircuitTypeCBV:
         pass
 
     @router.put("/circuit-types/{id}")
-    async def update_circuit_type(
-        self, circuit_type: schemas.CircuitTypeUpdate
-    ) -> BaseResponse[int]:
+    async def update_circuit_type(self, circuit_type: schemas.CircuitTypeUpdate) -> BaseResponse[int]:
         local_circuit_type: CircuitType | None = await self.session.get(CircuitType, id)
         if not local_circuit_type:
-            return_info = error_404_409(
-                ERR_NUM_404, self.locale, "circuit_type", "#id", id
-            )
+            return_info = error_404_409(ERR_NUM_404, self.locale, "circuit_type", "#id", id)
             return return_info
 
         try:
             await self.crud.update(self.session, id, circuit_type)
         except IntegrityError as e:
             logger.error(e)
-            return_info = error_404_409(
-                ERR_NUM_409, self.locale, "circuit_type", "name", circuit_type.name
-            )
+            return_info = error_404_409(ERR_NUM_409, self.locale, "circuit_type", "name", circuit_type.name)
             return return_info
         return_info = ResponseMsg(data=id, locale=self.locale)
         return return_info
@@ -210,26 +176,18 @@ class CircuitTypeCBV:
     async def delete_circuit_type(self, id: int) -> BaseResponse[int]:
         result = await self.crud.delete(self.session, id)
         if not result:
-            return_info = error_404_409(
-                ERR_NUM_404, self.locale, "circuit_type", "#id", id
-            )
+            return_info = error_404_409(ERR_NUM_404, self.locale, "circuit_type", "#id", id)
             return return_info
         return_info = ResponseMsg(data=id, locale=self.locale)
         return return_info
 
     @router.post("/circuits/deleteList")
-    async def delete_circuit_types(
-        self, circuit_type: schemas.CircuitTypeBulkDelete
-    ) -> BaseResponse[List[int]]:
+    async def delete_circuit_types(self, circuit_type: schemas.CircuitTypeBulkDelete) -> BaseResponse[List[int]]:
         results = await self.crud.delete_multi(self.session, circuit_type.ids)
         if not results:
-            return_info = error_404_409(
-                ERR_NUM_404, self.locale, "circuit_type", "#ids", circuit_type.ids
-            )
+            return_info = error_404_409(ERR_NUM_404, self.locale, "circuit_type", "#ids", circuit_type.ids)
             return return_info
-        return_info = ResponseMsg(
-            data=[result.id for result in results], locale=self.locale
-        )
+        return_info = ResponseMsg(data=[result.id for result in results], locale=self.locale)
         return return_info
 
 
@@ -245,9 +203,7 @@ class CircuitCBV:
         if circuit.provider_id:
             provider: Provider = await self.session.get(Provider, circuit.provider_id)
             if not provider:
-                return_info = error_404_409(
-                    ERR_NUM_404, self.locale, "provider", "#id", id
-                )
+                return_info = error_404_409(ERR_NUM_404, self.locale, "provider", "#id", id)
                 return return_info
         new_circuit = Circuit(circuit.dict(exclude={"contact_id"}))
         try:
@@ -255,24 +211,16 @@ class CircuitCBV:
             await self.session.commit()
         except IntegrityError as e:
             logger.error(e)
-            return_info = error_404_409(
-                ERR_NUM_409, self.locale, "circuit", "name", circuit.name
-            )
+            return_info = error_404_409(ERR_NUM_409, self.locale, "circuit", "name", circuit.name)
             return return_info
         if circuit.contact_id:
-            contacts: List[Contact] = await self.crud.get_multi(
-                self.session, circuit.contact_id
-            )
+            contacts: List[Contact] = await self.crud.get_multi(self.session, circuit.contact_id)
             if len(contacts) < circuit.contact_id or not contacts:
                 if not contacts:
                     diff_contacts = circuit.contact_id
                 else:
-                    diff_contacts = set(circuit.contact_id) - set(
-                        [contact.id for contact in contacts]
-                    )
-                return_info = error_404_409(
-                    ERR_NUM_404, self.locale, "contact", "#id", diff_contacts
-                )
+                    diff_contacts = set(circuit.contact_id) - set([contact.id for contact in contacts])
+                return_info = error_404_409(ERR_NUM_404, self.locale, "contact", "#id", diff_contacts)
                 return return_info
             new_circuit.contact.append(contacts)
             await self.session.commit()
@@ -289,35 +237,25 @@ class CircuitCBV:
         return return_info
 
     @router.get("/circuits")
-    async def get_circuits(
-        self, q: QueryParams = Depends(QueryParams)
-    ) -> BaseListResponse[List[schemas.Circuit]]:
+    async def get_circuits(self, q: QueryParams = Depends(QueryParams)) -> BaseListResponse[List[schemas.Circuit]]:
         results = await self.crud.get_all(self.session, q.limit, q.offset)
         count = await self.crud.count_all(self.session)
-        return_info = ResponseMsg(
-            data={"count": count, "results": results}, locale=self.locale
-        )
+        return_info = ResponseMsg(data={"count": count, "results": results}, locale=self.locale)
         return return_info
 
     @router.post("/circuits/getList")
-    async def get_circuits_filter(
-        self, circuit: schemas.CircuitQuery
-    ) -> BaseListResponse[List[schemas.Circuit]]:
+    async def get_circuits_filter(self, circuit: schemas.CircuitQuery) -> BaseListResponse[List[schemas.Circuit]]:
         pass
 
     @router.put("/circuits/{id}")
-    async def update_circuit(
-        self, id: int, circuit: schemas.CircuitUpdate
-    ) -> BaseResponse[int]:
+    async def update_circuit(self, id: int, circuit: schemas.CircuitUpdate) -> BaseResponse[int]:
         result: Circuit = await self.session.get(Circuit, id)
         if not result:
             return_info = error_404_409(ERR_NUM_404, self.locale, "circuit", "#id", id)
             return return_info
 
     @router.post("/circuits/updateList")
-    async def update_circuits(
-        self, circuit: schemas.CircuitBulkUpdate
-    ) -> BaseResponse[List[int]]:
+    async def update_circuits(self, circuit: schemas.CircuitBulkUpdate) -> BaseResponse[List[int]]:
         pass
 
     @router.delete("/circuits/{id]")
@@ -330,14 +268,10 @@ class CircuitCBV:
         return return_info
 
     @router.post("/circuits/deleteList")
-    async def delete_circuits(
-        self, circuit: schemas.CircuitBulkDelete
-    ) -> BaseResponse[List[int]]:
+    async def delete_circuits(self, circuit: schemas.CircuitBulkDelete) -> BaseResponse[List[int]]:
         results = await self.crud.delete_multi(self.session, circuit.ids)
         if not results:
-            return_info = error_404_409(
-                ERR_NUM_404, self.locale, "circuit", "#ids", circuit.ids
-            )
+            return_info = error_404_409(ERR_NUM_404, self.locale, "circuit", "#ids", circuit.ids)
             return return_info
         return_info = ResponseMsg(data=[result.id for result in results])
         return return_info

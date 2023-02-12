@@ -8,7 +8,7 @@ class CustomBase:
 
     def dict(self):
         """Returns a dict representation of a model."""
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        return {c.name: getattr(self, c.name) for c in self.__table__.mapped_columns}
 
     @property
     def _id_str(self):
@@ -26,10 +26,7 @@ class CustomBase:
         single = len(self.__repr_attrs__) == 1
         for key in self.__repr_attrs__:
             if not hasattr(self, key):
-                raise KeyError(
-                    "{} has incorrect attribute '{}' in "
-                    "__repr__attrs__".format(self.__class__, key)
-                )
+                raise KeyError("{} has incorrect attribute '{}' in " "__repr__attrs__".format(self.__class__, key))
             value = getattr(self, key)
             wrap_in_quote = isinstance(value, str)
 

@@ -89,12 +89,8 @@ class CircuitCreate(BaseModel):
     purchase_term: str
     commit_rate: int | None
     comments: str | None
-    vender_available_ip: IPv4Network | List[IPv4Network] | IPv6Network | List[
-        IPv6Network
-    ] | None
-    vender_available_gateway: IPv4Network | List[IPv4Network] | IPv6Network | List[
-        IPv6Network
-    ] | None
+    vender_available_ip: IPv4Network | List[IPv4Network] | IPv6Network | List[IPv6Network] | None
+    vender_available_gateway: IPv4Network | List[IPv4Network] | IPv6Network | List[IPv6Network] | None
     contact_id: List[int] | None
 
     @root_validator(pre=False)
@@ -102,9 +98,7 @@ class CircuitCreate(BaseModel):
         if values["vender_available_ip"]:
             values["vender_available_ip"] = items_to_list(values["vender_available_ip"])
         if values["vender_available_gateway"]:
-            values["vender_available_gateway"] = items_to_list(
-                values["vender_available_gateway"]
-            )
+            values["vender_available_gateway"] = items_to_list(values["vender_available_gateway"])
         return values
 
 
@@ -120,12 +114,8 @@ class CircuitUpdate(BaseModel):
     purchase_term: str | None = None
     commit_rate: int | None = None
     comments: str | None = None
-    vender_available_ip: IPv4Network | List[IPv4Network] | None | IPv6Network | List[
-        IPv6Network
-    ] = None
-    vender_available_gateway: IPv4Network | List[
-        IPv4Network
-    ] | None | IPv6Network | List[IPv6Network] = None
+    vender_available_ip: IPv4Network | List[IPv4Network] | None | IPv6Network | List[IPv6Network] = None
+    vender_available_gateway: IPv4Network | List[IPv4Network] | None | IPv6Network | List[IPv6Network] = None
     contact_id: List[int] | None = None
 
     @root_validator(pre=False)
@@ -133,9 +123,7 @@ class CircuitUpdate(BaseModel):
         if values["vender_available_ip"]:
             values["vender_available_ip"] = items_to_list(values["vender_available_ip"])
         if values["vender_available_gateway"]:
-            values["vender_available_gateway"] = items_to_list(
-                values["vender_available_gateway"]
-            )
+            values["vender_available_gateway"] = items_to_list(values["vender_available_gateway"])
         return values
 
 
@@ -169,12 +157,8 @@ class Circuit(BaseModel):
     purchase_term: str
     commit_rate: int | None
     comments: str | None
-    vender_available_ip: IPv4Network | List[IPv4Network] | None | IPv6Network | List[
-        IPv6Network
-    ] | None
-    vender_available_gateway: IPv4Network | List[
-        IPv4Network
-    ] | None | IPv6Network | List[IPv6Network] | None
+    vender_available_ip: IPv4Network | List[IPv4Network] | None | IPv6Network | List[IPv6Network] | None
+    vender_available_gateway: IPv4Network | List[IPv4Network] | None | IPv6Network | List[IPv6Network] | None
     # contact: List[ContactBase] | None
     # circuit_termination: List[CircuitTerminationBase] | None
 
@@ -191,12 +175,8 @@ class CircuitBase(BaseModel):
     purchase_term: str
     commit_rate: int | None
     comments: str | None
-    vender_available_ip: IPv4Network | List[IPv4Network] | None | IPv6Network | List[
-        IPv6Network
-    ] | None
-    vender_available_gateway: IPv4Network | List[
-        IPv4Network
-    ] | None | IPv6Network | List[IPv6Network] | None
+    vender_available_ip: IPv4Network | List[IPv4Network] | None | IPv6Network | List[IPv6Network] | None
+    vender_available_gateway: IPv4Network | List[IPv4Network] | None | IPv6Network | List[IPv6Network] | None
 
     class Config:
         orm_mode = True

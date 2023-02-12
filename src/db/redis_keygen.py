@@ -44,9 +44,7 @@ def get_cache_key(
     return f"{prefix}{func.__module__}.{func.__name__}({args_str})"
 
 
-def get_func_args(
-    sig: Signature, *args: List, **kwargs: Dict
-) -> "OrderedDict[str, Any]":
+def get_func_args(sig: Signature, *args: List, **kwargs: Dict) -> "OrderedDict[str, Any]":
     """Return a dict object containing the name and value of all function arguments."""
     func_args = sig.bind(*args, **kwargs)
     func_args.apply_defaults()
@@ -60,7 +58,5 @@ def get_args_str(
 ) -> str:
     """Return a string with the name and value of all args whose type is not included in `ignore_arg_types`"""
     return ",".join(
-        f"{arg}={val}"
-        for arg, val in func_args.items()
-        if sig_params[arg].annotation not in ignore_arg_types
+        f"{arg}={val}" for arg, val in func_args.items() if sig_params[arg].annotation not in ignore_arg_types
     )

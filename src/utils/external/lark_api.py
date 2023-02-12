@@ -18,7 +18,5 @@ class LarkClient:
     async def get_user_identity(self, code: str):
         self.url + "/open-apis/authen/v1/access_token"
         data = {"grant_type": "authorization_code", "code": code}
-        result = await async_http_req(
-            "post", headers=self.headers, data=json.dumps(data)
-        )
+        result = await async_http_req("post", headers=self.headers, data=json.dumps(data))
         return result

@@ -20,9 +20,7 @@ class HttpxClient(interfaces.HttpClientAdapter):
     exceptions = exceptions.Exceptions()
 
     def __init__(self, session=None, verify=False, **kwargs):
-        self._session = session or httpx.AsyncClient(
-            verify=ssl_context if verify else False, **kwargs
-        )
+        self._session = session or httpx.AsyncClient(verify=ssl_context if verify else False, **kwargs)
         self._sync_callback_adapter = thread_callback
 
     def __del__(self):

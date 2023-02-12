@@ -1,9 +1,7 @@
 from typing import Any, Callable, List
 
 
-def before_request(
-    hook: Callable[[], Any] = None, only: List[str] = None
-) -> Callable[..., Any]:
+def before_request(hook: Callable[[], Any] = None, only: List[str] = None) -> Callable[..., Any]:
     """
     This decorator provides a way to hook into the request
     lifecycle by enqueueing methods to be invoked before each

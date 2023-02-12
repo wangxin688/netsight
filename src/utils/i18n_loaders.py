@@ -13,9 +13,7 @@ class I18n:
     def __init__(self, locales: dict = locale) -> None:
         self.locales = locales
 
-    def gettext(
-        self, path: str, locale: LOCALE = "en_US", **kwargs
-    ) -> Union[dict, str]:
+    def gettext(self, path: str, locale: LOCALE = "en_US", **kwargs) -> Union[dict, str]:
         founded: Union[dict, str] = self._find(locale, path)
 
         if len(kwargs) > 0 and isinstance(founded, str):

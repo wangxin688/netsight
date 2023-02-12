@@ -1,7 +1,7 @@
 import sqlalchemy.types as types
 from asgi_correlation_id import correlation_id
 from fastapi import Request
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, event, inspect
+from sqlalchemy import DateTime, ForeignKey, Integer, String, event, inspect, mapped_column
 from sqlalchemy.dialects.postgresql import ENUM, JSON, UUID
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import class_mapper, relationship
@@ -12,18 +12,18 @@ from src.db.db_base import Base
 
 
 class TimestampMixin:
-    created_at = Column(DateTime(timezone=True), default=func.now(), index=True)
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    created_at = mapped_column(DateTime(timezone=True), default=func.now(), index=True)
+    updated_at = mapped_column(DateTime(timezone=True), onupdate=func.now())
 
 
 class TimestampSingleMixin:
-    created_at = Column(DateTime(timezone=True), default=func.now())
+    created_at = mapped_column(DateTime(timezone=True), default=func.now())
 
 
 class NameMixin:
-    name = Column(String, nullable=False, unique=True, index=True)
-    # slug = Column(String, nullable=False, unique=True)
-    description = Column(String, nullable=True)
+    name = mapped_column(String, nullable=False, unique=True, index=True)
+    # slug = mapped_column(String, nullable=False, unique=True)
+    description = mapped_column(String, nullable=True)
 
     # @staticmethod
     # def _slug(mapper, connection, target):
@@ -35,17 +35,17 @@ class NameMixin:
     #     event.listen(cls, "before_insert", cls._slug, propagate=True)
 
 
-class FileColumn(types.TypeDecorator):
+class Filemapped_column(types.TypeDecorator):
     """
-    Extends SQLAlchemy to support and mostly identify a File Column
+    Extends SQLAlchemy to support and mostly identify a File mapped_column
     """
 
     impl = types.Text
 
 
-class ImageColumn(types.TypeDecorator):
+class Imagemapped_column(types.TypeDecorator):
     """
-    Extends SQLAlchemy to support and mostly identify an Image Column
+    Extends SQLAlchemy to support and mostly identify an Image mapped_column
     """
 
     impl = types.Text
@@ -70,7 +70,7 @@ def get_object_changes(obj):
     """
     inspection = inspect(obj)
     changes = {}
-    for attr in class_mapper(obj.__class__).column_attrs:
+    for attr in class_mapper(obj.__class__).mapped_column_attrs:
         if getattr(inspection.attrs, attr.key).history.has_changes():
             if get_history(obj, attr.key)[2]:
                 before = get_history(obj, attr.key)[2].pop()
@@ -82,18 +82,18 @@ def get_object_changes(obj):
 
 
 class AuditLog:
-    id = Column(Integer, primary_key=True)
-    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
-    request_id = Column(UUID, nullable=False)
-    action = Column(
+    id = mapped_column(Integer, primary_key=True)
+    created_at = mapped_column(DateTime(timezone=True), default=func.now(), nullable=False)
+    request_id = mapped_column(UUID, nullable=False)
+    action = mapped_column(
         ENUM("create", "update", "delete", name="audit_action", create_type=False),
         nullable=False,
     )
-    change_data = Column(JSON, nullable=False)
+    change_data = mapped_column(JSON, nullable=False)
 
     @declared_attr
     def user_id(cls):
-        return Column(
+        return mapped_column(
             Integer,
             ForeignKey("auth_user.id", ondelete="SET NULL"),
             default=cls.get_user_id,
@@ -129,7 +129,7 @@ class AuditLogMixin:
             (AuditLog, Base),
             dict(
                 __tablename__="%s_audit_log" % cls.__tablename__,
-                parent_id=Column(Integer, ForeignKey("%s.id" % cls.__tablename__)),
+                parent_id=mapped_column(Integer, ForeignKey("%s.id" % cls.__tablename__)),
                 audit_log=relationship(cls, viewonly=True),
             ),
         )
@@ -187,7 +187,7 @@ class AuditUserMixin:
 
     @declared_attr
     def created_by_fk(cls):
-        return Column(
+        return mapped_column(
             Integer,
             ForeignKey("auth_user.id"),
             default=cls._get_user_id,
@@ -204,7 +204,7 @@ class AuditUserMixin:
 
     @declared_attr
     def update_by_fk(cls):
-        return Column(
+        return mapped_column(
             Integer,
             ForeignKey("auth_user.id"),
             default=cls._get_user_id,

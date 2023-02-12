@@ -20,7 +20,7 @@ from src.core.security import (
     JWTTokenPayload,
     generate_access_token_response,
     get_password_hash,
-    verify_password,
+    verify_password
 )
 from src.register.middleware import AuditRoute
 from src.utils.error_code import ERR_NUM_404, ERR_NUM_10003, ResponseMsg, error_404_409
@@ -47,9 +47,7 @@ async def register_new_user(
 ):
     result = await session.execute(select(User).where(User.email == auth_user.email))
     if result.scalars().first() is not None:
-        return_info = error_404_409(
-            ERR_NUM_404, locale, "user", "email", auth_user.email
-        )
+        return_info = error_404_409(ERR_NUM_404, locale, "user", "email", auth_user.email)
         return return_info
     user = User(
         username=auth_user.username,
@@ -69,15 +67,9 @@ async def login(
     session: AsyncSession = Depends(get_session),
     locale=Depends(get_locale),
 ):
-    user: User = (
-        (await session.execute(select(User).where(User.email == form_data.username)))
-        .scalars()
-        .first()
-    )
+    user: User = (await session.execute(select(User).where(User.email == form_data.username))).scalars().first()
     if user is None:
-        return_info = error_404_409(
-            ERR_NUM_404, locale, "user", "username", form_data.username
-        )
+        return_info = error_404_409(ERR_NUM_404, locale, "user", "username", form_data.username)
         return return_info
     if not verify_password(form_data.password, user.hashed_password):
         return_info = ResponseMsg(
@@ -119,11 +111,7 @@ async def refresh_token(
     if now < token_data.issued_at or now > token_data.expires_at:
         raise TokenInvalidForRefreshError
 
-    user: User = (
-        (await session.execute(select(User).where(User.id == token_data.sub)))
-        .scalars()
-        .first()
-    )
+    user: User = (await session.execute(select(User).where(User.id == token_data.sub))).scalars().first()
 
     if user is None:
         return_info = error_404_409(ERR_NUM_404, locale, "user", "#id", token_data.sub)

@@ -19,7 +19,7 @@ from src.utils.exceptions import (
     ResourceNotFoundError,
     TokenExpiredError,
     TokenInvalidError,
-    TokenInvalidForRefreshError,
+    TokenInvalidForRefreshError
 )
 
 oauth2_scheme = auth_plugins(settings.AUTH)
@@ -57,9 +57,7 @@ async def get_current_user(
     token: str = Depends(oauth2_scheme),
 ) -> User:
     try:
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[security.JWT_ALGORITHM]
-        )
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[security.JWT_ALGORITHM])
     except jwt.DecodeError:
         raise TokenInvalidError
     # JWT guarantees payload will be unchanged (and thus valid), no errors here
@@ -73,9 +71,7 @@ async def get_current_user(
     user: User = (
         (
             await session.execute(
-                select(User)
-                .where(User.id == int(token_data.sub))
-                .options(selectinload(User.auth_role))
+                select(User).where(User.id == int(token_data.sub)).options(selectinload(User.auth_role))
             )
         )
         .scalars()

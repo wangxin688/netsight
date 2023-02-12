@@ -10,13 +10,7 @@ from src.core.config import settings
 
 class FileManager(object):
     def __init__(
-        self,
-        base_path=None,
-        relative_path=None,
-        name_generate=None,
-        allow_extensions=None,
-        permission=0o755,
-        **kwargs
+        self, base_path=None, relative_path=None, name_generate=None, allow_extensions=None, permission=0o755, **kwargs
     ):
         if hasattr(settings, "UPLOAD_DIR"):
             base_dir = settings.UPLOAD_DIR
@@ -35,10 +29,7 @@ class FileManager(object):
     def is_file_allowed(self, filename):
         if not self.allow_extensions:
             return True
-        return (
-            "." in filename
-            and filename.rsplit(".", 1)[1].lower() in self.allow_extensions
-        )
+        return "." in filename and filename.rsplit(".", 1)[1].lower() in self.allow_extensions
 
     def generate_name(self, obj, file_data):
         return self.name_generate(file_data)

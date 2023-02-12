@@ -74,12 +74,8 @@ def generate_access_token_response(subject: str | int, expired_time: int | None 
     """Generate tokens and return AccessTokenResponse"""
     if not expired_time:
         expired_time = ACCESS_TOKEN_EXPIRE_SECS
-    access_token, expires_at, issued_at = create_jwt_token(
-        subject, expired_time, refresh=False
-    )
-    refresh_token, refresh_expires_at, refresh_issued_at = create_jwt_token(
-        subject, expired_time, refresh=True
-    )
+    access_token, expires_at, issued_at = create_jwt_token(subject, expired_time, refresh=False)
+    refresh_token, refresh_expires_at, refresh_issued_at = create_jwt_token(subject, expired_time, refresh=True)
     return AccessToken(
         token_type="Bearer",
         access_token=access_token,

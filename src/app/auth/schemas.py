@@ -115,9 +115,7 @@ class AuthUserBulkDelete(BaseModel):
 class AuthGroupCreate(BaseModel):
     name: str
     description: str | None
-    auth_user_ids: int | List[int] | None = Field(
-        default=None, description="add users to current group"
-    )
+    auth_user_ids: int | List[int] | None = Field(default=None, description="add users to current group")
 
     @validator("auth_user_ids")
     def auth_user_id_trans(cls, v):

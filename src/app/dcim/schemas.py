@@ -362,9 +362,7 @@ class SiteCreate(BaseModel):
         description="Recommended use airport code of the city as prefix and auto-increment number as suffix, e.g. `CNCTU01`, `CNPEK01"
     )
     status: const.SITE_STATUS
-    region_id: int = Field(
-        description="cannot be empty, aims to build standard network"
-    )
+    region_id: int = Field(description="cannot be empty, aims to build standard network")
     facility: str | None
     ipam_asn_ids: List[int] | None
     time_zone: const.ALL_TIME_ZONES

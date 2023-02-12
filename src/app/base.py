@@ -16,9 +16,7 @@ def default(obj):
 class BaseModel(pydantic.BaseModel):
     class Config:
         orm_mode = True
-        json_encoders = {
-            datetime: lambda v: int(v.timestamp())
-        }  # method for customer JSON encoding of datetime fields
+        json_encoders = {datetime: lambda v: int(v.timestamp())}  # method for customer JSON encoding of datetime fields
 
 
 DataT = TypeVar("DataT", bound=BaseModel)
@@ -31,9 +29,7 @@ class BaseResponse(GenericModel, Generic[DataT]):
     message: str
 
     class Config:
-        json_encoders = {
-            datetime: lambda v: int(v.timestamp())
-        }  # method for customer JSON encoding of datetime fields
+        json_encoders = {datetime: lambda v: int(v.timestamp())}  # method for customer JSON encoding of datetime fields
 
 
 class ListData(GenericModel, Generic[DataT]):
@@ -48,9 +44,7 @@ class BaseListResponse(GenericModel, Generic[DataT]):
     message: str
 
     class Config:
-        json_encoders = {
-            datetime: lambda v: int(v.timestamp())
-        }  # method for customer JSON encoding of datetime fields
+        json_encoders = {datetime: lambda v: int(v.timestamp())}  # method for customer JSON encoding of datetime fields
 
 
 class QueryParams(NamedTuple):

@@ -19,7 +19,7 @@ from src.utils.error_code import (
     ERR_NUM_411,
     ERR_NUM_422,
     ERR_NUM_500,
-    ResponseMsg,
+    ResponseMsg
 )
 from src.utils.exceptions import (
     PermissionDenyError,
@@ -27,14 +27,12 @@ from src.utils.exceptions import (
     TokenExpiredError,
     TokenInvalidError,
     TokenInvalidForRefreshError,
-    TokenNotProvidedError,
+    TokenNotProvidedError
 )
 from src.utils.i18n_loaders import _
 
 
-async def token_not_provided_handler(
-    request: Request, exc: TokenNotProvidedError
-) -> JSONResponse:
+async def token_not_provided_handler(request: Request, exc: TokenNotProvidedError) -> JSONResponse:
     logger.error("Token not provided")
     locale = get_locale(request)
     return JSONResponse(
@@ -48,9 +46,7 @@ async def token_not_provided_handler(
     )
 
 
-async def token_invalid_handler(
-    request: Request, exc: TokenInvalidError
-) -> JSONResponse:
+async def token_invalid_handler(request: Request, exc: TokenInvalidError) -> JSONResponse:
     logger.error("Token invalid")
     locale = get_locale(request)
     return JSONResponse(
@@ -64,9 +60,7 @@ async def token_invalid_handler(
     )
 
 
-async def invalid_token_for_refresh_handler(
-    request: Request, exc: TokenInvalidForRefreshError
-) -> JSONResponse:
+async def invalid_token_for_refresh_handler(request: Request, exc: TokenInvalidForRefreshError) -> JSONResponse:
     logger.error("Token invalid for refresh")
     locale = get_locale(request)
     return JSONResponse(
@@ -80,9 +74,7 @@ async def invalid_token_for_refresh_handler(
     )
 
 
-async def token_expired_handler(
-    request: Request, exc: TokenExpiredError
-) -> JSONResponse:
+async def token_expired_handler(request: Request, exc: TokenExpiredError) -> JSONResponse:
     logger.error("Token expired")
     locale = get_locale(request)
     return JSONResponse(
@@ -96,9 +88,7 @@ async def token_expired_handler(
     )
 
 
-async def permission_deny_handler(
-    request: Request, exc: PermissionDenyError
-) -> JSONResponse:
+async def permission_deny_handler(request: Request, exc: PermissionDenyError) -> JSONResponse:
     logger.error("Permission Deny")
     locale = get_locale(request)
     return JSONResponse(
@@ -112,9 +102,7 @@ async def permission_deny_handler(
     )
 
 
-async def resource_not_found_handler(
-    request: Request, exc: ResourceNotFoundError
-) -> JSONResponse:
+async def resource_not_found_handler(request: Request, exc: ResourceNotFoundError) -> JSONResponse:
     logger.error("Resource not found")
     locale = get_locale(request)
     return JSONResponse(
@@ -128,9 +116,7 @@ async def resource_not_found_handler(
     )
 
 
-async def request_validation_exception_handler(
-    request: Request, exc: RequestValidationError
-) -> JSONResponse:
+async def request_validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     logger.error("Request validation error", exc)
     ex_type, _tmp, ex_traceback = sys.exc_info()
     trace_back = traceback.format_list(traceback.extract_tb(ex_traceback)[-1:])[-1]
@@ -148,9 +134,7 @@ async def request_validation_exception_handler(
     )
 
 
-async def validation_exception_handler(
-    request: Request, exc: ValidationError
-) -> JSONResponse:
+async def validation_exception_handler(request: Request, exc: ValidationError) -> JSONResponse:
     logger.error("Data validation error with pydantic", exc)
     ex_type, _tmp, ex_traceback = sys.exc_info()
     trace_back = traceback.format_list(traceback.extract_tb(ex_traceback)[-1:])[-1]
@@ -170,9 +154,7 @@ async def validation_exception_handler(
     )
 
 
-async def assert_exception_handler(
-    request: Request, exc: AssertionError
-) -> JSONResponse:
+async def assert_exception_handler(request: Request, exc: AssertionError) -> JSONResponse:
     locale = get_locale(request)
     return JSONResponse(
         status_code=status.HTTP_200_OK,

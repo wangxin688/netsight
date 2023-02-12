@@ -26,53 +26,29 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         count: int = (await session.execute(select(func.count(self.model.id)))).scalar()
         return count
 
-    async def get(
-        self, session: AsyncSession, id: int | UUID4, options: Sequence | None = None
-    ) -> ModelType | None:
+    async def get(self, session: AsyncSession, id: int | UUID4, options: Sequence | None = None) -> ModelType | None:
         result: ModelType | None = await session.get(self.model, id, options=options)
         return result
 
-    async def get_by_field(
-        self, session: AsyncSession, field: str, value: Any
-    ) -> List[ModelType] | None:
+    async def get_by_field(self, session: AsyncSession, field: str, value: Any) -> List[ModelType] | None:
         results: List[ModelType] | None = (
-            (
-                await session.execute(
-                    select(self.model).where(getattr(self.model, field) == value)
-                )
-            )
-            .scalars()
-            .all()
+            (await session.execute(select(self.model).where(getattr(self.model, field) == value))).scalars().all()
         )
         return results
 
-    async def filter(
-        self, session: AsyncSession, filter: Dict[str, Any]
-    ) -> ModelType | None:
-        result: ModelType | None = (
-            (await session.execute(select(self.model).filter(**filter)))
-            .scalars()
-            .first()
-        )
+    async def filter(self, session: AsyncSession, filter: Dict[str, Any]) -> ModelType | None:
+        result: ModelType | None = (await session.execute(select(self.model).filter(**filter))).scalars().first()
         return result
 
-    async def get_all(
-        self, session: AsyncSession, limit: int, offset: int
-    ) -> List[ModelType]:
+    async def get_all(self, session: AsyncSession, limit: int, offset: int) -> List[ModelType]:
         results: List[ModelType] = (
-            (await session.execute(select(self.model).slice(offset, limit + offset)))
-            .scalars()
-            .all()
+            (await session.execute(select(self.model).slice(offset, limit + offset))).scalars().all()
         )
         return results
 
-    async def get_multi(
-        self, session: AsyncSession, ids: List[int] | List[UUID4]
-    ) -> List[ModelType] | None:
+    async def get_multi(self, session: AsyncSession, ids: List[int] | List[UUID4]) -> List[ModelType] | None:
         results: List[ModelType] | None = (
-            (await session.execute(select(self.model).where(self.model.id.in_(ids))))
-            .scalars()
-            .all()
+            (await session.execute(select(self.model).where(self.model.id.in_(ids)))).scalars().all()
         )
         return results
 
@@ -83,13 +59,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             await session.commit()
         return result
 
-    async def delete_multi(
-        self, session: AsyncSession, ids: List[int] | List[UUID4]
-    ) -> List[ModelType] | None:
+    async def delete_multi(self, session: AsyncSession, ids: List[int] | List[UUID4]) -> List[ModelType] | None:
         results: List[ModelType] | None = (
-            (await session.execute(select(self.model).where(self.model.id.in_(ids))))
-            .scalars()
-            .all()
+            (await session.execute(select(self.model).where(self.model.id.in_(ids)))).scalars().all()
         )
         if results is not None:
             for result in results:
@@ -98,27 +70,16 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return results
 
     async def create(
-        self,
-        session: AsyncSession,
-        *,
-        obj_in: CreateSchemaType,
-        excludes: set | None = None
+        self, session: AsyncSession, *, obj_in: CreateSchemaType, excludes: set | None = None
     ) -> ModelType:
-        new_obj: ModelType = self.model(
-            **obj_in.dict(exclude_none=True, exclude=excludes)
-        )
+        new_obj: ModelType = self.model(**obj_in.dict(exclude_none=True, exclude=excludes))
         session.add(new_obj)
         await session.commit()
         await session.flush()
         return new_obj
 
     async def update(
-        self,
-        session: AsyncSession,
-        *,
-        id: int | UUID4,
-        obj_in: UpdateSchemaType,
-        excludes: set | None = None
+        self, session: AsyncSession, *, id: int | UUID4, obj_in: UpdateSchemaType, excludes: set | None = None
     ) -> int | UUID4:
         await session.execute(
             update(self.model)
@@ -138,11 +99,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     ) -> List[int | UUID4]:
         await session.execute(
             update(self.model)
-            .where(
-                self.model.id.in_(ids).values(
-                    obj_in.dict(exclude_none=True, exclude=excludes)
-                )
-            )
+            .where(self.model.id.in_(ids).values(obj_in.dict(exclude_none=True, exclude=excludes)))
             .execute_options(synchronize_session="fetch")
         )
         return ids

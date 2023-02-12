@@ -1,39 +1,26 @@
-import traceback
+# -*- encoding: utf-8 -*-
+"""
+@Time    :   2023/02/11 16:04:00
+@Author  :   jeffry 
+@Version :   1.0
+@Contact :   wangxin.jeffry@gmail.com
+@Description :
+"""
+
+
 import uuid
 
 from asgi_correlation_id import CorrelationIdMiddleware
 from asgi_correlation_id.middleware import is_valid_uuid4
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from gunicorn.app.base import BaseApplication
 from loguru import logger
 
 from src.app.auth.services import permission_dict_generate
 from src.core.config import settings
 from src.register.exception_handler import exception_handlers
 from src.register.router import router
-from src.utils.loggers import GunicornLogger, configure_logger
-
-
-class StandaloneApplication(BaseApplication):
-    """Our Gunicorn application."""
-
-    def __init__(self, app, options=None):
-        self.options = options or {}
-        self.application = app
-        super().__init__()
-
-    def load_config(self):
-        config = {
-            key: value
-            for key, value in self.options.items()
-            if key in self.cfg.settings and value is not None
-        }
-        for key, value in config.items():
-            self.cfg.set(key.lower(), value)
-
-    def load(self):
-        return self.application
+from src.utils.loggers import configure_logger
 
 
 def create_app():
@@ -91,30 +78,31 @@ def create_app():
     return app
 
 
+app = create_app()
+
 if __name__ == "__main__":
     # gunicorn version
-    app = create_app()
-    options = {
-        "bind": "0.0.0.0:8000",
-        "workers": 8,
-        "timeout": 30,
-        "max-requests": 200,
-        "max-requests-jitter": 20,
-        "preload": "-",
-        "forwarded-allow-ips": "*",
-        "accesslog": "-",
-        "errorlog": "-",
-        "worker_class": "uvicorn.workers.UvicornWorker",
-        "logger_class": GunicornLogger,
-    }
+    # options = {
+    #     "bind": "0.0.0.0:8000",
+    #     "workers": 8,
+    #     "timeout": 30,
+    #     "max-requests": 200,
+    #     "max-requests-jitter": 20,
+    #     "preload": "-",
+    #     "forwarded-allow-ips": "*",
+    #     "accesslog": "-",
+    #     "errorlog": "-",
+    #     "worker_class": "uvicorn.workers.UvicornWorker",
+    #     "logger_class": GunicornLogger,
+    # }
 
-    try:
-        StandaloneApplication(app, options).run()
-    except Exception:
-        print(traceback.format_exc())
+    # try:
+    #     StandaloneApplication(app, options).run()
+    # except Exception:
+    #     print(traceback.format_exc())
 
     # uvicorn version
-    # app = create_app()
-    # import uvicorn
 
-    # uvicorn.run(app, host="0.0.0.0")
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0")

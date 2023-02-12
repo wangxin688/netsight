@@ -74,11 +74,7 @@ def __getattr__(name: str) -> ResponseMsg:
 
 def get_code_all(locale: LOCALE) -> List[Dict[str, Any]]:
     """Get all error code"""
-    codes = [
-        {"code": v.code, "message": _(v.message, locale)}
-        for k, v in globals().items()
-        if k.startswith("ERR_NUM")
-    ]
+    codes = [{"code": v.code, "message": _(v.message, locale)} for k, v in globals().items() if k.startswith("ERR_NUM")]
     return codes
 
 

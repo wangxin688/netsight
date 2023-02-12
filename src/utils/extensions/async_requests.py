@@ -12,9 +12,7 @@ async def async_http_req(
 ):
     async with httpx.AsyncClient() as client:
         try:
-            logger.info(
-                f"Request start: url: {url}, method: {method}, headers: {headers}, payload: {payload}"
-            )
+            logger.info(f"Request start: url: {url}, method: {method}, headers: {headers}, payload: {payload}")
             resp = await getattr(client, method)(url=url, headers=headers, data=payload)
         except httpx.RequestError as e:
             logger.error(f"{url} request failed, {e}")

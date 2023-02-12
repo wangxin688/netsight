@@ -599,12 +599,8 @@ ALL_TIME_ZONES = Literal[
 ]
 
 # life cycle: planning->staged->validated->active->retired
-SITE_STATUS = Literal[
-    "Active", "Retired", "Planning", "Staged", "Canceled", "Validated"
-]
-LOCATION_STATUS = Literal[
-    "Active", "Retired", "Planning", "Staged", "Canceled", "Validated"
-]
+SITE_STATUS = Literal["Active", "Retired", "Planning", "Staged", "Canceled", "Validated"]
+LOCATION_STATUS = Literal["Active", "Retired", "Planning", "Staged", "Canceled", "Validated"]
 DEVICE_STATUS = Literal["Active", "Offline", "Staged", "Planning"]
 RACK_STATUS = Literal["Active", "Offline", "Staged", "Planning"]
 GENERAL_STATUS = Literal["Enabled", "Disabled"]

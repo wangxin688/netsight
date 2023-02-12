@@ -38,18 +38,14 @@ class AuditRoute(APIRoute):
                 rsp_data = json.loads(response.body.decode("utf-8"))
                 data.update(
                     {
-                        "request_user": request.state.current_user
-                        if hasattr(request.state, "current_user")
-                        else "",
+                        "request_user": request.state.current_user if hasattr(request.state, "current_user") else "",
                         "code": rsp_data.get("code"),
                         "data": rsp_data.get("data"),
                         "msg": rsp_data.get("msg"),
                     }
                 )
             logger.info(data)
-            async with aiofiles.open(
-                "log/audit.json", mode="a+", encoding="utf-8"
-            ) as f:
+            async with aiofiles.open("log/audit.json", mode="a+", encoding="utf-8") as f:
                 await f.write(json.dumps(data))
                 await f.write("\n")
             return response
