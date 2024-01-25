@@ -1,7 +1,9 @@
-from src.app.auth.models import *
-from src.app.circuit.models import *
-from src.app.dcim.models import *
-from src.app.ipam.models import *
-from src.app.netsight.models import *
-from src.app.server.models import *
-from src.db.db_base import Base
+from src.auth.models import *
+from src.db.base import Base
+
+
+def orm_by_table_name(table_name: str) -> type[Base] | None:
+    for m in Base.registry.mappers:
+        if getattr(m.class_, "__tablename__", None) == table_name:
+            return m.class_
+    return None

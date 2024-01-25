@@ -1,54 +1,112 @@
-[tool.poetry]
+[project]
 name = "netsight"
 version = "0.1.0"
-description = ""
-authors = ["wangxin.jeffry <wangxin.jeffry@gmail.com>"]
+description = "network full life-cycle automation system"
+authors = [
+    { name = "jeffry", email = "182467653@qq.com" }
+]
+dependencies = [
+    "fastapi>=0.108.0",
+    "alembic>=1.13.1",
+    "sqlalchemy>=2.0.25",
+    "pydantic-settings>=2.1.0",
+    "uvicorn[standard]>=0.25.0",
+    "pyjwt>=2.8.0",
+    "pandas>=2.1.4",
+    "passlib>=1.7.4",
+    "redis>=5.0.1",
+    "sentry_sdk>=1.39.2",
+    "httpx>=0.26.0",
+    "pydantic_extra_types>=2.4.1",
+    "phonenumbers>=8.13.27",
+    "asyncpg>=0.29.0",
+]
 readme = "README.md"
-
-[tool.poetry.dependencies]
-python = "^3.11"
-fastapi = "^0.91.0"
-sqlalchemy = "^2.0.3"
-asyncpg = "^0.27.0"
-asgi-correlation-id = "^3.2.1"
-loguru = "^0.6.0"
-aiofiles = "^23.1.0"
-pyjwt = "^2.6.0"
-toml = "^0.10.2"
-passlib = "^1.7.4"
-uvicorn = "^0.20.0"
-gunicorn = "^20.1.0"
-email-validator = "^1.3.1"
-python-dotenv = "^0.21.1"
-bcrypt = "^4.0.1"
-alembic = "^1.9.3"
-httpx = "^0.23.3"
-netaddr = "^0.8.0"
-
-
-[tool.poetry.group.dev.dependencies]
-black = "^23.1.0"
-isort = "^5.12.0"
-flake8 = "^6.0.0"
-autoflake = "^2.0.1"
-
-
-[[tool.poetry.source]]
-name = "aliyun"
-url = "https://mirrors.aliyun.com/pypi/simple/"
-default = true
-
+requires-python = ">= 3.11"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.isort]
-multi_line_output = 3
-include_trailing_comma = false
-force_grid_wrap = 0
-line_length = 120
-profile = "black"
+[tool.rye]
+managed = true
+dev-dependencies = [
+    "pytest>=7.4.4",
+    "pre-commit>=3.5.0",
+    "ruff>=0.1.11",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio>=0.23.3",
+    "black>=23.12.1",
+    "mypy>=1.8.0",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.ruff]
+line-length = 120
+indent-width = 4
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = ["D", "G002", "DTZ003", "ANN401", "ANN101", "ANN102", "EM101", "PD901", "COM812", "ISC001", "FBT", "A003", "PLR0913", "G004"]
+fixable = ["ALL"]
+
+
+[tool.ruff.extend-per-file-ignores]
+"env.py" = ["INP001", "I001", "ERA001"]
+"tests/*.py" = ["S101"]
+"exception_handlers.py" = ["ARG001"]
+"models.py" = ["RUF012"]
+"api.py" = ["A002", "B008"]
+"deps.py" = ["B008"]
+"src/internal/api.py" = ["ARG001"]
+"src/auth/schemas.py" = ["N815"]
+"alembic/*.py" = ["INP001", "UP007"]
+"__init__.py" = ["F403"]
+
+[tool.ruff.flake8-bugbear]
+extend-immutable-calls=[
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.params_functions.Form",
+    "fastapi.File",
+    "fastapi.Path",
+    "fastapi.params.Depends",
+]
 
 [tool.black]
-line_length = 120
+line-length = 120
+preview = true
+target_version = ['py311']
+
+[tool.pytest.ini_options]
+addopts = "--cov-report term --cov-config=.coveragerc -W ignore:DeprecationWarning --cov=src -v"
+xfail_strict = true
+asyncio_mode = "auto"
+markers = ["pytest.mark.anyio"]
+miniversion = "6.0"
+testpaths = ["tests"]
+
+[tool.coverage.report]
+skip_empty = true
+skip_covered = true
+precision = 2
+omit = ["*/__init__.py", "*/consts.py"]
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplentmentError",
+    "if TYPE_CHECKING:",
+    "if typing.TYPE_CHECKING",
+    "@overload",
+    "@typing.overload",
+    "assert_never",
+    "typing.assert_never",
+]
+
+[tool.coverage.run]
+concurrency=["thread", "greenlet"]
