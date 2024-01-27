@@ -50,7 +50,7 @@ class Prefix(Base, AuditTimeMixin, AuditLogMixin):
     site_id: Mapped[int | None] = mapped_column(ForeignKey("site.id", ondelete="SET NULL"))
     site: Mapped["Site"] = relationship("Site", back_populates="prefix", overlaps="prefix")
     role_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("ip_role.id", ondelete="SET NULL"), nullable=True)
-    ip_role: Mapped["IPRole"] = relationship(back_populates="prefix", overlaps="prefix")
+    role: Mapped["IPRole"] = relationship(back_populates="prefix", overlaps="prefix")
 
 
 class ASN(Base, AuditTimeMixin, AuditLogMixin):
@@ -74,9 +74,9 @@ class IPRange(Base, AuditTimeMixin, AuditLogMixin):
     size: Mapped[int]
     description: Mapped[str | None]
     vrf_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("vrf.id", ondelete="SET NULL"))
-    vrf: Mapped["VRF"] = relationship("VRF", back_populates="ip_range")
+    vrf: Mapped["VRF"] = relationship("VRF", backref="ip_range")
     role_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("ip_role.id", ondelete="SET NULL"))
-    ip_role: Mapped["IPRole"] = relationship(back_populates="ip_range")
+    role: Mapped["IPRole"] = relationship(backref="ip_range")
 
 
 class IPAddress(Base, AuditTimeMixin):
@@ -86,7 +86,7 @@ class IPAddress(Base, AuditTimeMixin):
     id: Mapped[int_pk]
     address: Mapped[str] = mapped_column(INET)
     vrf_id: Mapped[int | None] = mapped_column(ForeignKey("vrf.id", ondelete="SET NULL"))
-    ipam_vrf: Mapped["VRF"] = relationship(back_populates="ip_address")
+    vrf: Mapped["VRF"] = relationship(back_populates="ip_address")
     version: Mapped[int]
     status: Mapped[int]
     dns_name: Mapped[str | None]
@@ -97,7 +97,7 @@ class IPAddress(Base, AuditTimeMixin):
 
 
 class VLAN(Base, AuditTimeMixin, AuditLogMixin):
-    __tablename__ = "ipam_vlan"
+    __tablename__ = "vlan"
     __table_args__ = UniqueConstraint("site_id", "vid")
     __search_fields__ = {"name", "vid"}
     id: Mapped[int_pk]
@@ -108,7 +108,7 @@ class VLAN(Base, AuditTimeMixin, AuditLogMixin):
     site_id: Mapped[int] = mapped_column(ForeignKey("site.id", ondelete="CASCADE"))
     site: Mapped["Site"] = relationship(backref="vlan", passive_deletes=True)
     role_id: Mapped[int | None] = mapped_column(ForeignKey("ip_role.id", ondelete="SET NULL"))
-    ip_role: Mapped["IPRole"] = relationship(back_populates="vlan")
+    role: Mapped["IPRole"] = relationship(backref="vlan")
 
 
 class VRFRouteTarget(Base):
@@ -128,9 +128,6 @@ class VRF(Base, AuditTimeMixin, AuditLogMixin):
         comment="Enforce unique space, prevent duplicate IP/prefix",
     )
     route_target: Mapped[list["RouteTarget"]] = relationship(secondary="vrf_route_target", back_populates="vrf")
-    ip_range = relationship("IPRange", back_populates="ipam_vrf", passive_deletes=True)
-    ip_address = relationship("IPAddress", back_populates="ipam_vrf", passive_deletes=True)
-    interface = relationship("Interface", back_populates="ipam_vrf", passive_deletes=True)
 
 
 class RouteTarget(Base, AuditTimeMixin, AuditLogMixin):

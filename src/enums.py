@@ -1,4 +1,4 @@
-from enum import IntEnum
+from enum import Enum, IntEnum
 
 from src._types import AppStrEnum
 
@@ -12,11 +12,48 @@ class ReservedRoleSlug(AppStrEnum):
     ADMIN = "admin"
 
 
-class SiteStatus(AppStrEnum):
-    PLANNING = 1
-    VALIDAING = 2
-    ACTIVE = 3
-    RETIRED = 4
+class SiteStatus(IntEnum):
+    Planning = 1
+    Vlidating = 2
+    Active = 3
+    Retired = 4
+
+
+class LocationStatus(IntEnum):
+    Planning = 1
+    Vlidating = 2
+    Active = 3
+    Retired = 4
+
+
+class DeviceStatus(IntEnum):
+    Active = 1
+    Offline = 2
+    Staged = 3
+    Inventory = 4
+
+
+class RackStatus(IntEnum):
+    Active = 1
+    Offline = 2
+    Reserved = 3
+
+
+class InterfaceAdminStatus(IntEnum):
+    Disabled = 0
+    Enabled = 1
+
+
+class PrefixStatus(IntEnum):
+    Available = 1
+    Reserved = 2
+    Deprecated = 3
+
+
+class IPRangeStatus(IntEnum):
+    Available = 1
+    Reserved = 2
+    Deprecated = 3
 
 
 class SiteClassfication(AppStrEnum):
@@ -70,3 +107,13 @@ class CircuitStatus(IntEnum):
     Active = 2
     Provisioning = 3
     Offline = 4
+
+
+class CircuitType(str, Enum):
+    INTERNET = "INTERNET"
+    P2P = "P2P"
+    IEPL = "IEPL"
+    DPLC = "DPLC"
+    ADSL = "ADSL"
+    MPLS = "MPLS"
+    BGP = "BGP"

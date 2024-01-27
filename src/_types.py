@@ -4,7 +4,7 @@ from typing import Annotated, Generic, Literal, ParamSpec, TypeAlias, TypedDict,
 
 import pydantic
 from fastapi import Query
-from pydantic import ConfigDict, Field, constr
+from pydantic import ConfigDict, Field, StringConstraints
 from pydantic.functional_validators import BeforeValidator
 
 from src.validators import items_to_list, mac_address_validator
@@ -18,17 +18,39 @@ Order: TypeAlias = Literal["descend", "ascend"]
 StrList = Annotated[str | list[str], BeforeValidator(items_to_list)]
 IntList = Annotated[int | list[int], BeforeValidator(items_to_list)]
 MacAddress = Annotated[str, BeforeValidator(mac_address_validator)]
-NameStr = constr(pattern="^[a-zA-Z0-9_-].$", max_length=50)
-NameChineseStr = constr(pattern="^[\u4e00-\u9fa5a-zA-Z0-9_-].$", max_length=50)
+NameStr = Annotated[str, StringConstraints(pattern="^[a-zA-Z0-9_-].$", max_length=50)]
+NameChineseStr = Annotated[str, StringConstraints(pattern="^[\u4e00-\u9fa5a-zA-Z0-9_-].$", max_length=50)]
 
 
 class BaseModel(pydantic.BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class AuditTimeBase(BaseModel):
+class AuditTime(BaseModel):
     created_at: datetime
     updated_at: datetime | None = None
+
+
+class AuditUserBase(BaseModel):
+    id: int
+    name: str
+    email: str | None = None
+    phone: str | None = None
+    avatar: str | None = None
+
+
+class AuditUser(BaseModel):
+    created_by: AuditUserBase | None = None
+    updated_by: AuditUserBase | None = None
+
+
+class AuditLog(BaseModel):
+    id: int
+    created_at: datetime
+    request_id: str
+    action: str
+    diff: dict | None = None
+    user: AuditUserBase | None = None
 
 
 class ListT(BaseModel, Generic[T]):
@@ -43,6 +65,18 @@ class AppStrEnum(str, Enum):
     @classmethod
     def to_list(cls) -> list[str]:
         return [c.value for c in cls]
+
+
+class AuditTimeQuery(BaseModel):
+    created_at__lte: datetime
+    created_at__gte: datetime
+    updated_at__lte: datetime
+    updated_at__gte: datetime
+
+
+class AuidtUserQuery(BaseModel):
+    created_by_fk: list[int] = Field(Query(default=[]))
+    updated_by_fk: list[int] = Field(Query(default=[]))
 
 
 class QueryParams(BaseModel):
@@ -74,3 +108,7 @@ class VisibleName(TypedDict, total=True):
 
 class IdResponse(BaseModel):
     id: int
+
+
+class IdCreate(IdResponse):
+    ...

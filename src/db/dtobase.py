@@ -109,6 +109,16 @@ class DtoBase(Generic[ModelT, CreateSchemaType, UpdateSchemaType, QuerySchemaTyp
         """
         return getattr(obj, id_attribute if id_attribute is not None else cls.id_attribute)
 
+    def inspect_relationship(self) -> None:
+        """_summary_
+        insp = inspect(self.model)
+        for relationship in insp.relationships:
+            direction_name = relationship.direction.name
+            remote_site = relationship.remote_side
+            reverse_property = relationship._reverse_property
+        """
+        ...
+
     def _get_base_stmt(self) -> Select[tuple[ModelT]]:
         """Get base select statement of query"""
         return select(self.model)
@@ -145,6 +155,10 @@ class DtoBase(Generic[ModelT, CreateSchemaType, UpdateSchemaType, QuerySchemaTyp
                     where_clauses.append(cast(getattr(self.model, field), Text).ilike(search_text))
                 else:
                     where_clauses.append(cast(getattr(self.model, field), Text).like(search_text))
+            elif ignore_case:
+                where_clauses.append(getattr(self.model, field).ilike(search_text))
+            else:
+                where_clauses.append(getattr(self.model, field).like(search_text))
 
         return stmt.where(or_(False, *where_clauses))
 

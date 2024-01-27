@@ -1,78 +1,51 @@
-## Network Infrastructure Management System
-> This project is inspired by Netbox, to separate backend and frontend development, built backend with FastAPI&Sqlalchemy and full async support for database, HTTP, etc.
+### Background
+This project draws inspiration from Netbox, incorporating significant changes to better support built-in automation systems for netdevops. Having worked as a network engineer for over 5 years, I've managed more than 50,000 network devices, including but not limited to switches, routers, firewalls, SD-WAN, OVS, SDN, from various vendors in enterprise LAN/WAN/WLAN, and datacenter environments. Our team, consisting of more than 40 people, has been using Netbox for over 4 years. However, reaching a consensus on standards has proven challenging due to the lack of validations and limitations of netbox.
+
+While Netbox is undoubtedly a great and powerful tool, in my personal view, some of its data structures are too complex for efficient automation. It's better suited for modeling your network rather than serving as a primary tool for automation."
+
+Based on this foundation, I plan to launch a completely new project and build on top of FastAPI with pydantic. The new product will focus on simplifying data structures, providing more robust validation capabilities, and better supporting network automation processes. By optimizing these aspects, my goal is to offer a more user-friendly and efficient tool for netdevops, enabling them to smoothly devise and execute standardized network operational procedures.
+
+### Introducation
+Netsight aims to serve as a comprehensive network full life-cycle automation system. It is constructed on top of FastAPI, empowered by Pydantic to ensure robust data validation and limitations. This platform is designed to offer a multitude of features catering to the following functions:
+
+- Network Source of Truth:
+Netsight establishes itself as the authoritative source of truth for your network infrastructure, providing a centralized and accurate repository of network data.
+- Network Configuration Management:
+The platform facilitates efficient and organized management of network configurations, allowing for seamless updates and changes across the network infrastructure.
+- Intent-Based Networking:
+Netsight embraces intent-based networking, enabling network administrators to express their desired outcomes, allowing the system to autonomously translate these intentions into actionable network configurations.
+- Network Inventory Autodiscovery:
+Automated network inventory discovery ensures that the platform stays up-to-date with the latest additions or modifications to the network, providing a dynamic and accurate representation of the network inventory.
+- Network Topology Autodiscovery:
+Netsight employs automatic topology discovery to visualize and understand the intricate relationships and interconnections within the network, promoting a comprehensive understanding of the network architecture.
+- Assurance for Monitoring and Alerting:
+The platform includes robust assurance mechanisms for continuous monitoring and timely alerting, ensuring proactive detection of anomalies and potential issues within the network.
+- Change Management:
+Netsight introduces a streamlined change management process, facilitating controlled and documented modifications to the network. This ensures transparency, accountability, and the ability to roll back changes if necessary.
+By incorporating these features, Netsight aims to providing a powerful and user-friendly solution for network engineers, contributing to a more reliable and automated network management experience.
 
 
 ## Notice
-This project is still in development and not release a beta version. Changes will be made without
-any notifications, especially for database E-R. It mostly depends on my spare time to update the
-project, but any ideas or suggestions are welcome, you can create a git issue or contact me
-at wangxin.jeffry@gmail.com to discuss the project.
-As soon as I complete the beta version of the project, PR is welcome.
+This project is currently in the development phase, and a beta version has not been released yet. Changes will be implemented without prior notifications, with a particular emphasis on modifications to the database design. The project's progress is primarily reliant on my personal time and interests. While I aim to update the project whenever possible, it's important to note that development decisions, especially those related to feature additions, are primarily guided by my extensive engineering experience.
+
+Given the evolving nature of the project, any ideas or suggestions are highly encouraged and welcomed. Users are invited to create Git issues to initiate discussions and contribute to the project's enhancement. Please be aware that updates may occur based on my availability and may not be communicated in advance, highlighting the dynamic and iterative nature of the development process.
 
 
-### More Lightweight
-For our current env, we manage more than 50K+ network devices and VMS. it's hard to maintain with
-such complex object relationships, also with bad performance.
-For following features, are only my ideas and not related to the current environment, also, this project is built with interest outside of work.
-1. remove tenant support, for the most common case we don't need multi-tenant support in
-   a self-managed enterprise network. It will more simple and efficient for database relationship
-2. remove virtual-chassis support, there are so many virtualization techs for the different vendors,
-   like StackWise, VirtualChassis, IRF, stack, CSS, and regard all tec as a cluster for members.
-3. remove device components objects like slot, console port, out-of-band port, power, fans, etc, and only keep interfaces with devices. you can extend this table with LLDP table and neo4j ORM to generate network topology, but it will not include in this project.
-4. remove site_group, \I refuse to design a nested or combine a couple of sites within a group. It will make a huge challenge for operation, monitoring, automation, and data analysis. My suggestion is that make a very clear and standard, highly unified network architecture for a dedicated site, some things like Campus network v1.0, v2.0, DataCenter v1.0, and v2.0 with and following the rule to build the network.
-5. remove some tables to lightweight the object relationship, and use the enum type to define some fields. (I know this will reduce the flexibility for different users. But the main goal for me is to build a system that supports a large-scale network simple and efficient without every detail in the network. So need compromised)
-### More feature 
-1. add the department to DCIM devices and  classification to DCIM site natively without extra custom fields
-2. use ENUM type for constraints without id-mapping, which will be more efficient and simple
-3. with more features with WLAN(later)
-4. data analysis
-5. integrate with downstream and upstream plugins
-6. RBAC or ABAC?
-   Personally, I think RBAC is enough for most case, ABAC is more powerful and flexible, but at the same time, brings complexity and need more effort from management in your organization. Maybe it's a good idea to integrate with Pycasbin for ABAC. But I don't have enough time to figure it out. 
-7. unified log management with correlation-id for Gunicorn and hole project.
-8. audit log with JSON format, very easy to integrate with Filebeat and Elasticsearch for metrics, tracing, and analysis.
-9. x-request-id, x-process-time in header
-10. python 3.10+ support, with full type-hint and Pydantic validation control
-11. RESTful but not too much RESTful
-12. i18n support for backend
-```
-"""
-Since restful is not convenient to make batch requests or bulk operations, and
-GET, DELETE will ignore request body by default in browsers, also with url length
-limitations, after doing a lot of investigation and project experience, use POST by default for bulk operations.
-Regular Operations
-
-I guess graphql will be a good way to solve the restful issue. but fastapi with strawberry is not much good to start.
-
-GET /objects/ Gets all Objects
-
-GET /object/ID Gets an Object with specified ID
-
-POST /objects Adds a new Object
-
-PUT /object/ID Adds an Object with specified ID, Updates an Object
-
-DELETE /object/ID Deletes the object with specified ID
-
-All Custom actions are POST
-
-POST /objects/addList Adds a List or Array of Objects included in body
-
-POST /objects/deleteList Deletes a List of Objects included in body
-
-POST /objects/getList Creates a List based on custom query in body
-
-POST /objects/updateList Update a List based on custom query in body
-
-"""
-```
-
-### How to start?
-> before you start the project, make sure you have install postgresql and redis with docker or install these two instance directly.
-1. pull the project from GitHub
-2. `chmod +x init.sh pre-push.sh` and  execute `init.sh`
-3. execute `touch .env` in the project root path, and add environment variables, which define in `src/core/config.py Settings class`, you can always refer to Pydantic docs. also, I add some comments in this file.
-4. set up one of the python virtual environments: venv or poetry env as you prefer
-5. install requirements.txt 
-6. execute `python3 src/init_app.py` to create superuser 
-7. execute app: `python3 main.py` or install supervisor on Linux, the demo of the config file is already in the project.
+## Features
+### Changes
+- Omitting tenant support:
+In the context of a self-managed enterprise network, multi-tenant support is often unnecessary for the typical use case. By removing this feature, we aim to streamline and enhance the efficiency of database relationships.
+- Eliminating regions:
+The intention is to utilize site_group for site management, incorporating configuration inheritance. This adjustment simplifies the structure and improves overall manageability.
+- Constraining location tree depth:
+ Recognizing the impracticality of limitless depth in Netbox's location tree, we propose implementing a reasonable limit. This modification seeks to enhance the usability and organization of location-related data.
+- Abandoning virtual-chassis support:
+Given the diverse virtualization technologies employed by different vendors (e.g., StackWise, VirtualChassis, IRF, stack, CSS), treating all these technologies as a cluster for members provides a more versatile approach. Handling stack configurations for automation becomes less complex when choosing between treating devices as physical or logical entities.
+- Introducing device entity:
+ Managing devices in a logical manner, as opposed to treating them as assets, adds a layer of simplicity and clarity to device management within the system.
+- Consolidating device components:
+Simplifying the data model by removing device components such as slots, console ports, out-of-band ports, power, fans, etc., and retaining only interfaces with devices streamlines the representation of network elements.
+- Streamlining object relationships:
+Removing select tables and utilizing enum types to define certain fields contributes to a lighter-weight object relationship model. While acknowledging that this may reduce flexibility for some users, the primary goal is to construct a system that efficiently supports large-scale networks without necessitating exhaustive details for every network element. This compromise aims to strike a balance between simplicity and usability.
+- And a lot of changes will be introuduced later
+### New Features(later)

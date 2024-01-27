@@ -4,29 +4,24 @@ from sqlalchemy import ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.orm import Mapped, backref, mapped_column, relationship
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
-from src.db._types import int_pk
+from src.db._types import IntegerEnum, int_pk
 from src.db.base import Base
 from src.db.mixins import AuditLogMixin, AuditTimeMixin
+from src.enums import LocationStatus, SiteStatus
 
 if TYPE_CHECKING:
     from src.ipam.models import ASN
 
 
-class Region(Base, AuditTimeMixin, AuditLogMixin):
-    __tablename__ = "region"
+class SiteGroup(Base, AuditTimeMixin, AuditLogMixin):
+    __tablename__ = "site_group"
     __search_fields__ = {"name", "slug"}
-    __visible_name__ = {"en_US": "Area", "zh_CN": "区域"}
-    __table_args__ = (UniqueConstraint("parent_id", "name"), UniqueConstraint("parent_id", "slug"))
+    __visible_name__ = {"en_US": "Site Group", "zh_CN": "站点组"}
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[str]
-    slug: Mapped[str]
-    parent_id: Mapped[int | None] = mapped_column(Integer, ForeignKey(id))
-    children: Mapped[list["Region"]] = relationship(
-        "Region",
-        cascade="all, delete-orphan",
-        backref=backref("parent", remote_side=id),
-        collection_class=attribute_mapped_collection("name"),
-    )
+    name: Mapped[str] = mapped_column(unique=True)
+    slug: Mapped[str] = mapped_column(unique=True)
+    description: Mapped[str | None]
+    site: Mapped[list["Site"]] = relationship(back_populates="site_group")
 
 
 class Site(Base, AuditTimeMixin, AuditLogMixin):
@@ -36,18 +31,19 @@ class Site(Base, AuditTimeMixin, AuditLogMixin):
     id: Mapped[int_pk]
     name: Mapped[str] = mapped_column(unique=True)
     site_code: Mapped[str] = mapped_column(unique=True, index=True)
-    status: Mapped[int]
+    status: Mapped[SiteStatus] = mapped_column(IntegerEnum(SiteStatus))
     facility_code: Mapped[str | None]
-    ipam_asn: Mapped["ASN"] = relationship(secondary="site_asn", back_populates="dcim_site")
     time_zone: Mapped[str | None]
-    physical_address: Mapped[str | None]
-    shipping_address: Mapped[str | None]
-    latitude: Mapped[float | None]
-    longitude: Mapped[float | None]
+    country: Mapped[str | None]
+    city: Mapped[str | None]
+    address: Mapped[str]
+    latitude: Mapped[float]
+    longitude: Mapped[float]
     classification: Mapped[str | None]
-    description: Mapped[str | None]
-    region_id: Mapped[int] = mapped_column(ForeignKey(Region.id, ondelete="CASCADE"))
-    region: Mapped["Region"] = relationship("Region", backref="site", passive_deletes=True)
+    comments: Mapped[str | None]
+    site_group_id: Mapped[int | None] = mapped_column(ForeignKey(SiteGroup.id, ondelete="RESTRIC"))
+    site_group: Mapped["SiteGroup"] = relationship(backref="site")
+    asn: Mapped[list["ASN"]] = relationship(secondary="site_asn", back_populates="site")
 
 
 class Location(Base, AuditTimeMixin, AuditLogMixin):
@@ -59,9 +55,9 @@ class Location(Base, AuditTimeMixin, AuditLogMixin):
     name: Mapped[str] = mapped_column(unique=True)
     location_type: Mapped[int]
     description: Mapped[str | None]
-    status: Mapped[int]
-    site_id: Mapped[int] = mapped_column(Integer, ForeignKey("dcim_site.id", ondelete="CASCADE"))
-    dcim_site: Mapped["Site"] = relationship(backref="location", passive_deletes=True)
+    status: Mapped[LocationStatus] = mapped_column(IntegerEnum(LocationStatus))
+    site_id: Mapped[int] = mapped_column(Integer, ForeignKey("site.id", ondelete="CASCADE"))
+    site: Mapped["Site"] = relationship(backref="location", passive_deletes=True)
     parent_id: Mapped[int | None] = mapped_column(Integer, ForeignKey(id))
     children: Mapped[list["Location"]] = relationship(
         cascade="all, delete-orphan",
@@ -87,11 +83,6 @@ class ContactRole(Base):
     id: Mapped[int_pk]
     name: Mapped[str]
     description: Mapped[str]
-
-
-class SiteGroup(Base):
-    __tablename__ = "site_group"
-    __visible_name__ = {"en_US": "Site Group", "zh_CN": "站点组"}
 
 
 class SiteContact(Base):

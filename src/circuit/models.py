@@ -30,30 +30,32 @@ class Circuit(Base, AuditTimeMixin, AuditLogMixin):
     comments: Mapped[str | None] = mapped_column(TEXT, nullable=True)
     vendor_available_ip: Mapped[list[str] | None] = mapped_column(ARRAY(INET), nullable=True)
     vendor_available_gateway: Mapped[list[str] | None] = mapped_column(ARRAY(INET), nullable=True)
-    isp_id: Mapped[int] = mapped_column(ForeignKey("isp.id", ondelete="CASCADE"))
+    isp_id: Mapped[int] = mapped_column(ForeignKey("isp.id", ondelete="RESTRICT"))
     isp: Mapped["ISP"] = relationship(backref="circuit")
-    circuit_type_id: Mapped[int] = mapped_column(ForeignKey("circuit_type.id", ondelete="CASCADE"))
-    circuit_type: Mapped["CircuitType"] = relationship("CircuitType", backref="circuit")
-    site_a_id: Mapped[int] = mapped_column(ForeignKey("site.id", ondelete="CASCADE"))
+    circuit_type_id: Mapped[int] = mapped_column(ForeignKey("circuit_type.id", ondelete="RESTRICT"))
+    circuit_type: Mapped["CircuitType"] = relationship(backref="circuit")
+    site_a_id: Mapped[int] = mapped_column(ForeignKey("site.id", ondelete="RESTRICT"))
     site_a: Mapped["Site"] = relationship(foreign_keys=[site_a_id], backref="circuit")
-    device_a_id: Mapped[int] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))
+    device_a_id: Mapped[int] = mapped_column(ForeignKey("device.id", ondelete="RESTRICT"))
     device_a: Mapped["Device"] = relationship(foreign_keys=[device_a_id], backref="circuit")
     interface_a_id: Mapped[int] = mapped_column(ForeignKey("interface.id", ondelete="SET NULL"))
     interface_a: Mapped["Interface"] = relationship(foreign_keys=[interface_a_id], backref="circuit")
-    site_z_id: Mapped[int | None] = mapped_column(ForeignKey("site.id", ondelete="CASCADE"))
+    site_z_id: Mapped[int | None] = mapped_column(ForeignKey("site.id", ondelete="RESTRICT"))
     site_z: Mapped["Site"] = relationship(foreign_keys=[site_z_id], backref="circuit")
-    device_z_id: Mapped[int | None] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))
+    device_z_id: Mapped[int | None] = mapped_column(ForeignKey("device.id", ondelete="RESTRICT"))
     device_z: Mapped["Device"] = relationship(foreign_keys=[device_z_id], backref="circuit")
     interface_z_id: Mapped[int | None] = mapped_column(ForeignKey("interface.id", ondelete="SET NULL"))
     interface_z: Mapped["Interface"] = relationship(foreign_keys=[interface_z_id], backref="circuit")
 
 
-class ISP(Base):
+class ISP(Base, AuditTimeMixin, AuditLogMixin):
     __tablename__ = "isp"
     __visible_name__ = {"en_US": "ISP", "zh_CN": "营运商"}
     __i18n_fields__ = {"name"}
+    __search_fields__ = {"name", "slug"}
     id: Mapped[int_pk]
     name: Mapped[i18n_name]
+    slug: Mapped[str] = mapped_column(unique=True)
     description: Mapped[str | None]
     account: Mapped[str | None]
     portal: Mapped[str | None] = mapped_column(String, nullable=True)
