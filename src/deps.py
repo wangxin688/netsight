@@ -12,9 +12,9 @@ from sqlalchemy.orm import selectinload
 from src import exceptions
 from src.auth.models import RolePermission, User
 from src.config import settings
+from src.consts import ReservedRoleSlug
 from src.context import locale_ctx
 from src.db.session import async_session
-from src.enums import ReservedRoleSlug
 from src.security import API_WHITE_LISTS, JWT_ALGORITHM, JwtTokenPayload
 from src.utils.cache import CacheNamespace, redis_client
 

@@ -4,7 +4,7 @@ from pathlib import Path
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from src.enums import Env
+from src.consts import Env
 
 PROJECT_DIR = Path(__file__).parent.parent
 with Path.open(f"{PROJECT_DIR}/pyproject.toml", "rb") as f:

@@ -13,7 +13,7 @@ from src._types import (
     NameStr,
     QueryParams,
 )
-from src.enums import CircuitStatus
+from src.consts import CircuitStatus
 from src.internal import schemas
 
 

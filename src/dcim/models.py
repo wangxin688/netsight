@@ -4,10 +4,10 @@ from sqlalchemy import Float, ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.dialects.postgresql import INET
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from src.consts import DeviceStatus, InterfaceAdminStatus, RackStatus
 from src.db._types import IntegerEnum, i18n_name, int_pk
 from src.db.base import Base
 from src.db.mixins import AuditLogMixin, AuditTimeMixin, AuditUserMixin
-from src.enums import DeviceStatus, InterfaceAdminStatus, RackStatus
 
 if TYPE_CHECKING:
     from src.arch.models import DeviceRole, RackRole

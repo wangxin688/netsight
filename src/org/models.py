@@ -4,10 +4,10 @@ from sqlalchemy import ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.orm import Mapped, backref, mapped_column, relationship
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
+from src.consts import LocationStatus, SiteStatus
 from src.db._types import IntegerEnum, int_pk
 from src.db.base import Base
 from src.db.mixins import AuditLogMixin, AuditTimeMixin
-from src.enums import LocationStatus, SiteStatus
 
 if TYPE_CHECKING:
     from src.ipam.models import ASN

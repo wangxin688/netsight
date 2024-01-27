@@ -12,7 +12,7 @@ from src._types import (
     NameStr,
     QueryParams,
 )
-from src.enums import DeviceStatus, RackStatus
+from src.consts import DeviceStatus, RackStatus
 from src.internal import schemas
 
 
