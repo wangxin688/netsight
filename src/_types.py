@@ -55,7 +55,7 @@ class AuditLog(BaseModel):
 
 class ListT(BaseModel, Generic[T]):
     count: int
-    results: T | None = None
+    results: list[T] | None = None
 
 
 class AppStrEnum(str, Enum):

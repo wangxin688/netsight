@@ -12,6 +12,8 @@ from src.db import _types
 from src.db.base import Base
 from src.db.mixins import AuditTimeMixin
 
+__all__ = ("Role", "Permission", "Menu", "RolePermission", "RoleMenu", "User", "Group")
+
 
 class RolePermission(Base):
     __tablename__ = "role_permission"

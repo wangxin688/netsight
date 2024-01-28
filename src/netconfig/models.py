@@ -3,10 +3,10 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from src.db._types import EncryptedString, int_pk
 from src.db.base import Base
-from src.db.mixins import AuditTimeMixin, AuditUserMixin
+from src.db.mixins import AuditUserMixin
 
 
-class BaseLineConfig(Base, AuditTimeMixin, AuditUserMixin):
+class BaseLineConfig(Base, AuditUserMixin):
     __tablename__ = "baseline_config"
     __visible_name__ = {"en_US": "Baseline Configuration", "zh_CN": "基线配置"}
     id: Mapped[int_pk]
@@ -22,8 +22,8 @@ class BaseLineConfig(Base, AuditTimeMixin, AuditUserMixin):
     device_id: Mapped[int | None] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))
 
 
-class DeviceCredential(Base, AuditTimeMixin, AuditUserMixin):
-    __tablename__ = "baseline_config"
+class DeviceCredential(Base, AuditUserMixin):
+    __tablename__ = "device_credential"
     __visible_name__ = {"en_US": "Baseline Configuration", "zh_CN": "基线配置"}
     id: Mapped[int_pk]
     cli: Mapped[str | None] = mapped_column(EncryptedString())

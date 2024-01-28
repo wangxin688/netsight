@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.db._types import date_optional, i18n_name, int_pk
 from src.db.base import Base
-from src.db.mixins import AuditLogMixin, AuditTimeMixin
+from src.db.mixins import AuditLogMixin
 
 if TYPE_CHECKING:
     from src.arch.models import CircuitType
@@ -14,8 +14,10 @@ if TYPE_CHECKING:
     from src.ipam.models import ASN
     from src.org.models import CircuitContact, Site
 
+__all__ = ("Circuit", "ISP", "ISPASN")
 
-class Circuit(Base, AuditTimeMixin, AuditLogMixin):
+
+class Circuit(Base, AuditLogMixin):
     __tablename__ = "circuit"
     __visible_name__ = {"en_US": "Circuit", "zh_CN": "线路"}
     __search_fields__ = {"name", "slug", "cid"}
@@ -31,25 +33,25 @@ class Circuit(Base, AuditTimeMixin, AuditLogMixin):
     vendor_available_ip: Mapped[list[str] | None] = mapped_column(ARRAY(INET), nullable=True)
     vendor_available_gateway: Mapped[list[str] | None] = mapped_column(ARRAY(INET), nullable=True)
     isp_id: Mapped[int] = mapped_column(ForeignKey("isp.id", ondelete="RESTRICT"))
-    isp: Mapped["ISP"] = relationship(backref="circuit")
+    isp: Mapped["ISP"] = relationship(back_populates="circuit")
     circuit_type_id: Mapped[int] = mapped_column(ForeignKey("circuit_type.id", ondelete="RESTRICT"))
     circuit_type: Mapped["CircuitType"] = relationship(backref="circuit")
     site_a_id: Mapped[int] = mapped_column(ForeignKey("site.id", ondelete="RESTRICT"))
-    site_a: Mapped["Site"] = relationship(foreign_keys=[site_a_id], backref="circuit")
+    site_a: Mapped["Site"] = relationship(foreign_keys=[site_a_id], backref="a_circuit")
     device_a_id: Mapped[int] = mapped_column(ForeignKey("device.id", ondelete="RESTRICT"))
-    device_a: Mapped["Device"] = relationship(foreign_keys=[device_a_id], backref="circuit")
+    device_a: Mapped["Device"] = relationship(foreign_keys=[device_a_id], backref="a_circuit")
     interface_a_id: Mapped[int] = mapped_column(ForeignKey("interface.id", ondelete="SET NULL"))
-    interface_a: Mapped["Interface"] = relationship(foreign_keys=[interface_a_id], backref="circuit")
+    interface_a: Mapped["Interface"] = relationship(foreign_keys=[interface_a_id], backref="a_circuit")
     site_z_id: Mapped[int | None] = mapped_column(ForeignKey("site.id", ondelete="RESTRICT"))
-    site_z: Mapped["Site"] = relationship(foreign_keys=[site_z_id], backref="circuit")
+    site_z: Mapped["Site"] = relationship(foreign_keys=[site_z_id], backref="z_circuit")
     device_z_id: Mapped[int | None] = mapped_column(ForeignKey("device.id", ondelete="RESTRICT"))
-    device_z: Mapped["Device"] = relationship(foreign_keys=[device_z_id], backref="circuit")
+    device_z: Mapped["Device"] = relationship(foreign_keys=[device_z_id], backref="z_circuit")
     interface_z_id: Mapped[int | None] = mapped_column(ForeignKey("interface.id", ondelete="SET NULL"))
-    interface_z: Mapped["Interface"] = relationship(foreign_keys=[interface_z_id], backref="circuit")
-    circuit_contact: Mapped["CircuitContact"] = relationship(backref="circuit")
+    interface_z: Mapped["Interface"] = relationship(foreign_keys=[interface_z_id], backref="z_circuit")
+    circuit_contact: Mapped["CircuitContact"] = relationship(backref="circuit", passive_deletes=True)
 
 
-class ISP(Base, AuditTimeMixin, AuditLogMixin):
+class ISP(Base, AuditLogMixin):
     __tablename__ = "isp"
     __visible_name__ = {"en_US": "ISP", "zh_CN": "营运商"}
     __i18n_fields__ = {"name"}
@@ -64,8 +66,7 @@ class ISP(Base, AuditTimeMixin, AuditLogMixin):
     admin_contact: Mapped[list[str | None]] = mapped_column(ARRAY(String), nullable=True)
     comments: Mapped[str | None]
     circuit: Mapped[list["Circuit"]] = relationship(
-        back_populates="circuit_provider",
-        overlaps="circuit_provider",
+        back_populates="isp",
     )
     asn: Mapped[list["ASN"]] = relationship(secondary="isp_asn", back_populates="isp")
 

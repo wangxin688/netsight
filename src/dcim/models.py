@@ -7,15 +7,17 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.consts import DeviceStatus, EntityPhysicalClass, InterfaceAdminStatus, RackStatus
 from src.db._types import IntegerEnum, i18n_name, int_pk
 from src.db.base import Base
-from src.db.mixins import AuditLogMixin, AuditTimeMixin, AuditUserMixin
+from src.db.mixins import AuditLogMixin, AuditUserMixin
 
 if TYPE_CHECKING:
     from src.arch.models import DeviceRole, RackRole
     from src.ipam.models import VLAN, VRF, IPAddress
     from src.org.models import Location, Site
 
+__all__ = ("Rack", "Vendor", "DeviceType", "Platform", "Device", "Interface", "DeviceEntity", "DeviceGroup")
 
-class Rack(Base, AuditTimeMixin, AuditLogMixin):
+
+class Rack(Base, AuditLogMixin):
     __tablename__ = "rack"
     __visible_name__ = {"en_US": "Rack", "zh_CN": "机柜"}
     __search_fields__ = {"name", "asset_tag", "serial_num"}
@@ -35,19 +37,18 @@ class Rack(Base, AuditTimeMixin, AuditLogMixin):
     device: Mapped[list["Device"]] = relationship(back_populates="rack")
 
 
-class Vendor(Base, AuditTimeMixin, AuditUserMixin):
-    __tablename__ = ""
+class Vendor(Base, AuditUserMixin):
+    __tablename__ = "vendor"
     __visible_name__ = {"en_US": "Vendor", "zh_CN": "厂商"}
     __i18n_fields__ = {"name"}
     id: Mapped[int_pk]
     name: Mapped[i18n_name]
     slug: Mapped[str] = mapped_column(unique=True)
     description: Mapped[str | None]
-    device_type: Mapped[list["DeviceType"]] = relationship(back_populates="vendor")
     platform: Mapped[list["Platform"]] = relationship(back_populates="vendor")
 
 
-class DeviceType(Base, AuditTimeMixin, AuditUserMixin):
+class DeviceType(Base, AuditUserMixin):
     __tablename__ = "device_type"
     __visible_name__ = {"en_US": "Device Type", "zh_CN": "设备型号"}
     __table_args__ = (UniqueConstraint("vendor_id", "name"),)
@@ -58,10 +59,10 @@ class DeviceType(Base, AuditTimeMixin, AuditUserMixin):
     front_image: Mapped[str | None]
     rear_image: Mapped[str | None]
     vendor_id: Mapped[int] = mapped_column(ForeignKey("vendor.id", ondelete="RESTRICT"))
-    vendor: Mapped["Vendor"] = relationship(back_populates="device_type", passive_deletes=True)
+    vendor: Mapped["Vendor"] = relationship(backref="device_type", passive_deletes=True)
 
 
-class Platform(Base, AuditTimeMixin, AuditUserMixin):
+class Platform(Base, AuditUserMixin):
     __tablename__ = "platform"
     id: Mapped[int_pk]
     name: Mapped[str] = mapped_column(unique=True)
@@ -72,7 +73,7 @@ class Platform(Base, AuditTimeMixin, AuditUserMixin):
     vendor: Mapped[Vendor] = relationship(back_populates="platform", passive_deletes=True)
 
 
-class Device(Base, AuditTimeMixin, AuditLogMixin):
+class Device(Base, AuditLogMixin):
     __tablename__ = "device"
     __visible_name__ = {"en_US": "Device", "zh_CN": "设备"}
     __table_args__ = (UniqueConstraint("rack_id", "position"),)
@@ -86,16 +87,17 @@ class Device(Base, AuditTimeMixin, AuditLogMixin):
     comments: Mapped[str | None]
     serial_num: Mapped[str | None] = mapped_column(unique=True)
     asset_tag: Mapped[str | None]
+    position: Mapped[int | None]
     device_type_id: Mapped[int] = mapped_column(ForeignKey("device_type.id", ondelete="RESTRICT"))
     device_type: Mapped["DeviceType"] = relationship(backref="device", passive_deletes=True)
     device_role_id: Mapped[int] = mapped_column(ForeignKey("device_role.id", ondelete="RESTRICT"))
-    device_role: Mapped["DeviceRole"] = relationship(back_populates="device", passive_deletes=True)
+    device_role: Mapped["DeviceRole"] = relationship(backref="device", passive_deletes=True)
     platform_id: Mapped[int] = mapped_column(ForeignKey("platform.id", ondelete="CASCADE"))
     platform: Mapped["Platform"] = relationship(backref="device", passive_deletes=True)
     site_id: Mapped[int] = mapped_column(ForeignKey("site.id", ondelete="CASCADE"))
-    site: Mapped["Site"] = relationship(back_populates="device", passive_deletes=True)
+    site: Mapped["Site"] = relationship(backref="device", passive_deletes=True)
     location_id: Mapped[int | None] = mapped_column(ForeignKey("location.id", ondelete="SET NULL"))
-    location: Mapped["Location"] = relationship(back_populates="device")
+    location: Mapped["Location"] = relationship(backref="device")
     rack_id: Mapped[int | None] = mapped_column(ForeignKey("rack.id", ondelete="SET NULL"))
     rack: Mapped["Rack"] = relationship(back_populates="device")
     device_group_id: Mapped[int | None] = mapped_column(ForeignKey("device_group.id", ondelete="SET NULL"))
@@ -104,7 +106,7 @@ class Device(Base, AuditTimeMixin, AuditLogMixin):
     device_entity: Mapped[list["DeviceEntity"]] = relationship(back_populates="device")
 
 
-class DeviceEntity(Base, AuditTimeMixin, AuditLogMixin):
+class DeviceEntity(Base, AuditLogMixin):
     __tablename__ = "device_entity"
     __visible_name__ = {"en_US": "Device Entity", "zh_CN": "设备实体"}
     __search_fields__ = {"serial_num"}
@@ -162,7 +164,7 @@ class Interface(Base):
     ip_address: Mapped[list["IPAddress"]] = relationship("IPAddress", back_populates="interface")
 
 
-class DeviceGroup(Base, AuditTimeMixin, AuditUserMixin):
+class DeviceGroup(Base, AuditUserMixin):
     __tablename__ = "device_group"
     __visible_name__ = {"en_US": "Device Group", "zh_CN": "设备组"}
     id: Mapped[int_pk]

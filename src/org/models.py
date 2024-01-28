@@ -1,19 +1,21 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, Integer, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import ForeignKey, Integer, UniqueConstraint, func, select
+from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from src.consts import LocationStatus, LocationType, SiteStatus
 from src.db._types import IntegerEnum, int_pk
 from src.db.base import Base
-from src.db.mixins import AuditLogMixin, AuditTimeMixin
+from src.db.mixins import AuditLogMixin, AuditUserMixin
 
 if TYPE_CHECKING:
     from src.ipam.models import ASN
 
+__all__ = ("SiteGroup", "Site", "Location", "ContactRole", "Contact", "SiteContact", "CircuitContact")
 
-class SiteGroup(Base, AuditTimeMixin, AuditLogMixin):
+
+class SiteGroup(Base, AuditLogMixin):
     """A aggregation of site or a set of data centor(available zone).
     site group can be used to manage the configuration/security/intend policy
     for the sites under this group.
@@ -29,7 +31,7 @@ class SiteGroup(Base, AuditTimeMixin, AuditLogMixin):
     site: Mapped[list["Site"]] = relationship(back_populates="site_group")
 
 
-class Site(Base, AuditTimeMixin, AuditLogMixin):
+class Site(Base, AuditLogMixin):
     """Office, Campus or data center"""
 
     __tablename__ = "site"
@@ -49,12 +51,12 @@ class Site(Base, AuditTimeMixin, AuditLogMixin):
     classification: Mapped[str | None]
     comments: Mapped[str | None]
     site_group_id: Mapped[int | None] = mapped_column(ForeignKey(SiteGroup.id, ondelete="RESTRIC"))
-    site_group: Mapped["SiteGroup"] = relationship(backref="site")
+    site_group: Mapped["SiteGroup"] = relationship(back_populates="site")
     asn: Mapped[list["ASN"]] = relationship(secondary="site_asn", back_populates="site")
-    site_contact: Mapped[list["SiteContact"]] = relationship(backref="site")
+    site_contact: Mapped[list["SiteContact"]] = relationship(backref="site", passive_deletes=True)
 
 
-class Location(Base, AuditTimeMixin, AuditLogMixin):
+class Location(Base, AuditLogMixin):
     """a sub location of site, like building, floor, idf, mdf and etc"""
 
     __tablename__ = "location"
@@ -73,6 +75,7 @@ class Location(Base, AuditTimeMixin, AuditLogMixin):
         back_populates="parent",
         remote_side=[id],
         collection_class=attribute_mapped_collection("name"),
+        single_parent=True,
     )
     parent: Mapped["Location"] = relationship(back_populates="children", remote_side=[parent_id])
 
@@ -88,7 +91,7 @@ class Contact(Base):
     phone: Mapped[str | None]
 
 
-class ContactRole(Base, AuditTimeMixin):
+class ContactRole(Base, AuditUserMixin):
     __tablename__ = "contact_role"
     __visible_name__ = {"en_US": "Contact Role", "zh_CN": "联系人角色"}
     id: Mapped[int_pk]
@@ -98,17 +101,27 @@ class ContactRole(Base, AuditTimeMixin):
 
 class SiteContact(Base):
     __tablename__ = "site_contact"
-    contact_id: Mapped[int] = mapped_column(ForeignKey("contact.id"), primary_key=True)
+    id: Mapped[int_pk]
+    contact_id: Mapped[int] = mapped_column(ForeignKey("contact.id", ondelete="RESTRICT"))
     contact: Mapped["Contact"] = relationship(backref="site_contact")
-    site_id: Mapped[int] = mapped_column(ForeignKey("site.id"), primary_key=True)
-    role_id: Mapped[int] = mapped_column(ForeignKey("role.id", ondelete="CASCADE"))
-    contact_role: Mapped["ContactRole"] = relationship(back_populates="contact_site")
+    site_id: Mapped[int] = mapped_column(ForeignKey("site.id", ondelete="CASCADE"))
+    contact_role_id: Mapped[int] = mapped_column(ForeignKey("contact_role.id", ondelete="RESTRIC"))
+    contact_role: Mapped["ContactRole"] = relationship(backref="site_contact")
 
 
 class CircuitContact(Base):
     __tablename__ = "circuit_contact"
-    contact_id: Mapped[int] = mapped_column(ForeignKey("contact.id"), primary_key=True)
-    contact: Mapped["Contact"] = relationship(backref="site_contact")
-    circuit_id: Mapped[int] = mapped_column(ForeignKey("site.id"), primary_key=True)
-    role_id: Mapped[int] = mapped_column(ForeignKey("role.id", ondelete="CASCADE"))
-    contact_role: Mapped["ContactRole"] = relationship(back_populates="contact_site", passive_deletes=True)
+    id: Mapped[int_pk]
+    contact_id: Mapped[int] = mapped_column(ForeignKey("contact.id", ondelete="RESTRICT"))
+    contact: Mapped["Contact"] = relationship(backref="circuit_contact")
+    circuit_id: Mapped[int] = mapped_column(ForeignKey("circuit.id", ondelete="CASCADE"))
+    contact_role_id: Mapped[int] = mapped_column(ForeignKey("contact_role.id", ondelete="RSTRICT"))
+    contact_role: Mapped["ContactRole"] = relationship(backref="circuit_contact")
+
+
+SiteGroup.site_count = column_property(
+    select(func.count(Site.id)).where(Site.site_group_id == id).correlate_except(SiteGroup).scalar_subquery(),
+    deferred=True,
+)
+
+

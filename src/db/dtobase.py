@@ -13,6 +13,7 @@ from sqlalchemy.sql.base import ExecutableOption
 from src._types import Order, QueryParams
 from src.context import locale_ctx
 from src.db.base import Base
+from src.db import orm_by_table_name
 from src.db.session import async_engine
 from src.exceptions import ExistError, NotFoundError
 
@@ -109,15 +110,18 @@ class DtoBase(Generic[ModelT, CreateSchemaType, UpdateSchemaType, QuerySchemaTyp
         """
         return getattr(obj, id_attribute if id_attribute is not None else cls.id_attribute)
 
-    def inspect_relationship(self) -> None:
-        """_summary_
+    def inspect_relationship(self) -> dict[str, type[RelationT]]:
+        result = {}
         insp = inspect(self.model)
         for relationship in insp.relationships:
+            key = relationship.key
             direction_name = relationship.direction.name
-            remote_site = relationship.remote_side
-            reverse_property = relationship._reverse_property
-        """
-        ...
+            if direction_name in ("MANYTOMANY", "ONETOMANY"):
+                _class = relationship.mapper.class_
+                result[key] = _class
+        return result
+
+
 
     def _get_base_stmt(self) -> Select[tuple[ModelT]]:
         """Get base select statement of query"""

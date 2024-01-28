@@ -14,6 +14,20 @@ if TYPE_CHECKING:
     from src.circuit.models import ISP
     from src.dcim.models import Interface, Site
 
+__all__ = (
+    "IPAddress",
+    "IPRange",
+    "Prefix",
+    "VRF",
+    "RouteTarget",
+    "SiteASN",
+    "IPAddressUser",
+    "Block",
+    "ASN",
+    "VLAN",
+    "VRFRouteTarget",
+)
+
 
 class SiteASN(Base):
     __tablename__ = "site_asn"
@@ -23,11 +37,11 @@ class SiteASN(Base):
 
 class IPAddressUser(Base):
     __tablename__ = "ip_address_user"
-    ip_address_id: Mapped[int] = mapped_column(ForeignKey("site.id"), primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("site.id"), primary_key=True)
+    ip_address_id: Mapped[int] = mapped_column(ForeignKey("ip_address.id"), primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), primary_key=True)
 
 
-class Block(Base, AuditTimeMixin, AuditLogMixin):
+class Block(Base, AuditLogMixin):
     __tablename__ = "block"
     __visible_name__ = {"en_US": "IP Block", "zh_CN": "IP地址段"}
     __search_fields__ = {"block"}
@@ -36,7 +50,7 @@ class Block(Base, AuditTimeMixin, AuditLogMixin):
     description: Mapped[str | None]
 
 
-class Prefix(Base, AuditTimeMixin, AuditLogMixin):
+class Prefix(Base, AuditLogMixin):
     __tablename__ = "prefix"
     __visible_name__ = {"en_US": "IP Prefix", "zh_CN": "IP子网段"}
     __search_fields__ = {"prefix"}
@@ -46,14 +60,14 @@ class Prefix(Base, AuditTimeMixin, AuditLogMixin):
     is_dhcp_pool: Mapped[bool_true]
     is_full: Mapped[bool_false]
     vlan_id: Mapped[int | None] = mapped_column(ForeignKey("vlan.id", ondelete="SET NULL"))
-    vlan: Mapped["VLAN"] = relationship(back_populates="prefix")
+    vlan: Mapped["VLAN"] = relationship(backref="prefix")
     site_id: Mapped[int | None] = mapped_column(ForeignKey("site.id", ondelete="SET NULL"))
-    site: Mapped["Site"] = relationship("Site", back_populates="prefix", overlaps="prefix")
-    role_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("ip_role.id", ondelete="SET NULL"), nullable=True)
-    role: Mapped["IPRole"] = relationship(back_populates="prefix", overlaps="prefix")
+    site: Mapped["Site"] = relationship(backref="prefix")
+    role_id: Mapped[int | None] = mapped_column(ForeignKey("ip_role.id", ondelete="SET NULL"))
+    role: Mapped["IPRole"] = relationship(backref="prefix")
 
 
-class ASN(Base, AuditTimeMixin, AuditLogMixin):
+class ASN(Base, AuditLogMixin):
     __tablename__ = "asn"
     __visible_name__ = {"en_US": "AS Number", "zh_CN": "AS号"}
     __search_fields__ = {"asn"}
@@ -64,7 +78,7 @@ class ASN(Base, AuditTimeMixin, AuditLogMixin):
     isp: Mapped[list["ISP"]] = relationship(secondary="isp_asn", back_populates="asn")
 
 
-class IPRange(Base, AuditTimeMixin, AuditLogMixin):
+class IPRange(Base, AuditLogMixin):
     __tablename__ = "ip_range"
     __visible_name__ = {"en_US": "IP Range", "zh_CN": "IP地址串"}
     id: Mapped[int_pk]
@@ -86,19 +100,19 @@ class IPAddress(Base, AuditTimeMixin):
     id: Mapped[int_pk]
     address: Mapped[str] = mapped_column(INET)
     vrf_id: Mapped[int | None] = mapped_column(ForeignKey("vrf.id", ondelete="SET NULL"))
-    vrf: Mapped["VRF"] = relationship(back_populates="ip_address")
+    vrf: Mapped["VRF"] = relationship(backref="ip_address")
     version: Mapped[int]
     status: Mapped[int]
     dns_name: Mapped[str | None]
     description: Mapped[str | None]
-    owner: Mapped[list["User"]] = relationship(secondary="ip_address_user", back_populates="ip_address")
+    owner: Mapped[list["User"]] = relationship(secondary="ip_address_user", backref="ip_address")
     interface_id: Mapped[int | None] = mapped_column(ForeignKey("interface.id", ondelete="SET NULL"))
     interface: Mapped["Interface"] = relationship(back_populates="ip_address")
 
 
-class VLAN(Base, AuditTimeMixin, AuditLogMixin):
+class VLAN(Base, AuditLogMixin):
     __tablename__ = "vlan"
-    __table_args__ = UniqueConstraint("site_id", "vid")
+    __table_args__ = (UniqueConstraint("site_id", "vid"),)
     __search_fields__ = {"name", "vid"}
     id: Mapped[int_pk]
     name: Mapped[str]
@@ -119,7 +133,7 @@ class VRFRouteTarget(Base):
     target: Mapped[str]
 
 
-class VRF(Base, AuditTimeMixin, AuditLogMixin):
+class VRF(Base, AuditLogMixin):
     __tablename__ = "vrf"
     id: Mapped[int_pk]
     name: Mapped[str] = mapped_column(unique=True)
@@ -130,7 +144,7 @@ class VRF(Base, AuditTimeMixin, AuditLogMixin):
     route_target: Mapped[list["RouteTarget"]] = relationship(secondary="vrf_route_target", back_populates="vrf")
 
 
-class RouteTarget(Base, AuditTimeMixin, AuditLogMixin):
+class RouteTarget(Base, AuditLogMixin):
     __tablename__ = "route_target"
     id: Mapped[int_pk]
     name: Mapped[str] = mapped_column(unique=True)
