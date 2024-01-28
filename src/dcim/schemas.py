@@ -9,10 +9,12 @@ from src._types import (
     AuditUser,
     BaseModel,
     I18nField,
+    IdCreate,
+    NameChineseStr,
     NameStr,
     QueryParams,
 )
-from src.consts import DeviceStatus, RackStatus
+from src.consts import DeviceStatus, EntityPhysicalClass, RackStatus
 from src.internal import schemas
 
 
@@ -26,19 +28,20 @@ class RackBase(BaseModel):
 
 
 class RackCreate(RackBase):
+    name: NameChineseStr
     site_id: int | None = None
     location_id: int | None = None
     rack_role_id: int
 
 
 class RackUpdate(RackCreate):
-    name: str | None = None
+    name: NameChineseStr | None = None
     status: RackStatus | None = None
     rack_role_id: int | None = None
 
 
 class RackQuery(QueryParams, AuditTimeQuery):
-    name: list[str] | None = Field(Query(default=[]))
+    name: list[NameChineseStr] | None = Field(Query(default=[]))
     status: list[RackStatus] | None = Field(Query(default=[]))
     site_id: list[int] | None = Field(Query(default=[]))
     location_id: list[int] | None = Field(Query(default=[]))
@@ -54,18 +57,18 @@ class Rack(RackBase, AuditTime):
 
 class VendorCreate(BaseModel):
     name: I18nField
-    slug: str
+    slug: NameStr
     description: str | None = None
 
 
 class VendorUpdate(VendorCreate):
     name: I18nField | None = None
-    slug: str | None = None
+    slug: NameStr | None = None
 
 
 class VendorQuery(QueryParams):
     name: list[str] | None = Field(Query(default=[]))
-    slug: list[str] | None = Field(Query(default=[]))
+    slug: list[NameStr] | None = Field(Query(default=[]))
 
 
 class Vendor(VendorCreate, AuditTime, AuditUser):
@@ -89,18 +92,19 @@ class DeviceTypeBase(BaseModel):
 
 
 class DeviceTypeCreate(DeviceTypeBase):
+    name: NameStr
     vendor_id: int
 
 
 class DeviceTypeUpdate(DeviceTypeCreate):
-    name: str | None = None
+    name: NameStr | None = None
     snmp_sysobjectid: str | None = None
     u_height: float | None = None
     vendor_id: int | None = None
 
 
 class DeviceTypeQuery(QueryParams):
-    name: list[str] | None = Field(Query(default=[]))
+    name: list[NameStr] | None = Field(Query(default=[]))
     vendor_id: list[int] | None = Field(Query(default=[]))
 
 
@@ -124,12 +128,14 @@ class PlatformBase(BaseModel):
 
 
 class PlatformCreate(PlatformBase):
+    name: NameStr
+    slug: NameStr
     vendor_id: int
 
 
 class PlatformUpdate(PlatformCreate):
-    name: str | None = None
-    slug: str | None = None
+    name: NameStr | None = None
+    slug: NameStr | None = None
     vendor_id: int | None = None
 
 
@@ -146,7 +152,7 @@ class Platform(PlatformBase, AuditTime, AuditUser):
 
 
 class DeviceBase(BaseModel):
-    name: NameStr
+    name: str
     management_ipv4: IPv4Address | None = None
     management_ipv6: IPv6Address | None = None
     status: DeviceStatus
@@ -157,6 +163,7 @@ class DeviceBase(BaseModel):
 
 
 class DeviceCreate(DeviceBase):
+    name: NameStr
     device_type_id: int
     device_role_id: int
     platform_id: int
@@ -187,7 +194,7 @@ class DeviceUpdate(DeviceBase):
 
 
 class DeviceQuery(QueryParams):
-    name: list[str] | None = Field(Query(default=[]))
+    name: list[NameStr] | None = Field(Query(default=[]))
     status: list[DeviceStatus] | None = Field(Query(default=[]))
     site_id: list[int] | None = Field(Query(default=[]))
     location_id: list[int] | None = Field(Query(default=[]))
@@ -208,3 +215,63 @@ class Device(DeviceBase, AuditTime):
     location: schemas.LocationBrief
     rack: schemas.RackRoleBrief
     device_group: schemas.DeviceGroupBrief
+
+
+class DeviceEntityBase(BaseModel):
+    index: str
+    entity_class: EntityPhysicalClass
+    hardware_version: str | None = None
+    software_version: str | None = None
+    serial_num: str | None = None
+    model_name: str | None = None
+    asset_id: str | None = None
+    order: int
+
+
+class DeviceEntityCreate(DeviceEntityBase):
+    device_id: int
+
+
+class DeviceEntityUpdate(DeviceEntityBase):
+    index: str | None = None
+    entity_class: EntityPhysicalClass | None = None
+    order: int | None = None
+    device_id: int | None = None
+
+
+class DeviceEntityQuery(QueryParams):
+    device_id: list[int] | None = Field(Query(default=[]))
+    serial_num: list[str] | None = Field(Query(default=[]))
+
+
+class DeviceEntity(DeviceEntityBase, AuditTime):
+    id: int
+    device: schemas.DeviceBrief
+
+
+class DeviceGroupBase(BaseModel):
+    name: str
+    description: str | None = None
+
+
+class DeviceGroupCreate(DeviceGroupBase):
+    name: NameChineseStr
+    device: list[IdCreate] | None = None
+
+
+class DeviceGroupUpdate(DeviceGroupCreate):
+    name: NameChineseStr | None = None
+
+
+class DeviceGroupQuery(QueryParams):
+    name: list[NameChineseStr] | None = Field(Query(default=[]))
+
+
+class DeviceGroup(DeviceGroupBase, AuditTime):
+    id: int
+    devices: list[schemas.DeviceBrief]
+
+
+class DeviceGroupList(DeviceGroupBase, AuditTime):
+    id: int
+    device_count: int

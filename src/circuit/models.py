@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from src.arch.models import CircuitType
     from src.dcim.models import Device, Interface
     from src.ipam.models import ASN
-    from src.org.models import Site
+    from src.org.models import CircuitContact, Site
 
 
 class Circuit(Base, AuditTimeMixin, AuditLogMixin):
@@ -46,6 +46,7 @@ class Circuit(Base, AuditTimeMixin, AuditLogMixin):
     device_z: Mapped["Device"] = relationship(foreign_keys=[device_z_id], backref="circuit")
     interface_z_id: Mapped[int | None] = mapped_column(ForeignKey("interface.id", ondelete="SET NULL"))
     interface_z: Mapped["Interface"] = relationship(foreign_keys=[interface_z_id], backref="circuit")
+    circuit_contact: Mapped["CircuitContact"] = relationship(backref="circuit")
 
 
 class ISP(Base, AuditTimeMixin, AuditLogMixin):

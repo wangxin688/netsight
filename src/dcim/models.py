@@ -4,7 +4,7 @@ from sqlalchemy import Float, ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.dialects.postgresql import INET
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.consts import DeviceStatus, InterfaceAdminStatus, RackStatus
+from src.consts import DeviceStatus, EntityPhysicalClass, InterfaceAdminStatus, RackStatus
 from src.db._types import IntegerEnum, i18n_name, int_pk
 from src.db.base import Base
 from src.db.mixins import AuditLogMixin, AuditTimeMixin, AuditUserMixin
@@ -110,14 +110,13 @@ class DeviceEntity(Base, AuditTimeMixin, AuditLogMixin):
     __search_fields__ = {"serial_num"}
     __table_args__ = (UniqueConstraint("id", "index"),)
     id: Mapped[int_pk]
-    index: Mapped[int]
-    entity_class: Mapped[int]
+    index: Mapped[str]
+    entity_class: Mapped[EntityPhysicalClass] = mapped_column(IntegerEnum(EntityPhysicalClass))
     hardware_version: Mapped[str | None]
     software_version: Mapped[str | None]
     serial_num: Mapped[str | None]
     model_name: Mapped[str | None]
     asset_id: Mapped[str | None]
-    serial: Mapped[str | None]
     order: Mapped[int]
     device_id: Mapped[int] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))
     device: Mapped["Device"] = relationship(back_populates="device_entity", passive_deletes=True)

@@ -19,6 +19,12 @@ class SiteStatus(IntEnum):
     Retired = 4
 
 
+class LocationType(IntEnum):
+    Building = 1
+    Floor = 2
+    ServerRoom = 3
+
+
 class LocationStatus(IntEnum):
     Planning = 1
     Vlidating = 2

@@ -111,6 +111,11 @@ class LocationBrief(BaseModel):
     name: str
 
 
+class ContactRoleBrief(BaseModel):
+    id: int
+    name: str
+
+
 ## -------WLAN----------
 ## -------AUTH----------
 ## -------ARCH----------

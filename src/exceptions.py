@@ -146,7 +146,7 @@ def gener_error_handler(request: Request, exc: GenerError) -> JSONResponse:
         status_code=exc.status_code,
         content={
             "error": exc.error.error,
-            "message": _(exc.error.message, **exc.params),
+            "message": _(exc.error.message, **exc.params) if exc.params else _(exc.error.message),
         },
     )
 

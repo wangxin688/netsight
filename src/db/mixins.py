@@ -1,12 +1,10 @@
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import DateTime, ForeignKey, Integer, String, event, func, insert, inspect
 from sqlalchemy.dialects.postgresql import JSON
-from sqlalchemy.engine import Connection
 from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.orm import Mapped, Mapper, class_mapper, mapped_column, relationship
+from sqlalchemy.orm import Mapped, class_mapper, mapped_column, relationship
 from sqlalchemy.orm.attributes import get_history
 
 from src.context import orm_diff_ctx, request_id_ctx, user_ctx
@@ -14,21 +12,29 @@ from src.db._types import int_pk
 from src.db.base import Base
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
+    from sqlalchemy.engine import Connection
+    from sqlalchemy.orm import Mapper
+
     from src.auth.models import User
+    from src.db.dtobase import ModelT
 
 
 class AuditTimeMixin:
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), onupdate=func.now())
+    created_at: Mapped["datetime"] = mapped_column(DateTime(timezone=True), default=func.now(), index=True)
+    updated_at: Mapped["datetime"] = mapped_column(DateTime(timezone=True), default=func.now(), onupdate=func.now())
 
 
-def get_object_change(obj: Mapper) -> dict:
+def get_object_change(obj: "ModelT") -> dict:
     insp = inspect(obj)
     changes: dict[str, dict] = {
         "post_change": {},
         "diff": {},
     }
     for attr in class_mapper(obj.__class__).column_attrs:
+        before = None
+        after = None
         if getattr(insp.attrs, attr.key).hisotry.has_changes():
             if get_history(obj, attr.key)[2]:
                 before = get_history(obj, attr.key)[2].pop()
@@ -38,12 +44,12 @@ def get_object_change(obj: Mapper) -> dict:
                 after = getattr(obj, attr.key)
             if before != after:
                 changes["diff"][attr.key] = {"before": before, "after": after}
-    return jsonable_encoder(changes)
+    return jsonable_encoder(changes, exclude={"children", "parent"})
 
 
 class AuditLog:
     id: Mapped[int_pk]
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now())
+    created_at: Mapped["datetime"] = mapped_column(DateTime(timezone=True), default=func.now())
     request_id: Mapped[str]
     action: Mapped[str] = mapped_column(String, nullable=False)
     diff: Mapped[dict | None] = mapped_column(JSON)
@@ -67,7 +73,7 @@ class AuditLog:
 class AuditLogMixin:
     @declared_attr
     @classmethod
-    def audit_log(cls) -> Mapped[list["AuditLog"]]:
+    def audit_log(cls: type["ModelT"]) -> Mapped[list["AuditLog"]]:
         cls.AuditLog = type(
             f"{cls.__name__}AuditLog",
             (AuditLog, Base),
@@ -84,20 +90,20 @@ class AuditLogMixin:
         return relationship(cls.AuditLog)
 
     @classmethod
-    def log_create(cls, mapper: Mapper, connection: Connection, target: Mapper) -> None:  # noqa: ARG003
+    def log_create(cls, mapper: "Mapper", connection: "Connection", target: "ModelT") -> None:  # noqa: ARG003
         connection.execute(
             insert(cls.AuditLog),
             {
                 "request_id": request_id_ctx.get(),
                 "action": "create",
-                "diff": target.dict(exclude_relationship=True),
+                "diff": target.dict(native_dict=True),
                 "parent_id": target.id,
                 "user_id": user_ctx.get(),
             },
         )
 
     @classmethod
-    def log_update(cls, mapper: Mapper, connection: Connection, target: Mapper) -> None:  # noqa: ARG003
+    def log_update(cls, mapper: "Mapper", connection: "Connection", target: "ModelT") -> None:  # noqa: ARG003
         changes = get_object_change(target)
         if changes is not None:
             orm_diff_ctx.set(changes)
@@ -113,13 +119,13 @@ class AuditLogMixin:
             )
 
     @classmethod
-    def log_delete(cls, mapper: Mapper, connection: Connection, target: Mapper) -> None:  # noqa: ARG003
+    def log_delete(cls, mapper: "Mapper", connection: "Connection", target: "ModelT") -> None:  # noqa: ARG003
         connection.execute(
             insert(cls.AuditLog),
             {
                 "request_id": request_id_ctx.get(),
                 "action": "delete",
-                "diff": target.dict(exclude_relationship=True),
+                "diff": target.dict(native_dict=True),
                 "parent_id": target.id,
                 "user_id": user_ctx.get(),
             },
@@ -133,8 +139,8 @@ class AuditLogMixin:
 
 
 class AuditUserMixin:
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), onupdate=func.now())
+    created_at: Mapped["datetime"] = mapped_column(DateTime(timezone=True), default=func.now(), index=True)
+    updated_at: Mapped["datetime"] = mapped_column(DateTime(timezone=True), default=func.now(), onupdate=func.now())
 
     @declared_attr
     @classmethod

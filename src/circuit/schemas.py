@@ -10,6 +10,7 @@ from src._types import (
     BatchUpdate,
     I18nField,
     IdCreate,
+    NameChineseStr,
     NameStr,
     QueryParams,
 )
@@ -19,7 +20,7 @@ from src.internal import schemas
 
 class ISPBase(BaseModel):
     name: I18nField
-    slug: NameStr
+    slug: str
     description: str | None = None
     account: str | None = None
     portal: AnyHttpUrl | None = None
@@ -29,25 +30,28 @@ class ISPBase(BaseModel):
 
 
 class ISPCreate(ISPBase):
+    slug: NameStr
     asn: list[IdCreate] | None = Field(default=None, description="List of asn id belong to current isp.")
 
 
 class ISPUpdate(ISPCreate):
     name: I18nField | None = None
+    slug: NameStr | None = None
 
 
-class ISPResponse(ISPCreate, AuditTime):
+class ISP(ISPBase, AuditTime):
     id: int
     asn: list[schemas.ASNBrief]
 
 
-class ISPListResponse(ISPBase, AuditTime):
+class ISPList(ISPBase, AuditTime):
     id: int
     asn_count: int = Field(description="Number of as number belongs to current isp.")
 
 
 class ISPQuery(QueryParams):
-    name: str
+    name: list[str] | None = Field(Query(default=[]))
+    slug: list[NameStr] | None = Field(Query(default=[]))
 
 
 class CircuitBase(BaseModel):
@@ -64,8 +68,11 @@ class CircuitBase(BaseModel):
 
 
 class CircuitCreate(CircuitBase):
+    name: NameChineseStr
+    slug: NameStr
     isp_id: int
     circuit_type_id: int
+    bandwidth: int = Field(gt=0, description="Mbps")
     site_a_id: int
     device_a_id: int
     interface_id: int
@@ -75,11 +82,11 @@ class CircuitCreate(CircuitBase):
 
 
 class CircuitUpdate(CircuitCreate):
-    name: str | None = None
-    slug: str | None = None
+    name: NameChineseStr | None = None
+    slug: NameStr | None = None
     cid: str | None = None
     status: CircuitStatus | None = None
-    bandwidth: int | None = None
+    bandwidth: int | None = Field(default=None, gt=0, description="Mbps")
     isp_id: int | None = None
     circuit_type_id: int | None = None
     site_a_id: int | None = None
@@ -94,8 +101,8 @@ class CircuitBatchUpdate(BatchUpdate):
 
 
 class CircuitQuery(QueryParams, AuditTimeQuery):
-    name: list[str] | None = Field(Query(default=[]))
-    slug: list[str] | None = Field(Query(default=[]))
+    name: list[NameChineseStr] | None = Field(Query(default=[]))
+    slug: list[NameStr] | None = Field(Query(default=[]))
     cid: list[str] | None = Field(Query(default=[]))
     status: CircuitStatus | None = Field(Query(default=[]))
     install_date__lte: date | None = None
