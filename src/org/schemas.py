@@ -173,7 +173,7 @@ class ContactUpdate(ContactBase):
     phone: PhoneNumber | None = None
 
 
-class ContactRoleQuery(QueryParams):
+class ContactQuery(QueryParams):
     name: list[NameChineseStr] | None = Field(Query(default=[]))
     email: list[EmailStr] | None = Field(Query(default=[]))
     phone: list[PhoneNumber] | None = Field(Query(default=[]))
@@ -202,6 +202,9 @@ class ContactRoleUpdate(ContactRoleCreate):
 
 class ContactRole(ContactRoleBase):
     id: int
+
+class ContactRoleQuery(QueryParams):
+    name: list[NameChineseStr] | None = Field(Query(default=[]))
 
 
 class CircuitContact(ContactBase):
