@@ -100,9 +100,9 @@ class CircuitQuery(QueryParams, AuditTimeQuery):
     cid: list[str] | None = Field(Query(default=[]))
     status: CircuitStatus | None = Field(Query(default=[]))
     install_date__lte: date | None = None
-    install_date_gte: date | None = None
-    bandwidth_lte: int | None = None
-    bandwidth_gte: int | None = None
+    install_date__gte: date | None = None
+    bandwidth__lte: int | None = None
+    bandwidth__gte: int | None = None
     isp_id: list[int] | None = Field(Query(default=[]))
     circuit_type_id: list[int] | None = Field(Query(default=[]))
     site_id: list[int] | None = Field(Query(default=[]))
