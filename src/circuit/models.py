@@ -35,7 +35,7 @@ class Circuit(Base, AuditLogMixin):
     isp_id: Mapped[int] = mapped_column(ForeignKey("isp.id", ondelete="RESTRICT"))
     isp: Mapped["ISP"] = relationship(back_populates="circuit")
     circuit_type_id: Mapped[int] = mapped_column(ForeignKey("circuit_type.id", ondelete="RESTRICT"))
-    circuit_type: Mapped["CircuitType"] = relationship(backref="circuit")
+    circuit_type: Mapped["CircuitType"] = relationship(back_populates="circuit")
     site_a_id: Mapped[int] = mapped_column(ForeignKey("site.id", ondelete="RESTRICT"))
     site_a: Mapped["Site"] = relationship(foreign_keys=[site_a_id], backref="a_circuit")
     device_a_id: Mapped[int] = mapped_column(ForeignKey("device.id", ondelete="RESTRICT"))

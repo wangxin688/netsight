@@ -73,11 +73,7 @@ class CircuitCreate(CircuitBase):
     isp_id: int
     circuit_type_id: int
     bandwidth: int = Field(gt=0, description="Mbps")
-    site_a_id: int
-    device_a_id: int
-    interface_id: int
-    site_z_id: int | None = None
-    device_z_id: int | None = None
+    interface_a_id: int
     interface_z_id: int | None = None
 
 
@@ -89,9 +85,7 @@ class CircuitUpdate(CircuitCreate):
     bandwidth: int | None = Field(default=None, gt=0, description="Mbps")
     isp_id: int | None = None
     circuit_type_id: int | None = None
-    site_a_id: int | None = None
-    device_a_id: int | None = None
-    interface_id: int | None = None
+    interface_a_id: int | None = None
 
 
 class CircuitBatchUpdate(BatchUpdate):

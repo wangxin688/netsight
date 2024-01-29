@@ -7,18 +7,19 @@ from sqlalchemy import Row, Select, Text, cast, desc, func, inspect, not_, or_, 
 from sqlalchemy.dialects.postgresql import ARRAY, HSTORE, INET, JSON, JSONB, MACADDR
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.mutable import Mutable
-from sqlalchemy.orm import InstrumentedAttribute, undefer
+from sqlalchemy.orm import InstrumentedAttribute, selectinload, undefer
 from sqlalchemy.sql.base import ExecutableOption
 
 from src._types import Order, QueryParams
 from src.context import locale_ctx
 from src.db.base import Base
-from src.db import orm_by_table_name
 from src.db.session import async_engine
 from src.exceptions import ExistError, NotFoundError
 
 if TYPE_CHECKING:
     from sqlalchemy.engine.interfaces import ReflectedForeignKeyConstraint, ReflectedUniqueConstraint
+
+    from src.db.mixins import AuditLog
 
 ModelT = TypeVar("ModelT", bound=Base)
 PkIdT = TypeVar("PkIdT", int, UUID)
@@ -110,7 +111,7 @@ class DtoBase(Generic[ModelT, CreateSchemaType, UpdateSchemaType, QuerySchemaTyp
         """
         return getattr(obj, id_attribute if id_attribute is not None else cls.id_attribute)
 
-    def inspect_relationship(self) -> dict[str, type[RelationT]]:
+    def inspect_relationship(self) -> dict[str, type[Any]]:
         result = {}
         insp = inspect(self.model)
         for relationship in insp.relationships:
@@ -120,8 +121,6 @@ class DtoBase(Generic[ModelT, CreateSchemaType, UpdateSchemaType, QuerySchemaTyp
                 _class = relationship.mapper.class_
                 result[key] = _class
         return result
-
-
 
     def _get_base_stmt(self) -> Select[tuple[ModelT]]:
         """Get base select statement of query"""
@@ -857,3 +856,16 @@ class DtoBase(Generic[ModelT, CreateSchemaType, UpdateSchemaType, QuerySchemaTyp
         """
         await session.delete(db_obj)
         await session.commit()
+
+    async def get_audit_log(self, session: AsyncSession, pk_id: PkIdT) -> tuple[int, Sequence["AuditLog"] | None]:
+        if hasattr(self.model, "audit_log"):
+            stmt = self._get_base_stmt()
+            id_str = self.get_id_attribute_value(self.model)
+            stmt = stmt.where(id_str == pk_id).options(
+                selectinload(self.model.audit_log)  # type: ignore  # noqa: PGH003
+            )
+            results = (await session.scalars(stmt)).one_or_none()
+            if results:
+                return len(results.audit_log), results.audit_log  # type: ignore  # noqa: PGH003
+            return 0, None
+        return 0, None

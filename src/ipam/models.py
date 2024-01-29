@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.db._types import bool_false, bool_true, int_pk
 from src.db.base import Base
-from src.db.mixins import AuditLogMixin, AuditTimeMixin
+from src.db.mixins import AuditLogMixin
 
 if TYPE_CHECKING:
     from src.arch.models import IPRole
@@ -93,7 +93,7 @@ class IPRange(Base, AuditLogMixin):
     role: Mapped["IPRole"] = relationship(backref="ip_range")
 
 
-class IPAddress(Base, AuditTimeMixin):
+class IPAddress(Base, AuditLogMixin):
     __tablename__ = "ip_address"
     __visible_name__ = {"en_US": "IP Address", "zh_CN": "IP地址"}
     __search_fields__ = {"address"}

@@ -7,7 +7,7 @@ from sqlalchemy.orm.collections import attribute_mapped_collection
 from src.consts import LocationStatus, LocationType, SiteStatus
 from src.db._types import IntegerEnum, int_pk
 from src.db.base import Base
-from src.db.mixins import AuditLogMixin, AuditUserMixin
+from src.db.mixins import AuditLogMixin
 
 if TYPE_CHECKING:
     from src.ipam.models import ASN
@@ -80,7 +80,7 @@ class Location(Base, AuditLogMixin):
     parent: Mapped["Location"] = relationship(back_populates="children", remote_side=[parent_id])
 
 
-class Contact(Base):
+class Contact(Base, AuditLogMixin):
     __tablename__ = "contact"
     __visible_name__ = {"en_US": "Contact", "zh_CN": "联系人"}
 
@@ -91,7 +91,7 @@ class Contact(Base):
     phone: Mapped[str | None]
 
 
-class ContactRole(Base, AuditUserMixin):
+class ContactRole(Base, AuditLogMixin):
     __tablename__ = "contact_role"
     __visible_name__ = {"en_US": "Contact Role", "zh_CN": "联系人角色"}
     id: Mapped[int_pk]
@@ -123,5 +123,3 @@ SiteGroup.site_count = column_property(
     select(func.count(Site.id)).where(Site.site_group_id == id).correlate_except(SiteGroup).scalar_subquery(),
     deferred=True,
 )
-
-

@@ -1,8 +1,7 @@
 from fastapi import Query
 from pydantic import Field
 
-from src._types import AuditTime, AuditUser, BaseModel, I18nField, QueryParams
-from src.internal import schemas
+from src._types import AuditTime, BaseModel, I18nField, QueryParams
 
 
 class CircuitTypeCreate(BaseModel):
@@ -21,12 +20,7 @@ class CircuitTypeQuery(QueryParams):
     slug: list[str] | None = Field(Query(default=[]))
 
 
-class CircuitType(CircuitTypeCreate, AuditTime, AuditUser):
-    id: int
-    circuit: list[schemas.CircuitBrief]
-
-
-class CircuitTypeList(CircuitTypeCreate, AuditTime):
+class CircuitType(CircuitTypeCreate, AuditTime):
     id: int
     circuit_count: int
 
@@ -47,12 +41,7 @@ class RackRoleQuery(QueryParams):
     slug: list[str] | None = Field(Query(default=[]))
 
 
-class RackRole(RackRoleCreate, AuditTime, AuditUser):
-    id: int
-    rack_count: int
-
-
-class RackRoleList(RackRoleCreate, AuditTime):
+class RackRole(RackRoleCreate, AuditTime):
     id: int
     rack_count: int
 
@@ -73,12 +62,7 @@ class DeviceRoleQuery(QueryParams):
     slug: list[str] | None = Field(Query(default=[]))
 
 
-class DeviceRole(DeviceRoleCreate, AuditTime, AuditUser):
-    id: int
-    device_count: int
-
-
-class DeviceRoleList(RackRoleCreate, AuditTime):
+class DeviceRole(DeviceRoleCreate, AuditTime):
     id: int
     device_count: int
 
@@ -99,9 +83,7 @@ class IPRoleQuery(QueryParams):
     slug: list[str] | None = Field(Query(default=[]))
 
 
-class IPRole(IPRoleCreate, AuditTime, AuditUser):
+class IPRole(IPRoleCreate, AuditTime):
     id: int
-
-
-class IPRoleList(RackRoleCreate, AuditTime):
-    id: int
+    prefix_count: int
+    vlan_count: int

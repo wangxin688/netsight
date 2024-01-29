@@ -7,7 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.consts import DeviceStatus, EntityPhysicalClass, InterfaceAdminStatus, RackStatus
 from src.db._types import IntegerEnum, i18n_name, int_pk
 from src.db.base import Base
-from src.db.mixins import AuditLogMixin, AuditUserMixin
+from src.db.mixins import AuditLogMixin
 
 if TYPE_CHECKING:
     from src.arch.models import DeviceRole, RackRole
@@ -37,7 +37,7 @@ class Rack(Base, AuditLogMixin):
     device: Mapped[list["Device"]] = relationship(back_populates="rack")
 
 
-class Vendor(Base, AuditUserMixin):
+class Vendor(Base, AuditLogMixin):
     __tablename__ = "vendor"
     __visible_name__ = {"en_US": "Vendor", "zh_CN": "厂商"}
     __i18n_fields__ = {"name"}
@@ -48,7 +48,7 @@ class Vendor(Base, AuditUserMixin):
     platform: Mapped[list["Platform"]] = relationship(back_populates="vendor")
 
 
-class DeviceType(Base, AuditUserMixin):
+class DeviceType(Base, AuditLogMixin):
     __tablename__ = "device_type"
     __visible_name__ = {"en_US": "Device Type", "zh_CN": "设备型号"}
     __table_args__ = (UniqueConstraint("vendor_id", "name"),)
@@ -62,7 +62,7 @@ class DeviceType(Base, AuditUserMixin):
     vendor: Mapped["Vendor"] = relationship(backref="device_type", passive_deletes=True)
 
 
-class Platform(Base, AuditUserMixin):
+class Platform(Base, AuditLogMixin):
     __tablename__ = "platform"
     id: Mapped[int_pk]
     name: Mapped[str] = mapped_column(unique=True)
@@ -70,7 +70,7 @@ class Platform(Base, AuditUserMixin):
     description: Mapped[str | None]
     netmiko_driver: Mapped[str | None]
     vendor_id: Mapped[int] = mapped_column(ForeignKey("vendor.id", ondelete="RESTRICT"))
-    vendor: Mapped[Vendor] = relationship(back_populates="platform", passive_deletes=True)
+    vendor: Mapped["Vendor"] = relationship(back_populates="platform", passive_deletes=True)
 
 
 class Device(Base, AuditLogMixin):
@@ -164,7 +164,7 @@ class Interface(Base):
     ip_address: Mapped[list["IPAddress"]] = relationship("IPAddress", back_populates="interface")
 
 
-class DeviceGroup(Base, AuditUserMixin):
+class DeviceGroup(Base, AuditLogMixin):
     __tablename__ = "device_group"
     __visible_name__ = {"en_US": "Device Group", "zh_CN": "设备组"}
     id: Mapped[int_pk]

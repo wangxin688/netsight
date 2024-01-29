@@ -71,7 +71,7 @@ fixable = ["ALL"]
 "src/internal/api.py" = ["ARG001"]
 "src/auth/schemas.py" = ["N815"]
 "alembic/*.py" = ["INP001", "UP007"]
-"__init__.py" = ["F403"]
+"__init__.py" = ["F403", "F405"]
 "schemas.py" = ["ANN201"]
 
 [tool.ruff.flake8-bugbear]

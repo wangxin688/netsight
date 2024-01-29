@@ -203,6 +203,7 @@ class ContactRoleUpdate(ContactRoleCreate):
 class ContactRole(ContactRoleBase):
     id: int
 
+
 class ContactRoleQuery(QueryParams):
     name: list[NameChineseStr] | None = Field(Query(default=[]))
 

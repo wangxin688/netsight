@@ -45,7 +45,7 @@ async_session: AsyncSession = sessionmaker(
 # 已自动实现上下文管理， close session
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
     async with async_session() as session:
-        yield 
+        yield
 
 ```
 2. 非API接口业务，如定时任务场景
@@ -118,4 +118,3 @@ relationship 的 cascade 参数决定了修改父表时，什么时候子表要�
 #### 数据库层的 cascade 实现
 - 将 ForeignKey 的 `ondelete`和`onupdate` 参数指定为`CASCADE`，实现数据库层面的级联。
 - 为 `relationship` 添加关键字参数`passive_deletes="all"`，这样就完全禁用sqla将外键列设置为 NULL 的行为，并且 DELETE 父数据不会对子数据产生任何影响。这样 DELETE 操作时，就会触发数据库的`ON DELETE`约束，从而级联删除子数据。
-
