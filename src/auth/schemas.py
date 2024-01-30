@@ -3,7 +3,7 @@ from uuid import UUID
 
 from pydantic_extra_types.phone_numbers import PhoneNumber
 
-from src._types import AuditTimeBase, BaseModel, QueryParams
+from src._types import AuditTimeBase, BaseModel, QueryParams, IdCreate
 
 
 class AccessToken(BaseModel):
@@ -130,12 +130,11 @@ class UserCreate(UserBase):
 class GroupCreate(GroupBase):
     password: str
     role_id: int
-    user_ids: list[int] | None = None
+    user: list[IdCreate]
 
 
 class RoleCreate(RoleBase):
-    permission_ids: list[UUID] | None = None
-
+    permission: list[IdCreate]
 
 class UserUpdate(UserCreate):
     name: str | None = None

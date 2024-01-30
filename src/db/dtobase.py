@@ -598,7 +598,7 @@ class DtoBase(Generic[ModelT, CreateSchemaType, UpdateSchemaType, QuerySchemaTyp
         )
         if m2m:
             for key, value in m2m.items():
-                if hasattr(obj_in, key):
+                if hasattr(obj_in, key) and getattr(obj_in, key) is not None:
                     dto_m2m = DtoBase(value)
                     db_m2m = await dto_m2m.get_multi_by_pks_or_404(session, [r.id for r in getattr(obj_in, key)])
                     setattr(new_obj, key, db_m2m)
@@ -631,6 +631,18 @@ class DtoBase(Generic[ModelT, CreateSchemaType, UpdateSchemaType, QuerySchemaTyp
         insp = await inspect_table(self.model.__tablename__)
         await self._apply_foreign_keys_check(session, obj_in, insp)
         await self._apply_unique_constraints_when_update(session, obj_in, insp, db_obj)
+        m2m = self.inspect_relationship()
+        extra_excluded = set(m2m.keys())
+        if excludes:
+            excludes.update(extra_excluded)
+        else:
+            excludes = extra_excluded
+        if m2m:
+            for key, value in m2m.items():
+                if hasattr(obj_in, key) and getattr(obj_in, key) is not None:
+                    await self.update_relationship_field(
+                        session, db_obj, value, key, [r.id for r in getattr(obj_in, key)], self.id_attribute
+                    )
         db_obj = self._update_mutable_tracking(obj_in, db_obj, excludes)
         if commit:
             return await self.commit(session, db_obj)

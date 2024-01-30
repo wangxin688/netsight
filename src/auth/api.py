@@ -8,7 +8,8 @@ from src import errors
 from src._types import IdResponse, ListT
 from src.auth import schemas
 from src.auth.models import Group, Menu, Permission, Role, User
-from src.auth.services import GroupDto, MenuDto, RoleDto, UserDto
+from src.auth.services import MenuDto, UserDto
+from src.db.dtobase import DtoBase
 from src.cbv import cbv
 from src.deps import auth, get_session
 from src.exceptions import GenerError
@@ -68,7 +69,7 @@ class UserAPI:
     async def update_user(self, id: int, user: schemas.UserUpdate) -> IdResponse:
         update_user = user.model_dump(exclude_unset=True)
         if "password" in update_user and update_user["password"] is None:
-            raise GenerError(errors.ERR_10006, status_code=status.HTTP_406_NOT_ACCEPTABLE)
+            raise GenerError(errors.ERR_10005, status_code=status.HTTP_406_NOT_ACCEPTABLE)
         db_user = await self.dto.get_one_or_404(self.session, id)
         await self.dto.update(self.session, db_user, user)
         return IdResponse(id=id)
@@ -84,15 +85,11 @@ class UserAPI:
 class GroupAPI:
     user: User = Depends(auth)
     session: AsyncSession = Depends(get_session)
-    dto = GroupDto(Group)
+    dto = DtoBase(Group)
 
     @router.post("/groups", operation_id="9e3e639d-c694-467d-9209-717b038cf267")
     async def create_group(self, group: schemas.GroupCreate) -> IdResponse:
-        if not group.user_ids:
-            new_group = await self.dto.create(self.session, group)
-        else:
-            users = (await self.session.scalars(select(User).where(User.id.in_(group.user_ids)))).all()
-            new_group = await self.dto.create_with_users(self.session, group, users)
+        new_group = await self.dto.create(self.session, group)
         return IdResponse(id=new_group.id)
 
     @router.get("/groups/{id}", operation_id="00327087-9443-4d24-8d04-e396e3244744")
@@ -108,10 +105,7 @@ class GroupAPI:
     @router.put("/groups/{id}", operation_id="3d5badd1-665c-49f8-85c4-6f6d7f3a1b2a")
     async def update_group(self, id: int, group: schemas.GroupUpdate) -> IdResponse:
         db_group = await self.dto.get_one_or_404(self.session, id, selectinload(Group.user))
-        update_group = group.model_dump(exclude_unset=True)
-        if "user_ids" in update_group:
-            db_group = await self.dto.update_relationship_field(self.session, db_group, User, "user", group.user_ids)
-        await self.dto.update(self.session, db_group, group, excludes={"user_ids"})
+        await self.dto.update(self.session, db_group, group)
         return IdResponse(id=id)
 
     @router.delete("/groups/{id}", operation_id="e16830da-2973-4369-8e75-da9b4174ab72")
@@ -125,17 +119,11 @@ class GroupAPI:
 class RoleAPI:
     user: User = Depends(auth)
     session: AsyncSession = Depends(get_session)
-    dto = RoleDto(Role)
+    dto = DtoBase(Role)
 
     @router.post("/roles", operation_id="a18a152b-e9e9-4128-b8be-8a8e9c842abb")
     async def create_role(self, role: schemas.RoleCreate) -> IdResponse:
-        if not role.permission_ids:
-            new_role = await self.dto.create(self.session, role)
-        else:
-            permissions = (
-                await self.session.scalars(select(Permission).where(Permission.id.in_(role.permission_ids)))
-            ).all()
-            new_role = await self.dto.create_with_permissions(self.session, role, permissions)
+        new_role = await self.dto.create(self.session, role)
         return IdResponse(id=new_role.id)
 
     @router.get("/roles/{id}", operation_id="2b45f59a-77a1-45d4-bf43-94373da517e3")
@@ -151,11 +139,7 @@ class RoleAPI:
     @router.put("/roles/{id}", operation_id="2fda2e00-ad86-4296-a1d4-c7f02366b52e")
     async def update_role(self, id: int, role: schemas.RoleUpdate) -> IdResponse:
         db_role = await self.dto.get_one_or_404(self.session, id, selectinload(Role.permission))
-        if "permission_ids" in role.model_dump(exclude_unset=True):
-            db_role = await self.dto.update_relationship_field(
-                self.session, db_role, Permission, "permission", role.permission_ids
-            )
-        await self.dto.update(self.session, db_role, role, excludes={"permission_ids"})
+        await self.dto.update(self.session, db_role, role)
         return IdResponse(id=id)
 
     @router.delete("/roles/{id}", operation_id="c4e9e0e8-6b0c-4f6f-9e6c-8d9f9f9f9f9f")
