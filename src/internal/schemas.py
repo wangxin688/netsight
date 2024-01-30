@@ -87,6 +87,7 @@ class DeviceTypeBrief(BaseModel):
 class PlatformBrief(BaseModel):
     id: int
     name: str
+    netmiko_driver: str
 
 
 class DeviceGroupBrief(BaseModel):

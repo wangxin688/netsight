@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Float, ForeignKey, Integer, UniqueConstraint
+from sqlalchemy import Float, ForeignKey, Integer, UniqueConstraint, func, select
 from sqlalchemy.dialects.postgresql import INET
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
 from src.consts import DeviceStatus, EntityPhysicalClass, InterfaceAdminStatus, RackStatus
 from src.db._types import IntegerEnum, i18n_name, int_pk
@@ -45,7 +45,6 @@ class Vendor(Base, AuditLogMixin):
     name: Mapped[i18n_name]
     slug: Mapped[str] = mapped_column(unique=True)
     description: Mapped[str | None]
-    platform: Mapped[list["Platform"]] = relationship(back_populates="vendor")
 
 
 class DeviceType(Base, AuditLogMixin):
@@ -60,6 +59,8 @@ class DeviceType(Base, AuditLogMixin):
     rear_image: Mapped[str | None]
     vendor_id: Mapped[int] = mapped_column(ForeignKey("vendor.id", ondelete="RESTRICT"))
     vendor: Mapped["Vendor"] = relationship(backref="device_type", passive_deletes=True)
+    platform_id: Mapped[int] = mapped_column(ForeignKey("platform.id", ondelete="RESTRIC"))
+    platform: Mapped["Platform"] = relationship(backref="device_type")
 
 
 class Platform(Base, AuditLogMixin):
@@ -69,19 +70,18 @@ class Platform(Base, AuditLogMixin):
     slug: Mapped[str] = mapped_column(unique=True)
     description: Mapped[str | None]
     netmiko_driver: Mapped[str | None]
-    vendor_id: Mapped[int] = mapped_column(ForeignKey("vendor.id", ondelete="RESTRICT"))
-    vendor: Mapped["Vendor"] = relationship(back_populates="platform", passive_deletes=True)
 
 
 class Device(Base, AuditLogMixin):
     __tablename__ = "device"
     __visible_name__ = {"en_US": "Device", "zh_CN": "设备"}
     __table_args__ = (UniqueConstraint("rack_id", "position"),)
-    __search_fields__ = {"name", "management_ipv4", "management_ipv6", "serial_num"}
+    __search_fields__ = {"name", "management_ipv4", "management_ipv6", "serial_num", "oob_ip"}
     id: Mapped[int_pk]
     name: Mapped[str] = mapped_column(index=True)
     management_ipv4: Mapped[str | None] = mapped_column(INET, index=True)
     management_ipv6: Mapped[str | None] = mapped_column(INET, index=True)
+    oob_ip: Mapped[str | None] = mapped_column(INET)
     status: Mapped[DeviceStatus] = mapped_column(IntegerEnum(DeviceStatus))
     version: Mapped[str | None]
     comments: Mapped[str | None]
@@ -92,8 +92,8 @@ class Device(Base, AuditLogMixin):
     device_type: Mapped["DeviceType"] = relationship(backref="device", passive_deletes=True)
     device_role_id: Mapped[int] = mapped_column(ForeignKey("device_role.id", ondelete="RESTRICT"))
     device_role: Mapped["DeviceRole"] = relationship(backref="device", passive_deletes=True)
-    platform_id: Mapped[int] = mapped_column(ForeignKey("platform.id", ondelete="CASCADE"))
-    platform: Mapped["Platform"] = relationship(backref="device", passive_deletes=True)
+    platform_id: Mapped[int] = mapped_column(comment="redundant platform.id for query performance")
+    vendor_id: Mapped[int] = mapped_column(comment="redundant vendor.id for query performance")
     site_id: Mapped[int] = mapped_column(ForeignKey("site.id", ondelete="CASCADE"))
     site: Mapped["Site"] = relationship(backref="device", passive_deletes=True)
     location_id: Mapped[int | None] = mapped_column(ForeignKey("location.id", ondelete="SET NULL"))
@@ -170,3 +170,56 @@ class DeviceGroup(Base, AuditLogMixin):
     id: Mapped[int_pk]
     name: Mapped[str]
     description: Mapped[str | None]
+
+
+Rack.device_count = column_property(
+    select(func.count(Device.id)).where(Device.rack_id == Rack.id).correlate_except(Rack).scalar_subquery(),
+    deferred=True,
+)
+Vendor.device_type_count = column_property(
+    select(func.count(DeviceType.id))
+    .where(DeviceType.vendor_id == Vendor.id)
+    .correlate_except(Vendor)
+    .scalar_subquery(),
+    deferred=True,
+)
+Vendor.device_count = column_property(
+    select(func.count(Device.id)).where(Device.vendor_id == Vendor.id).correlate_except(Vendor).scalar_subquery(),
+    deferred=True,
+)
+DeviceType.device_count = column_property(
+    select(func.count(Device.id))
+    .where(Device.device_type_id == DeviceType.id)
+    .correlate_except(DeviceType)
+    .scalar_subquery(),
+    deferred=True,
+)
+Platform.device_count = column_property(
+    select(func.count(Device.id)).where(Device.platform_id == Platform.id).correlate_except(Platform).scalar_subquery(),
+    deferred=True,
+)
+Platform.device_type_count = column_property(
+    select(func.count(DeviceType.id))
+    .where(DeviceType.platform_id == Platform.id)
+    .correlate_except(Platform)
+    .scalar_subquery(),
+    deferred=True,
+)
+Device.interface_count = column_property(
+    select(func.count(Interface.id)).where(Interface.device_id == Device.id).correlate_except(Device).scalar_subquery(),
+    deferred=True,
+)
+Device.device_entity_count = column_property(
+    select(func.count(DeviceEntity.id))
+    .where(DeviceEntity.device_id == Device.id)
+    .correlate_except(Device)
+    .scalar_subquery(),
+    deferred=True,
+)
+DeviceGroup.device_count = column_property(
+    select(func.count(Device.id))
+    .where(Device.device_group_id == DeviceGroup.id)
+    .correlate_except(DeviceGroup)
+    .scalar_subquery(),
+    deferred=True,
+)
