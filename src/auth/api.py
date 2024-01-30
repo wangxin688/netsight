@@ -1,16 +1,15 @@
 from fastapi import APIRouter, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src import errors
 from src._types import IdResponse, ListT
 from src.auth import schemas
-from src.auth.models import Group, Menu, Permission, Role, User
+from src.auth.models import Group, Menu, Role, User
 from src.auth.services import MenuDto, UserDto
-from src.db.dtobase import DtoBase
 from src.cbv import cbv
+from src.db.dtobase import DtoBase
 from src.deps import auth, get_session
 from src.exceptions import GenerError
 from src.security import generate_access_token_response

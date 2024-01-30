@@ -23,6 +23,7 @@ class UserDto(DtoBase[User, schemas.UserCreate, schemas.UserUpdate, schemas.User
             raise PermissionDenyError
         return db_user
 
+
 class PermissionDto(DtoBase[Permission, schemas.PermissionCreate, schemas.PermissionUpdate, schemas.PermissionQuery]):
     async def create(
         self,
