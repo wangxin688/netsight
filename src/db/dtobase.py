@@ -587,9 +587,22 @@ class DtoBase(Generic[ModelT, CreateSchemaType, UpdateSchemaType, QuerySchemaTyp
         insp = await inspect_table(self.model.__tablename__)
         await self._apply_foreign_keys_check(session, obj_in, insp)
         await self._apply_unique_constraints_when_create(session, obj_in, insp)
+        m2m = self.inspect_relationship()
+        extra_excluded = set(m2m.keys())
+        if excludes:
+            excludes.update(extra_excluded)
+        else:
+            excludes = extra_excluded
         new_obj = self.model(
             **obj_in.model_dump(exclude_unset=exclude_unset, exclude_none=exclude_none, exclude=excludes)
         )
+        if m2m:
+            for key, value in m2m.items():
+                if hasattr(obj_in, key):
+                    dto_m2m = DtoBase(value)
+                    db_m2m = await dto_m2m.get_multi_by_pks_or_404(session, getattr(obj_in, key))
+                    setattr(new_obj, key, db_m2m)
+                setattr(obj_in, key, value)
         if commit:
             return await self.commit(session, new_obj)
         return new_obj
