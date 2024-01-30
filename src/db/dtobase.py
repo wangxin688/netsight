@@ -600,7 +600,7 @@ class DtoBase(Generic[ModelT, CreateSchemaType, UpdateSchemaType, QuerySchemaTyp
             for key, value in m2m.items():
                 if hasattr(obj_in, key):
                     dto_m2m = DtoBase(value)
-                    db_m2m = await dto_m2m.get_multi_by_pks_or_404(session, getattr(obj_in, key))
+                    db_m2m = await dto_m2m.get_multi_by_pks_or_404(session, [r.id for r in getattr(obj_in, key)])
                     setattr(new_obj, key, db_m2m)
                 setattr(obj_in, key, value)
         if commit:
