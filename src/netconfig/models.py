@@ -1,9 +1,14 @@
-from sqlalchemy import ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column
+from typing import TYPE_CHECKING
 
-from src.db._types import EncryptedString, int_pk
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from src.db.base import Base
+from src.db.db_types import EncryptedString, int_pk
 from src.db.mixins import AuditLogMixin
+
+if TYPE_CHECKING:
+    from src.dcim.models import Platform
 
 
 class BaseLineConfig(Base, AuditLogMixin):
@@ -16,7 +21,7 @@ class BaseLineConfig(Base, AuditLogMixin):
     ntp_server: Mapped[str | None] = mapped_column(EncryptedString())
     syslog_server: Mapped[str | None] = mapped_column(EncryptedString())
     netflow_server: Mapped[str | None] = mapped_column(EncryptedString())
-    region_id: Mapped[int | None] = mapped_column(ForeignKey("region.id", ondelete="CASCADE"))
+    site_group_id: Mapped[int | None] = mapped_column(ForeignKey("site_group.id", ondelete="CASCADE"))
     site_id: Mapped[int | None] = mapped_column(ForeignKey("site.id", ondelete="CASCADE"))
     device_group_id: Mapped[int | None] = mapped_column(ForeignKey("device_group.id", ondelete="CASCADE"))
     device_id: Mapped[int | None] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))
@@ -32,7 +37,7 @@ class DeviceCredential(Base, AuditLogMixin):
     snmpv3: Mapped[str | None] = mapped_column(EncryptedString())
     http_read: Mapped[str | None] = mapped_column(EncryptedString())
     http_write: Mapped[str | None] = mapped_column(EncryptedString())
-    region_id: Mapped[int | None] = mapped_column(ForeignKey("region.id", ondelete="CASCADE"))
+    site_group_id: Mapped[int | None] = mapped_column(ForeignKey("site_group.id", ondelete="CASCADE"))
     site_id: Mapped[int | None] = mapped_column(ForeignKey("site.id", ondelete="CASCADE"))
     device_group_id: Mapped[int | None] = mapped_column(ForeignKey("device_group.id", ondelete="CASCADE"))
     device_id: Mapped[int | None] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))
@@ -44,6 +49,20 @@ class WLANConfig(Base):
     id: Mapped[int_pk]
 
 
-# class TtpTemplate(Base):
+class TextFsmTemplate(Base):
+    __tablename__ = "textfsm_template"
+    __visible_name__ = {"en_US": "TextFSM Template", "zh_CN": "TextFSM模板"}
+    id: Mapped[int_pk]
+    name: Mapped[str]
+    commonad: Mapped[str]
+    platform_id: Mapped[int] = mapped_column(ForeignKey("platform.id", ondelete="RESTRICT"))
+    platform: Mapped["Platform"] = relationship(back_populates="textfsm_template")
 
-# class JinjaTemplate(Base):
+
+class JinjaTemplate(Base):
+    __tablename__ = "jinja_template"
+    __visible_name__ = {"en_US": "Jinja Template", "zh_CN": "Jinja模板"}
+    id: Mapped[int_pk]
+    name: Mapped[str]
+    platform_id: Mapped[int] = mapped_column(ForeignKey("platform.id", ondelete="RESTRICT"))
+    platform: Mapped["Platform"] = relationship(back_populates="jinja_template")

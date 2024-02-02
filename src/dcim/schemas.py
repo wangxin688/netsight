@@ -147,6 +147,7 @@ class Platform(PlatformBase, AuditTime):
     id: int
     device_type_count: int
     device_count: int
+    textfsm_template_count: int
 
 
 class DeviceBase(BaseModel):
@@ -222,7 +223,7 @@ class DeviceEntityBase(BaseModel):
     hardware_version: str | None = None
     software_version: str | None = None
     serial_num: str | None = None
-    model_name: str | None = None
+    module_name: str | None = None
     asset_id: str | None = None
     order: int
 

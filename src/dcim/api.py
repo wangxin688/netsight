@@ -1,10 +1,10 @@
-from typing import TYPE_CHECKING
-
 from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src._types import AuditLog, IdResponse, ListT
 from src.arch.models import RackRole
+from src.auth.models import User
 from src.cbv import cbv
 from src.db.dtobase import DtoBase
 from src.dcim import schemas
@@ -13,18 +13,13 @@ from src.dcim.services import RackDto
 from src.deps import auth, get_session
 from src.org.models import Location, Site
 
-if TYPE_CHECKING:
-    from sqlalchemy.ext.asyncio import AsyncSession
-
-    from src.auth.models import User
-
 router = APIRouter()
 
 
 @cbv(router)
 class RackAPI:
-    session: "AsyncSession" = Depends(get_session)
-    user: "User" = Depends(auth)
+    session: AsyncSession = Depends(get_session)
+    user: User = Depends(auth)
     dto = RackDto(Rack)
 
     @router.post("racks", operation_id="040b3088-1616-4c36-8db1-62152efe9e64")
@@ -77,8 +72,8 @@ class RackAPI:
 
 @cbv(router)
 class VendorAPI:
-    session: "AsyncSession" = Depends(get_session)
-    user: "User" = Depends(auth)
+    session: AsyncSession = Depends(get_session)
+    user: User = Depends(auth)
     dto = DtoBase(Vendor)
 
     @router.post("/vendors", operation_id="e56edca5-f270-494f-894b-e80b76ed6e5e")
@@ -118,8 +113,8 @@ class VendorAPI:
 
 @cbv(router)
 class DeviceTypeAPI:
-    session: "AsyncSession" = Depends(get_session)
-    user: "User" = Depends(auth)
+    session: AsyncSession = Depends(get_session)
+    user: User = Depends(auth)
     dto = DtoBase(DeviceType)
 
     @router.post("/device-types", operation_id="cea5008c-0a32-4bdb-9c17-709230168e2b")
@@ -170,8 +165,8 @@ class DeviceTypeAPI:
 
 @cbv(router)
 class PlatformAPI:
-    session: "AsyncSession" = Depends(get_session)
-    user: "User" = Depends(auth)
+    session: AsyncSession = Depends(get_session)
+    user: User = Depends(auth)
     dto = DtoBase(Platform)
 
     @router.post("/platforms", operation_id="38e18494-e38c-4060-962f-64dfd37a61af")
@@ -211,8 +206,8 @@ class PlatformAPI:
 
 @cbv(router)
 class DeviceAPI:
-    session: "AsyncSession" = Depends(get_session)
-    user: "User" = Depends(auth)
+    session: AsyncSession = Depends(get_session)
+    user: User = Depends(auth)
     dto = DtoBase(Device)
 
     @router.post("/devices", operation_id="8e4357aa-9de9-4daf-858c-78f92fbd7160")
@@ -257,8 +252,8 @@ class DeviceAPI:
 
 @cbv(router)
 class DeviceEntityAPI:
-    session: "AsyncSession" = Depends(get_session)
-    user: "User" = Depends(auth)
+    session: AsyncSession = Depends(get_session)
+    user: User = Depends(auth)
     dto = DtoBase(DeviceEntity)
 
     @router.post("/device-entities", operation_id="b998bbdf-0956-4e09-998a-9e1d8c3c8f39")
@@ -298,8 +293,8 @@ class DeviceEntityAPI:
 
 @cbv(router)
 class DeviceGroupAPI:
-    session: "AsyncSession" = Depends(get_session)
-    user: "User" = Depends(auth)
+    session: AsyncSession = Depends(get_session)
+    user: User = Depends(auth)
     dto = DtoBase(DeviceGroup)
 
     @router.post("/device-groups", operation_id="a70c2ef2-8591-4e67-a490-473c9e28b8ea")

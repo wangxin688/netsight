@@ -1,0 +1,52 @@
+[
+    {
+        "id": 1,
+        "name": {"en_US": "Cisco Systems", "zh_CN": "思科"},
+        "slug": "cisco"
+    },
+    {
+        "id": 2,
+        "name": {"en_US": "Juniper Networks", "zh_CN": "瞻博网络"},
+        "slug": "juniper"
+    },
+    {
+        "id": 3,
+        "name": {"en_US": "PlatAlto Networks", "zh_CN": "PlatAlto 网络"},
+        "slug": "platalto"
+    },
+    {
+        "id": 4,
+        "name": {"en_US": "Arista Networks", "zh_CN": "Arista 网络"},
+        "slug": "arista"
+    },
+    {
+        "id": 5,
+        "name": {"en_US": "HPE", "zh_CN": "HPE"},
+        "slug": "hpe"
+    },
+    {
+        "id": 6,
+        "name": {"en_US": "VMware", "zh_CN": "VMware"},
+        "slug": "vmware"
+    }
+    {
+        "id": 7,
+        "name": {"en_US": "H3C", "zh_CN": "新华三"},
+        "slug": "h3c"
+    },
+    {
+        "id": 8,
+        "name": {"en_US": "Huawei", "zh_CN": "华为"},
+        "slug": "huawei"
+    },
+    {
+        "id": 9,
+        "name": {"en_US": "Ruijie Networks", "zh_CN": "锐捷网络"},
+        "slug": "ruijie"
+    },
+    {
+        "id": 10,
+        "name": {"en_US": "FORTINET", "zh_CN": "飞塔"},
+        "slug": "fortinet"
+    }
+]

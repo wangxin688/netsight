@@ -3,15 +3,17 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Float, ForeignKey, Integer, UniqueConstraint, func, select
 from sqlalchemy.dialects.postgresql import INET
 from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
+from sqlalchemy_utils.types import ChoiceType
 
 from src.consts import DeviceStatus, EntityPhysicalClass, InterfaceAdminStatus, RackStatus
-from src.db._types import IntegerEnum, i18n_name, int_pk
 from src.db.base import Base
+from src.db.db_types import i18n_name, int_pk
 from src.db.mixins import AuditLogMixin
 
 if TYPE_CHECKING:
     from src.arch.models import DeviceRole, RackRole
     from src.ipam.models import VLAN, VRF, IPAddress
+    from src.netconfig.models import TextFsmTemplate
     from src.org.models import Location, Site
 
 __all__ = ("Rack", "Vendor", "DeviceType", "Platform", "Device", "Interface", "DeviceEntity", "DeviceGroup")
@@ -23,7 +25,7 @@ class Rack(Base, AuditLogMixin):
     __search_fields__ = {"name", "asset_tag", "serial_num"}
     id: Mapped[int_pk]
     name: Mapped[str]
-    status: Mapped[RackStatus] = mapped_column(IntegerEnum(RackStatus))
+    status: Mapped[RackStatus] = mapped_column(ChoiceType(RackStatus))
     serial_num: Mapped[str | None] = mapped_column(unique=True)
     asset_tag: Mapped[str | None] = mapped_column(unique=True)
     u_width: Mapped[float | None]
@@ -44,7 +46,6 @@ class Vendor(Base, AuditLogMixin):
     id: Mapped[int_pk]
     name: Mapped[i18n_name]
     slug: Mapped[str] = mapped_column(unique=True)
-    description: Mapped[str | None]
 
 
 class DeviceType(Base, AuditLogMixin):
@@ -59,7 +60,7 @@ class DeviceType(Base, AuditLogMixin):
     rear_image: Mapped[str | None]
     vendor_id: Mapped[int] = mapped_column(ForeignKey("vendor.id", ondelete="RESTRICT"))
     vendor: Mapped["Vendor"] = relationship(backref="device_type", passive_deletes=True)
-    platform_id: Mapped[int] = mapped_column(ForeignKey("platform.id", ondelete="RESTRIC"))
+    platform_id: Mapped[int] = mapped_column(ForeignKey("platform.id", ondelete="RESTRICT"))
     platform: Mapped["Platform"] = relationship(backref="device_type")
 
 
@@ -70,6 +71,7 @@ class Platform(Base, AuditLogMixin):
     slug: Mapped[str] = mapped_column(unique=True)
     description: Mapped[str | None]
     netmiko_driver: Mapped[str | None]
+    textfsm_template: Mapped[list["TextFsmTemplate"]] = relationship(back_populates="platform")
 
 
 class Device(Base, AuditLogMixin):
@@ -82,7 +84,7 @@ class Device(Base, AuditLogMixin):
     management_ipv4: Mapped[str | None] = mapped_column(INET, index=True)
     management_ipv6: Mapped[str | None] = mapped_column(INET, index=True)
     oob_ip: Mapped[str | None] = mapped_column(INET)
-    status: Mapped[DeviceStatus] = mapped_column(IntegerEnum(DeviceStatus))
+    status: Mapped[DeviceStatus] = mapped_column(ChoiceType(DeviceStatus))
     version: Mapped[str | None]
     comments: Mapped[str | None]
     serial_num: Mapped[str | None] = mapped_column(unique=True)
@@ -113,11 +115,11 @@ class DeviceEntity(Base, AuditLogMixin):
     __table_args__ = (UniqueConstraint("id", "index"),)
     id: Mapped[int_pk]
     index: Mapped[str]
-    entity_class: Mapped[EntityPhysicalClass] = mapped_column(IntegerEnum(EntityPhysicalClass))
+    entity_class: Mapped[EntityPhysicalClass] = mapped_column(ChoiceType(EntityPhysicalClass))
     hardware_version: Mapped[str | None]
     software_version: Mapped[str | None]
     serial_num: Mapped[str | None]
-    model_name: Mapped[str | None]
+    module_name: Mapped[str | None]
     asset_id: Mapped[str | None]
     order: Mapped[int]
     device_id: Mapped[int] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))
@@ -136,7 +138,7 @@ class Interface(Base):
     mode: Mapped[str]
     interface_type: Mapped[str | None]
     mtu: Mapped[int | None]
-    admin_state: Mapped[InterfaceAdminStatus] = mapped_column(IntegerEnum(InterfaceAdminStatus))
+    admin_state: Mapped[InterfaceAdminStatus] = mapped_column(ChoiceType(InterfaceAdminStatus))
     device_id: Mapped[int] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))
     device: Mapped["Device"] = relationship(back_populates="interface")
     lag_interface_id: Mapped[int | None] = mapped_column(

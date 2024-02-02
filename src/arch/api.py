@@ -1,26 +1,21 @@
-from typing import TYPE_CHECKING
-
 from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src._types import AuditLog, IdResponse, ListT
 from src.arch import schemas
 from src.arch.models import CircuitType, DeviceRole, IPRole, RackRole
+from src.auth.models import User
 from src.cbv import cbv
 from src.db.dtobase import DtoBase
 from src.deps import auth, get_session
-
-if TYPE_CHECKING:
-    from sqlalchemy.ext.asyncio import AsyncSession
-
-    from src.auth.models import User
 
 router = APIRouter()
 
 
 @cbv(router)
 class CircuitTypeAPI:
-    session: "AsyncSession" = Depends(get_session)
-    user: "User" = Depends(auth)
+    session: AsyncSession = Depends(get_session)
+    user: User = Depends(auth)
     dto = DtoBase(CircuitType)
 
     @router.post("/circuit-types", operation_id="be8f6f87-90f4-429d-8b80-85a3816bb466")
@@ -60,8 +55,8 @@ class CircuitTypeAPI:
 
 @cbv(router)
 class DeviceRoleAPI:
-    session: "AsyncSession" = Depends(get_session)
-    user: "User" = Depends(auth)
+    session: AsyncSession = Depends(get_session)
+    user: User = Depends(auth)
     dto = DtoBase(DeviceRole)
 
     @router.post("/device-roles", operation_id="b266343a-2832-4984-97ca-5bcb9b1f13fc")
@@ -101,8 +96,8 @@ class DeviceRoleAPI:
 
 @cbv(router)
 class RackRoleAPI:
-    session: "AsyncSession" = Depends(get_session)
-    user: "User" = Depends(auth)
+    session: AsyncSession = Depends(get_session)
+    user: User = Depends(auth)
     dto = DtoBase(RackRole)
 
     @router.post("/rack-roles", operation_id="60f2f8e2-5694-48bf-82c1-8780639504b8")
@@ -142,8 +137,8 @@ class RackRoleAPI:
 
 @cbv(router)
 class IPRoleAPI:
-    session: "AsyncSession" = Depends(get_session)
-    user: "User" = Depends(auth)
+    session: AsyncSession = Depends(get_session)
+    user: User = Depends(auth)
     dto = DtoBase(IPRole)
 
     @router.post("/ip-roles", operation_id="6adadd9a-f2d9-49da-824f-58df420ab35e")

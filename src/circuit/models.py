@@ -1,11 +1,13 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import TEXT, ForeignKey, String
+from sqlalchemy import TEXT, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import ARRAY, INET
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy_utils.types import ChoiceType
 
-from src.db._types import date_optional, i18n_name, int_pk
+from src.consts import CircuitStatus
 from src.db.base import Base
+from src.db.db_types import date_optional, i18n_name, int_pk
 from src.db.mixins import AuditLogMixin
 
 if TYPE_CHECKING:
@@ -25,7 +27,7 @@ class Circuit(Base, AuditLogMixin):
     name: Mapped[str] = mapped_column(unique=True)
     slug: Mapped[str] = mapped_column(unique=True)
     cid: Mapped[str | None] = mapped_column(unique=True)
-    status: Mapped[int]
+    status: Mapped[CircuitStatus] = mapped_column(ChoiceType(CircuitStatus))
     install_date: Mapped[date_optional]
     purchase_term: Mapped[str | None]
     bandwidth: Mapped[int] = mapped_column(comment="Mbps")

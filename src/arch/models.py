@@ -2,12 +2,13 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.db._types import i18n_name, int_pk
 from src.db.base import Base
+from src.db.db_types import i18n_name, int_pk
 from src.db.mixins import AuditLogMixin
 
 if TYPE_CHECKING:
     from src.circuit.models import Circuit
+    from src.ipam.models import VLAN, Prefix
 
 __all__ = ("RackRole", "DeviceRole", "IPRole", "CircuitType")
 
@@ -37,6 +38,8 @@ class IPRole(Base, AuditLogMixin):
     name: Mapped[i18n_name]
     slug: Mapped[str] = mapped_column(unique=True)
     description: Mapped[str | None]
+    vlan: Mapped[list["VLAN"]] = relationship(back_populates="role")
+    prefix: Mapped[list["Prefix"]] = relationship(back_populates="role")
 
 
 class CircuitType(Base, AuditLogMixin):

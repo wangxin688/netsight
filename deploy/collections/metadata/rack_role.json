@@ -1,0 +1,51 @@
+[
+    {
+    "id": 1,
+    "name": {"en_US": "Server Rack", "zh_CN": "服务器机柜"},
+    "slug": "server",
+    "description": "用于托管各种服务器，包括应用服务器、数据库服务器等，该机柜可能包括冗余电源单元、网络交换机等。\nUsed to host various servers, including application servers, database servers, etc. This cabinet may include redundant power units, network switches, etc."
+    },
+    {
+        "id": 2,
+        "name": {"en_US": "Network Equipment Rack", "zh_CN": "网络设备机柜"},
+        "slug": "network",
+        "description": "专门用于存放网络设备，如交换机、路由器、防火墙等，集中管理和维护网络基础设施。\nSpecifically designed to house network devices such as switches, routers, firewalls, etc for centralize the management and maintenance of network infrastructure."
+    },
+    {
+        "id": 3,
+        "name": {"en_US": "Storage Rack", "zh_CN": "存储机柜"},
+        "slug": "storage",
+        "description": "用于托管各种存储设备，如磁盘阵列、存储服务器、网络附加存储等,支持高容量和高性能存储需求。\nUsed to host various storage devices, including disk arrays, storage servers, network-attached storage, etc. Designed to support high-capacity and high-performance storage requirements."
+    },
+    {
+        "id": 4,
+        "name": {"en_US": "Management and Monitoring Rack", "zh_CN": "管理监控机柜"},
+        "slug": "management",
+        "description": "包含用于监控和管理数据中心设备的设备，如监控系统、远程管理设备等。实时监测和响应设备状态。\nAcommodates power units and air conditioning equipment, ensuring stable power supply and suitable environmental conditions for data center equipment."
+    },
+    {
+        "id": 5,
+        "name": {"en_US": "Auxiliary Equipment Rack", "zh_CN": "辅助设备机柜"},
+        "slug": "auxiliary",
+        "description": "包括备用设备、配线架、电缆管理等辅助设备。\nIncludes backup equipment, patch panels, cable management, etc. for auxiliary equipment."
+    },
+    {
+        "id": 6,
+        "name": {"en_US": "Security Equipment Rack", "zh_CN": "安全设备机柜"},
+        "slug": "security",
+        "description": "存放安全设备，如防火墙、入侵检测，DDos系统等保护数据中心免受网络攻击和潜在威胁。\nHouses security devices such as firewalls, intrusion detection systems, DDoS systems, etc, to protect the data center from network attacks and potential threats."
+    },
+    {
+        "id": 7,
+        "name": {"en_US": "Application-Specific Rack", "zh_CN": "应用机柜"},
+        "slug": "application",
+        "description": "GPU加速，高速网络，RDMA等特定计算任务机柜\n host equipment for specific applications or workloads, such as GPU-accelerated computing, high-speed networking, RDMA, etc."
+    },
+    {
+        "id": 8,
+        "name": {"en_US": "Testing Rack", "zh_CN": "测试机柜"},
+        "slug": "testing",
+        "description": "专门为测试和开发环境提供的机柜，用于容纳测试服务器、开发服务器等。\nSpecifically designed for testing and development environments, housing servers dedicated to testing and development purposes."
+    }
+
+]

@@ -3,10 +3,12 @@ from typing import TYPE_CHECKING
 from sqlalchemy import ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.dialects.postgresql import CIDR, INET
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy_utils.types import ChoiceType
 
-from src.db._types import bool_false, bool_true, int_pk
 from src.db.base import Base
+from src.db.db_types import bool_false, bool_true, int_pk
 from src.db.mixins import AuditLogMixin
+from src.consts import PrefixStatus, IPAddressStatus, IPRangeStatus, VLANStatus
 
 if TYPE_CHECKING:
     from src.arch.models import IPRole
@@ -56,7 +58,7 @@ class Prefix(Base, AuditLogMixin):
     __search_fields__ = {"prefix"}
     id: Mapped[int_pk]
     prefix: Mapped[str] = mapped_column(CIDR, unique=True)
-    status: Mapped[int]
+    status: Mapped[PrefixStatus] = mapped_column(ChoiceType(PrefixStatus))
     is_dhcp_pool: Mapped[bool_true]
     is_full: Mapped[bool_false]
     vlan_id: Mapped[int | None] = mapped_column(ForeignKey("vlan.id", ondelete="SET NULL"))
@@ -64,7 +66,7 @@ class Prefix(Base, AuditLogMixin):
     site_id: Mapped[int | None] = mapped_column(ForeignKey("site.id", ondelete="SET NULL"))
     site: Mapped["Site"] = relationship(backref="prefix")
     role_id: Mapped[int | None] = mapped_column(ForeignKey("ip_role.id", ondelete="SET NULL"))
-    role: Mapped["IPRole"] = relationship(backref="prefix")
+    role: Mapped["IPRole"] = relationship(back_populates="prefix")
 
 
 class ASN(Base, AuditLogMixin):
@@ -84,13 +86,11 @@ class IPRange(Base, AuditLogMixin):
     id: Mapped[int_pk]
     start_address: Mapped[str] = mapped_column(INET)
     end_address: Mapped[str] = mapped_column(INET)
-    status: Mapped[int]
+    status: Mapped[IPRangeStatus] = mapped_column(ChoiceType(IPRangeStatus))
     size: Mapped[int]
     description: Mapped[str | None]
     vrf_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("vrf.id", ondelete="SET NULL"))
     vrf: Mapped["VRF"] = relationship("VRF", backref="ip_range")
-    role_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("ip_role.id", ondelete="SET NULL"))
-    role: Mapped["IPRole"] = relationship(backref="ip_range")
 
 
 class IPAddress(Base, AuditLogMixin):
@@ -102,7 +102,7 @@ class IPAddress(Base, AuditLogMixin):
     vrf_id: Mapped[int | None] = mapped_column(ForeignKey("vrf.id", ondelete="SET NULL"))
     vrf: Mapped["VRF"] = relationship(backref="ip_address")
     version: Mapped[int]
-    status: Mapped[int]
+    status: Mapped[IPAddressStatus] = mapped_column(ChoiceType(IPAddressStatus))
     dns_name: Mapped[str | None]
     description: Mapped[str | None]
     owner: Mapped[list["User"]] = relationship(secondary="ip_address_user", backref="ip_address")
@@ -118,11 +118,11 @@ class VLAN(Base, AuditLogMixin):
     name: Mapped[str]
     vid: Mapped[int]
     description: Mapped[str | None]
-    status: Mapped[int]
+    status: Mapped[VLANStatus] = mapped_column(ChoiceType(VLANStatus))
     site_id: Mapped[int] = mapped_column(ForeignKey("site.id", ondelete="CASCADE"))
     site: Mapped["Site"] = relationship(backref="vlan", passive_deletes=True)
     role_id: Mapped[int | None] = mapped_column(ForeignKey("ip_role.id", ondelete="SET NULL"))
-    role: Mapped["IPRole"] = relationship(backref="vlan")
+    role: Mapped["IPRole"] = relationship(back_populates="vlan")
 
 
 class VRFRouteTarget(Base):

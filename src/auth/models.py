@@ -8,7 +8,7 @@ from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import Mapped, backref, column_property, mapped_column, relationship
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
-from src.db import _types
+from src.db import db_types
 from src.db.base import Base
 from src.db.mixins import AuditTimeMixin
 
@@ -31,7 +31,7 @@ class Role(Base, AuditTimeMixin):
     __tablename__ = "role"
     __search_fields__: ClassVar = {"name"}
     __visible_name__ = {"en_US": "Role", "zh_CN": "用户角色"}
-    id: Mapped[_types.int_pk]
+    id: Mapped[db_types.int_pk]
     name: Mapped[str]
     slug: Mapped[str]
     description: Mapped[str | None]
@@ -44,7 +44,7 @@ class Role(Base, AuditTimeMixin):
 class Permission(Base):
     __tablename__ = "permission"
     __visible_name__ = {"en_US": "Permission", "zh_CN": "权限"}
-    id: Mapped[_types.uuid_pk]
+    id: Mapped[db_types.uuid_pk]
     name: Mapped[str]
     url: Mapped[str]
     method: Mapped[str]
@@ -56,7 +56,7 @@ class Group(Base, AuditTimeMixin):
     __tablename__ = "group"
     __search_fields__: ClassVar = {"name"}
     __visible_name__ = {"en_US": "Group", "zh_CN": "用户组"}
-    id: Mapped[_types.int_pk]
+    id: Mapped[db_types.int_pk]
     name: Mapped[str]
     description: Mapped[str | None]
     role_id: Mapped[int] = mapped_column(ForeignKey(Role.id, ondelete="CASCADE"))
@@ -68,14 +68,14 @@ class User(Base, AuditTimeMixin):
     __tablename__ = "user"
     __search_fields__: ClassVar = {"email", "name", "phone"}
     __visible_name__ = {"en_US": "User", "zh_CN": "用户"}
-    id: Mapped[_types.int_pk]
+    id: Mapped[db_types.int_pk]
     name: Mapped[str]
     email: Mapped[str | None] = mapped_column(unique=True)
     phone: Mapped[str | None] = mapped_column(unique=True)
     password: Mapped[str]
     avatar: Mapped[str | None]
     last_login: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    is_active: Mapped[_types.bool_true]
+    is_active: Mapped[db_types.bool_true]
     group_id: Mapped[int] = mapped_column(ForeignKey(Group.id, ondelete="CASCADE"))
     group: Mapped["Group"] = relationship(back_populates="user", passive_deletes=True)
     role_id: Mapped[int] = mapped_column(ForeignKey(Role.id, ondelete="CASCADE"))
@@ -88,14 +88,14 @@ class Menu(Base):
     __visible_name__ = {"en_US": "Menu", "zh_CN": "菜单"}
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(unique=True, comment="the unique name of route")
-    hidden: Mapped[_types.bool_false]
+    hidden: Mapped[db_types.bool_false]
     redirect: Mapped[str] = mapped_column(comment="redirect url for the route")
-    hideChildrenInMenu: Mapped[_types.bool_false] = mapped_column(comment="hide children in menu force or not")  # noqa: N815
+    hideChildrenInMenu: Mapped[db_types.bool_false] = mapped_column(comment="hide children in menu force or not")  # noqa: N815
     order: Mapped[int]
     title: Mapped[str] = mapped_column(comment="the title of the route, 面包屑")
     icon: Mapped[str | None]
-    keepAlive: Mapped[_types.bool_false] = mapped_column(comment="cache route, 开启multi-tab时为true")  # noqa: N815
-    hiddenHeaderContent: Mapped[_types.bool_false] = mapped_column(comment="隐藏pageheader页面带的面包屑和标题栏")  # noqa: N815
+    keepAlive: Mapped[db_types.bool_false] = mapped_column(comment="cache route, 开启multi-tab时为true")  # noqa: N815
+    hiddenHeaderContent: Mapped[db_types.bool_false] = mapped_column(comment="隐藏pageheader页面带的面包屑和标题栏")  # noqa: N815
     permission: Mapped[list[int] | None] = mapped_column(ARRAY(Integer, dimensions=1))
     parent_id: Mapped[int | None] = mapped_column(ForeignKey(id, ondelete="CASCADE"))
     children: Mapped[list["Menu"]] = relationship(

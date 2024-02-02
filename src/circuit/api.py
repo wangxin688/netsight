@@ -1,30 +1,26 @@
-from typing import TYPE_CHECKING
-
 from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src._types import AuditLog, IdResponse, ListT
 from src.arch.models import CircuitType
+from src.auth.models import User
 from src.cbv import cbv
 from src.circuit import schemas
 from src.circuit.models import ISP, Circuit
 from src.circuit.services import CircuitDto
 from src.db.dtobase import DtoBase
-from src.dcim.models import Device, Interface, Site
+from src.dcim.models import Device, Interface
 from src.deps import auth, get_session
 from src.ipam.models import ASN
-
-if TYPE_CHECKING:
-    from sqlalchemy.ext.asyncio import AsyncSession
-
-    from src.auth.models import User
+from src.org.models import Site
 
 router = APIRouter()
 
 
 class IspAPI:
-    session: "AsyncSession" = Depends(get_session)
-    user: "User" = Depends(auth)
+    session: AsyncSession = Depends(get_session)
+    user: User = Depends(auth)
     dto = DtoBase(ISP)
 
     @router.post("/isp", operation_id="1cbcccdd-10f3-4d7c-80c9-64b1dccdbe18")
@@ -64,8 +60,8 @@ class IspAPI:
 
 @cbv(router)
 class CircuitAPI:
-    session: "AsyncSession" = Depends(get_session)
-    user: "User" = Depends(auth)
+    session: AsyncSession = Depends(get_session)
+    user: User = Depends(auth)
     dto = CircuitDto(Circuit)
 
     @router.post("/circuits", operation_id="f194c1b6-8a13-4759-aad5-8c2e4e24757a")

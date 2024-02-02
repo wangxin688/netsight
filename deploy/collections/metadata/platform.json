@@ -1,0 +1,100 @@
+[
+    {
+        "id": 1,
+        "name": "Cisco IOS",
+        "slug": "cisco-ios",
+        "description": "Cisco IOS platform",
+        "netmiko_driver": "cisco_ios"
+    },
+    {
+        "id": 2,
+        "name": "Cisco Nexus",
+        "slug": "cisco-nxos",
+        "description": "Cisco Nexus platform",
+        "netmiko_driver": "cisco_nxos"
+    },
+    {
+        "id": 3,
+        "name": "Cisco ASA",
+        "slug": "cisco-asa",
+        "description": "Cisco ASA platform",
+        "netmiko_driver": "cisco_asa"
+    },
+    {
+        "id": 4,
+        "name": "Cisco XE",
+        "slug": "cisco-xe",
+        "description": "Cisco XE platform",
+        "netmiko_driver": "cisco_xe"
+    },
+    {
+        "id": 5,
+        "name": "Huawei VRP",
+        "slug": "huawei-vrp",
+        "description": "Huawei VRP platform",
+        "netmiko_driver": "huawei_vrp"
+    },
+    {
+        "id": 6,
+        "name": "Huawei VRP V8",
+        "slug": "huawei-vrp-v8",
+        "description": "Huawei VRP V8 platform",
+        "netmiko_driver": "huawei_vrpv8"
+    },
+    {
+        "id": 7,
+        "name": "HP Comware",
+        "slug": "hp-comware",
+        "description": "HP Comware platform",
+        "netmiko_driver": "hp_comware"
+    },
+    {
+        "id": 8,
+        "name": "Ruijie OS",
+        "slug": "ruijie-os",
+        "description": "Ruijie OS platform",
+        "netmiko_driver": "ruijie_os"
+    },
+    {
+        "id": 8,
+        "name": "Aruba OS",
+        "slug": "aruba-os",
+        "description": "Aruba OS platform",
+        "netmiko_driver": "aruba_os"
+    },
+    {
+        "id": 9,
+        "name": "Arista EOS",
+        "slug": "arista-eos",
+        "description": "Arista EOS platform",
+        "netmiko_driver": "arista_eos"
+    },
+    {
+        "id": 10,
+        "name": "Juniper Junos",
+        "slug": "juniper-junos",
+        "description": "Juniper Junos platform",
+        "netmiko_driver": "juniper_junos"
+    },
+    {
+        "id": 11,
+        "name": "PlatAlto PANOS",
+        "slug": "platalto-panos",
+        "description": "PlatAlto PANOS platform",
+        "netmiko_driver": "platalto_panos"
+    },
+    {
+        "id": 12,
+        "name": "Linux",
+        "slug": "linux",
+        "description": "Linux Platform",
+        "netmiko_driver": "linux"
+    },
+    {
+        "id": 13,
+        "name": "Fortinet",
+        "slug": "fortinet",
+        "description": "Fortinet platform",
+        "netmiko_driver": "fortinet"
+    }
+]

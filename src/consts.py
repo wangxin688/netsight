@@ -1,6 +1,7 @@
-from enum import Enum, IntEnum
+from enum import Enum, StrEnum, IntEnum
 
 from src._types import AppStrEnum
+from src.i18n import _
 
 
 class Env(IntEnum):
@@ -12,81 +13,75 @@ class ReservedRoleSlug(AppStrEnum):
     ADMIN = "admin"
 
 
-class SiteStatus(IntEnum):
-    Planning = 1
-    Vlidating = 2
-    Active = 3
-    Retired = 4
+class SiteStatus(StrEnum):
+    Planning = "Planning"
+    Vlidating = "Validating"
+    Active = "Active"
+    Retired = "Retired"
 
 
-class LocationType(IntEnum):
-    Building = 1
-    Floor = 2
-    ServerRoom = 3
+class LocationType(StrEnum):
+    Building = "Building"
+    Floor = "Floor"
+    ServerRoom = "ServerRoom"
 
 
-class LocationStatus(IntEnum):
-    Planning = 1
-    Vlidating = 2
-    Active = 3
-    Retired = 4
+class LocationStatus(StrEnum):
+    Planning = "Planning"
+    Vlidating = "Validating"
+    Active = "Active"
+    Retired = "Retired"
 
 
-class DeviceStatus(IntEnum):
-    Active = 1
-    Offline = 2
-    Staged = 3
-    Inventory = 4
+class DeviceStatus(StrEnum):
+    Active = "Active"
+    Offline = "Offline"
+    Staged = "Staged"
+    Inventory = "Inventory"
 
 
-class RackStatus(IntEnum):
-    Active = 1
-    Offline = 2
-    Reserved = 3
+class RackStatus(StrEnum):
+    Active = "Active"
+    Offline = "Offline"
+    Reserved = "Reserved"
 
 
-class InterfaceAdminStatus(IntEnum):
-    Disabled = 0
-    Enabled = 1
+class InterfaceAdminStatus(StrEnum):
+    Disabled = "Disabled"
+    Enabled = "Enabled"
 
 
-class PrefixStatus(IntEnum):
-    Available = 1
-    Reserved = 2
-    Deprecated = 3
+class PrefixStatus(StrEnum):
+    Available = "Available"
+    Reserved = "Reserved"
+    Deprecated = "Deprecated"
 
 
-class IPRangeStatus(IntEnum):
-    Available = 1
-    Reserved = 2
-    Deprecated = 3
+class IPRangeStatus(StrEnum):
+    Available = "Available"
+    Reserved = "Reserved"
+    Deprecated = "Deprecated"
 
 
-class SiteClassfication(AppStrEnum):
+class SiteClassfication(StrEnum):
     DATACENTER = "DataCenter"
     CAMPUS = "Campus"
     OFFICE = "Office"
 
 
-class EntityPhysicalClass(IntEnum):
-    other = 1
-    unknown = 2
-    chassis = 3
-    backplane = 4
-    container = 5
-    powerSupply = 6  # noqa: N815
-    fan = 7
-    sensor = 8
-    module = 9
-    port = 10
-    stack = 11
-    cpu = 12
-
-
-class IPPrefixStatus(IntEnum):
-    Active = 1
-    Reserved = 2
-    Deprecated = 3
+class EntityPhysicalClass(StrEnum):
+    other = "other"
+    unknown = "unknown"
+    chassis = "chassis"
+    backplane = "backplane"
+    container = "container"
+    powerSupply = "powerSupply"
+    fan = "fan"
+    sensor = "sensor"
+    module = "module"
+    port = "port"
+    stack = "stack"
+    cpu = "cpu"
 
 
 class IPVersion(IntEnum):
@@ -94,28 +89,28 @@ class IPVersion(IntEnum):
     IPv6 = 6
 
 
-class IPAddressStatus(IntEnum):
-    Active = 1
-    Reserved = 2
-    Deprecated = 3
-    DHCP = 4
-    Available = 5
+class IPAddressStatus(StrEnum):
+    Active = "Active"
+    Reserved = "Reserved"
+    Deprecated = "Deprecated"
+    DHCP = "DHCP"
+    Available = "Available"
 
 
-class VLANStatus(IntEnum):
-    Active = 1
-    Reserved = 2
-    Deprecated = 3
+class VLANStatus(StrEnum):
+    Active = "Active"
+    Reserved = "Reserved"
+    Deprecated = "Deprecated"
 
 
-class CircuitStatus(IntEnum):
-    Planning = 1
-    Active = 2
-    Provisioning = 3
-    Offline = 4
+class CircuitStatus(StrEnum):
+    Planning = "Planning"
+    Active = "Active"
+    Provisioning = "Provisioning"
+    Offline = "Offline"
 
 
-class CircuitType(str, Enum):
+class CircuitType(StrEnum):
     INTERNET = "INTERNET"
     P2P = "P2P"
     IEPL = "IEPL"

@@ -1,0 +1,32 @@
+[
+    {
+        "id": 1,
+        "name": {"en_US": "Ponit-to-point", "zh_CN": "点对点专线"},
+        "slug": "p2p",
+        "description": "Point to point circuit/点对点专线"
+    },
+    {
+        "id": 2,
+        "name": {"en_US": "Internet", "zh_CN": "互联网专线"},
+        "slug": "internet",
+        "description": "Internet circuit with dedicated public IP addresses/互联网专线（带公网IP地址）"
+    },
+    {
+        "id": 3,
+        "name": {"en_US": "MPLS", "zh_CN": "MPLS"},
+        "slug": "mpls",
+        "description": "MPLS"
+    },
+    {
+        "id": 4,
+        "name": {"en_US": "Dark Fiber", "zh_CN": "裸光专线"},
+        "slug": "dark-fiber",
+        "description": "大带宽同城裸光专线（通常距离较短的大带宽同城裸光专线）"
+    },
+    {
+        "id": 5,
+        "name": {"en_US": "ADSL", "zh_CN": "ADSL线路"},
+        "slug": "adsl",
+        "description": "Intenet access with dynamic public IP addresses /ADSL互联网接入线路（无固定的公网地址）"
+    }
+]

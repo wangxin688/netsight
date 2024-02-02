@@ -1,24 +1,19 @@
-from typing import TYPE_CHECKING
-
 from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src._types import IdResponse, ListT
+from src.auth.models import User
 from src.cbv import cbv
 from src.deps import auth, get_session
 from src.org import models, schemas, services
-
-if TYPE_CHECKING:
-    from sqlalchemy.ext.asyncio import AsyncSession
-
-    from src.auth.models import User
 
 router = APIRouter()
 
 
 @cbv(router)
 class SiteGroupAPI:
-    session: "AsyncSession" = Depends(get_session)
-    user: "User" = Depends(auth)
+    session: AsyncSession = Depends(get_session)
+    user: User = Depends(auth)
     dto = services.SiteGroupDto(models.SiteGroup)
 
     @router.post("/site-groups", operation_id="4c6595c8-1aa1-4613-b128-37e7bca87e28")

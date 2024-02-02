@@ -20,6 +20,10 @@ dependencies = [
     "pydantic_extra_types>=2.4.1",
     "phonenumbers>=8.13.27",
     "asyncpg>=0.29.0",
+    "gufo_snmp>=0.5.0",
+    "sqlalchemy-utils>=0.41.1",
+    "python-multipart>=0.0.6",
+    "email-validator>=2.1.0.post1",
 ]
 readme = "README.md"
 requires-python = ">= 3.11"
@@ -70,8 +74,8 @@ fixable = ["ALL"]
 "deps.py" = ["B008"]
 "src/internal/api.py" = ["ARG001"]
 "src/auth/schemas.py" = ["N815"]
-"alembic/*.py" = ["INP001", "UP007"]
-"__init__.py" = ["F403", "F405"]
+"alembic/*.py" = ["INP001", "UP007", "SLF001", "F821", "PLR0915"]
+"__init__.py" = ["F403", "F405", "ERA001"]
 "schemas.py" = ["ANN201"]
 
 [tool.ruff.flake8-bugbear]

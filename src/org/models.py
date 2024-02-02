@@ -3,10 +3,11 @@ from typing import TYPE_CHECKING
 from sqlalchemy import ForeignKey, Integer, UniqueConstraint, func, select
 from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 from sqlalchemy.orm.collections import attribute_mapped_collection
+from sqlalchemy_utils.types import ChoiceType
 
 from src.consts import LocationStatus, LocationType, SiteStatus
-from src.db._types import IntegerEnum, int_pk
 from src.db.base import Base
+from src.db.db_types import int_pk
 from src.db.mixins import AuditLogMixin
 
 if TYPE_CHECKING:
@@ -40,7 +41,7 @@ class Site(Base, AuditLogMixin):
     id: Mapped[int_pk]
     name: Mapped[str] = mapped_column(unique=True)
     site_code: Mapped[str] = mapped_column(unique=True, index=True)
-    status: Mapped[SiteStatus] = mapped_column(IntegerEnum(SiteStatus))
+    status: Mapped[SiteStatus] = mapped_column(ChoiceType(SiteStatus))
     facility_code: Mapped[str | None]
     time_zone: Mapped[str | None]
     country: Mapped[str | None]
@@ -50,7 +51,7 @@ class Site(Base, AuditLogMixin):
     longitude: Mapped[float]
     classification: Mapped[str | None]
     comments: Mapped[str | None]
-    site_group_id: Mapped[int | None] = mapped_column(ForeignKey(SiteGroup.id, ondelete="RESTRIC"))
+    site_group_id: Mapped[int | None] = mapped_column(ForeignKey(SiteGroup.id, ondelete="RESTRICT"))
     site_group: Mapped["SiteGroup"] = relationship(back_populates="site")
     asn: Mapped[list["ASN"]] = relationship(secondary="site_asn", back_populates="site")
     site_contact: Mapped[list["SiteContact"]] = relationship(backref="site", passive_deletes=True)
@@ -64,9 +65,9 @@ class Location(Base, AuditLogMixin):
     __visible_name__ = {"en_US": "Location", "zh_CN": "位置"}
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
-    location_type: Mapped[LocationType] = mapped_column(IntegerEnum(LocationType))
+    location_type: Mapped[LocationType] = mapped_column(ChoiceType(LocationType))
     description: Mapped[str | None]
-    status: Mapped[LocationStatus] = mapped_column(IntegerEnum(LocationStatus))
+    status: Mapped[LocationStatus] = mapped_column(ChoiceType(LocationStatus))
     site_id: Mapped[int] = mapped_column(Integer, ForeignKey("site.id", ondelete="CASCADE"))
     site: Mapped["Site"] = relationship(backref="location", passive_deletes=True)
     parent_id: Mapped[int | None] = mapped_column(Integer, ForeignKey(id))
@@ -105,7 +106,7 @@ class SiteContact(Base):
     contact_id: Mapped[int] = mapped_column(ForeignKey("contact.id", ondelete="RESTRICT"))
     contact: Mapped["Contact"] = relationship(backref="site_contact")
     site_id: Mapped[int] = mapped_column(ForeignKey("site.id", ondelete="CASCADE"))
-    contact_role_id: Mapped[int] = mapped_column(ForeignKey("contact_role.id", ondelete="RESTRIC"))
+    contact_role_id: Mapped[int] = mapped_column(ForeignKey("contact_role.id", ondelete="RESTRICT"))
     contact_role: Mapped["ContactRole"] = relationship(backref="site_contact")
 
 
@@ -115,7 +116,7 @@ class CircuitContact(Base):
     contact_id: Mapped[int] = mapped_column(ForeignKey("contact.id", ondelete="RESTRICT"))
     contact: Mapped["Contact"] = relationship(backref="circuit_contact")
     circuit_id: Mapped[int] = mapped_column(ForeignKey("circuit.id", ondelete="CASCADE"))
-    contact_role_id: Mapped[int] = mapped_column(ForeignKey("contact_role.id", ondelete="RSTRICT"))
+    contact_role_id: Mapped[int] = mapped_column(ForeignKey("contact_role.id", ondelete="RESTRICT"))
     contact_role: Mapped["ContactRole"] = relationship(backref="circuit_contact")
 
 

@@ -5,7 +5,8 @@ from sqlalchemy.orm import selectinload
 from src.circuit import schemas
 from src.circuit.models import Circuit
 from src.db.dtobase import DtoBase
-from src.dcim.models import Device, Interface, Site
+from src.dcim.models import Device, Interface
+from src.org.models import Site
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
