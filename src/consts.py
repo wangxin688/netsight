@@ -1,7 +1,6 @@
-from enum import Enum, StrEnum, IntEnum
+from enum import IntEnum, StrEnum
 
 from src._types import AppStrEnum
-from src.i18n import _
 
 
 class Env(IntEnum):
@@ -75,7 +74,7 @@ class EntityPhysicalClass(StrEnum):
     chassis = "chassis"
     backplane = "backplane"
     container = "container"
-    powerSupply = "powerSupply"
+    powerSupply = "powerSupply"  # noqa: N815
     fan = "fan"
     sensor = "sensor"
     module = "module"

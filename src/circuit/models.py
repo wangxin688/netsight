@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import TEXT, ForeignKey, Integer, String
+from sqlalchemy import TEXT, ForeignKey, String
 from sqlalchemy.dialects.postgresql import ARRAY, INET
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils.types import ChoiceType

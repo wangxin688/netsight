@@ -5,10 +5,10 @@ from sqlalchemy.dialects.postgresql import CIDR, INET
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils.types import ChoiceType
 
+from src.consts import IPAddressStatus, IPRangeStatus, PrefixStatus, VLANStatus
 from src.db.base import Base
 from src.db.db_types import bool_false, bool_true, int_pk
 from src.db.mixins import AuditLogMixin
-from src.consts import PrefixStatus, IPAddressStatus, IPRangeStatus, VLANStatus
 
 if TYPE_CHECKING:
     from src.arch.models import IPRole
