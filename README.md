@@ -39,6 +39,9 @@ Given the evolving nature of the project, any ideas or suggestions are highly en
 ### Changes
 - Omitting tenant support:
 In the context of a self-managed enterprise network, multi-tenant support is often unnecessary for the typical use case. By removing this feature, we aim to streamline and enhance the efficiency of database relationships.
+> Some personal thoughts about multi-tenant:
+> **Data Security**: When considering multiple tenancy, data security is a crucial concern. Using logical isolation based on identifiers, such as IDs, within the same database inevitably introduces security risks. On the other hand, physical isolation enhances data security but adds overhead for sharing some common data, leading to increased development and operational costs. A balanced compromise is leveraging PostgreSQL's schema-based approach for data isolation, but this may require additional development effort.
+**Necessity**: The motivation behind designing this solution is driven solely by personal interest, without considering commercial requirements. In self-managed enterprise networks and data centers, the majority of scenarios may not necessitate multi-tenancy support. If there is a need for data-level isolation, exploring options like a data warehouse to provide Attribute-Based Access Control (ABAC) capabilities could be considered. Moreover, at the foundational level, if future extensions for multi-tenancy (based on ID-based isolation) are required, they can be implemented with ease.
 - Eliminating regions:
 The intention is to utilize site_group for site management, incorporating configuration inheritance. This adjustment simplifies the structure and improves overall manageability.
 - Constraining location tree depth:
