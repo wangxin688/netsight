@@ -5,6 +5,10 @@ While Netbox is undoubtedly a great and powerful tool, in my personal view, some
 
 Based on this foundation, I plan to launch a completely new project and build on top of FastAPI with pydantic. The new product will focus on simplifying data structures, providing more robust validation capabilities, and better supporting network automation processes. By optimizing these aspects, my goal is to offer a more user-friendly and efficient tool for netdevops, enabling them to smoothly devise and execute standardized network operational procedures.
 
+### Architecture
+![netsight-arch drawio](https://github.com/wangxin688/netsight/assets/36665036/3649d2ff-fdae-42aa-8fc8-0c74e9dc0473)
+
+
 ### Introducation
 Netsight aims to serve as a comprehensive network full life-cycle automation system. It is constructed on top of FastAPI, empowered by Pydantic to ensure robust data validation and limitations. This platform is designed to offer a multitude of features catering to the following functions:
 
