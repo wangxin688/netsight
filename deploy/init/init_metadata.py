@@ -89,4 +89,4 @@ async def init_meta() -> None:
 
 
 if __name__ == "__main__":
-    run(init_platform)
+    run(init_meta)

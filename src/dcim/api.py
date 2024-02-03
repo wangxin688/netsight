@@ -22,7 +22,7 @@ class RackAPI:
     user: User = Depends(auth)
     dto = RackDto(Rack)
 
-    @router.post("racks", operation_id="040b3088-1616-4c36-8db1-62152efe9e64")
+    @router.post("/racks", operation_id="040b3088-1616-4c36-8db1-62152efe9e64")
     async def create_rack(self, rack: schemas.RackCreate) -> IdResponse:
         new_rack = await self.dto.create(self.session, rack)
         return IdResponse(id=new_rack.id)

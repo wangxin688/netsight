@@ -53,7 +53,7 @@ class RackQuery(QueryParams, AuditTimeQuery):
 
 class Rack(RackBase, AuditTime):
     site: schemas.SiteBrief
-    location: schemas.LocationBrief
+    location: schemas.LocationBrief | None = None
     rack_role: schemas.RackRoleBrief
     device_count: int
 
@@ -210,9 +210,9 @@ class Device(DeviceBase, AuditTime):
     device_type: DeviceTypeInfo
     device_role: schemas.DeviceRoleBrief
     site: schemas.SiteBrief
-    location: schemas.LocationBrief
-    rack: schemas.RackRoleBrief
-    device_group: schemas.DeviceGroupBrief
+    location: schemas.LocationBrief | None = None
+    rack: schemas.RackRoleBrief | None = None
+    device_group: schemas.DeviceGroupBrief | None = None
     interface_count: int
     device_entity_count: int
 
