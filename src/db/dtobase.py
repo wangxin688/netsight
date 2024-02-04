@@ -894,3 +894,11 @@ class DtoBase(Generic[ModelT, CreateSchemaType, UpdateSchemaType, QuerySchemaTyp
                 return len(results.audit_log), results.audit_log  # type: ignore  # noqa: PGH003
             return 0, None
         return 0, None
+
+    async def get_all(
+        self, session: AsyncSession, *options: ExecutableOption, undefer_load: bool = False
+    ) -> Sequence[ModelT]:
+        stmt = self._get_base_stmt()
+        if options:
+            stmt = self._apply_selectinload(stmt, *options, undefer_load=undefer_load)
+        return (await session.scalars(stmt)).all()

@@ -41,6 +41,9 @@ def create_app() -> FastAPI:
         summary=settings.DESCRIPTION,
         description=openapi_description,
         lifespan=lifespan,
+        openapi_url="/api/openapi.json",
+        docs_url="/api/docs",
+        redoc_url="/api/redoc",
     )
     app.include_router(router, prefix="/api")
     for handler in exception_handlers:
