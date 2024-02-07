@@ -1,13 +1,13 @@
 from typing import TYPE_CHECKING
 
 from sqlalchemy import TEXT, ForeignKey, String
-from sqlalchemy.dialects.postgresql import ARRAY, INET
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils.types import ChoiceType
 
 from src.consts import CircuitStatus
 from src.db.base import Base
-from src.db.db_types import date_optional, i18n_name, int_pk
+from src.db.db_types import IPvAnyAddress, IPvAnyInterface, PgIpAddress, PgIpInterface, date_optional, i18n_name, int_pk
 from src.db.mixins import AuditLogMixin
 
 if TYPE_CHECKING:
@@ -32,8 +32,8 @@ class Circuit(Base, AuditLogMixin):
     purchase_term: Mapped[str | None]
     bandwidth: Mapped[int] = mapped_column(comment="Mbps")
     comments: Mapped[str | None] = mapped_column(TEXT, nullable=True)
-    vendor_available_ip: Mapped[list[str] | None] = mapped_column(ARRAY(INET), nullable=True)
-    vendor_available_gateway: Mapped[list[str] | None] = mapped_column(ARRAY(INET), nullable=True)
+    vendor_available_ip: Mapped[list[IPvAnyInterface] | None] = mapped_column(ARRAY(PgIpInterface), nullable=True)
+    vendor_available_gateway: Mapped[list[IPvAnyAddress] | None] = mapped_column(ARRAY(PgIpAddress), nullable=True)
     isp_id: Mapped[int] = mapped_column(ForeignKey("isp.id", ondelete="RESTRICT"))
     isp: Mapped["ISP"] = relationship(back_populates="circuit")
     circuit_type_id: Mapped[int] = mapped_column(ForeignKey("circuit_type.id", ondelete="RESTRICT"))

@@ -1,13 +1,12 @@
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Float, ForeignKey, Integer, UniqueConstraint, func, select
-from sqlalchemy.dialects.postgresql import INET
 from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 from sqlalchemy_utils.types import ChoiceType
 
 from src.consts import DeviceStatus, EntityPhysicalClass, InterfaceAdminStatus, RackStatus
 from src.db.base import Base
-from src.db.db_types import i18n_name, int_pk
+from src.db.db_types import IPvAnyAddress, PgIpAddress, i18n_name, int_pk
 from src.db.mixins import AuditLogMixin
 
 if TYPE_CHECKING:
@@ -81,9 +80,9 @@ class Device(Base, AuditLogMixin):
     __search_fields__ = {"name", "management_ipv4", "management_ipv6", "serial_num", "oob_ip"}
     id: Mapped[int_pk]
     name: Mapped[str] = mapped_column(index=True)
-    management_ipv4: Mapped[str | None] = mapped_column(INET, index=True)
-    management_ipv6: Mapped[str | None] = mapped_column(INET, index=True)
-    oob_ip: Mapped[str | None] = mapped_column(INET)
+    management_ipv4: Mapped[IPvAnyAddress | None] = mapped_column(PgIpAddress, index=True, nullable=True)
+    management_ipv6: Mapped[IPvAnyAddress | None] = mapped_column(PgIpAddress, index=True, nullable=True)
+    oob_ip: Mapped[IPvAnyAddress | None] = mapped_column(PgIpAddress, nullable=True)
     status: Mapped[DeviceStatus] = mapped_column(ChoiceType(DeviceStatus))
     version: Mapped[str | None]
     comments: Mapped[str | None]

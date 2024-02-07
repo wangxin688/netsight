@@ -60,7 +60,7 @@ select = ["ALL"]
 ignore = [
     "D", "G002", "DTZ003", "ANN401", "ANN101",
     "ANN102", "EM101", "PD901", "COM812", "ISC001",
-    "FBT", "A003", "PLR0913", "G004", "TRY003"
+    "FBT", "A003", "PLR0913", "G004", "TRY003", "ERA001"
 ]
 fixable = ["ALL"]
 
@@ -77,6 +77,7 @@ fixable = ["ALL"]
 "alembic/*.py" = ["INP001", "UP007", "SLF001", "F821", "PLR0915"]
 "__init__.py" = ["F403", "F405", "ERA001"]
 "schemas.py" = ["ANN201"]
+"db_types.py" = ["ARG002"]
 
 [tool.ruff.flake8-bugbear]
 extend-immutable-calls=[

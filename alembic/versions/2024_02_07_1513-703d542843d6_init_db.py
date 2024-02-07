@@ -1,8 +1,8 @@
-"""init db
+"""init_db
 
-Revision ID: 6d6e764d14da
+Revision ID: 703d542843d6
 Revises:
-Create Date: 2024-02-02 18:20:20.343187
+Create Date: 2024-02-07 15:13:01.581591
 
 """
 from collections.abc import Sequence
@@ -29,7 +29,7 @@ from src.consts import (
 )
 
 # revision identifiers, used by Alembic.
-revision: str = "6d6e764d14da"
+revision: str = "703d542843d6"
 down_revision: str | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -51,7 +51,9 @@ def upgrade() -> None:
     op.create_table(
         "block",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("block", postgresql.CIDR(), nullable=False),
+        sa.Column("name", sa.String(), nullable=False),
+        sa.Column("block", src.db.db_types.PgCIDR(), nullable=False),
+        sa.Column("is_private", sa.Boolean(), nullable=False),
         sa.Column("description", sa.String(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
@@ -321,10 +323,9 @@ def upgrade() -> None:
     op.create_table(
         "ip_range",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("start_address", postgresql.INET(), nullable=False),
-        sa.Column("end_address", postgresql.INET(), nullable=False),
+        sa.Column("start_address", src.db.db_types.PgIpInterface(), nullable=False),
+        sa.Column("end_address", src.db.db_types.PgIpInterface(), nullable=False),
         sa.Column("status", sqlalchemy_utils.types.choice.ChoiceType(IPRangeStatus), nullable=False),
-        sa.Column("size", sa.Integer(), nullable=False),
         sa.Column("description", sa.String(), nullable=True),
         sa.Column("vrf_id", sa.Integer(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
@@ -655,22 +656,24 @@ def upgrade() -> None:
     op.create_table(
         "prefix",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("prefix", postgresql.CIDR(), nullable=False),
+        sa.Column("prefix", src.db.db_types.PgCIDR(), nullable=False),
         sa.Column("status", sqlalchemy_utils.types.choice.ChoiceType(PrefixStatus), nullable=False),
         sa.Column("is_dhcp_pool", sa.Boolean(), server_default=sa.text("true"), nullable=False),
         sa.Column("is_full", sa.Boolean(), server_default=sa.text("false"), nullable=False),
         sa.Column("vlan_id", sa.Integer(), nullable=True),
         sa.Column("site_id", sa.Integer(), nullable=True),
         sa.Column("role_id", sa.Integer(), nullable=True),
+        sa.Column("vrf_id", sa.Integer(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(["role_id"], ["ip_role.id"], ondelete="SET NULL"),
         sa.ForeignKeyConstraint(["site_id"], ["site.id"], ondelete="SET NULL"),
         sa.ForeignKeyConstraint(["vlan_id"], ["vlan.id"], ondelete="SET NULL"),
+        sa.ForeignKeyConstraint(["vrf_id"], ["vrf.id"], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("prefix"),
     )
     op.create_index(op.f("ix_prefix_created_at"), "prefix", ["created_at"], unique=False)
+    op.create_index(op.f("ix_prefix_prefix"), "prefix", ["prefix"], unique=True)
     op.create_table(
         "rack",
         sa.Column("id", sa.Integer(), nullable=False),
@@ -788,9 +791,9 @@ def upgrade() -> None:
         "device",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(), nullable=False),
-        sa.Column("management_ipv4", postgresql.INET(), nullable=True),
-        sa.Column("management_ipv6", postgresql.INET(), nullable=True),
-        sa.Column("oob_ip", postgresql.INET(), nullable=True),
+        sa.Column("management_ipv4", src.db.db_types.PgIpAddress(), nullable=True),
+        sa.Column("management_ipv6", src.db.db_types.PgIpAddress(), nullable=True),
+        sa.Column("oob_ip", src.db.db_types.PgIpAddress(), nullable=True),
         sa.Column("status", sqlalchemy_utils.types.choice.ChoiceType(DeviceStatus), nullable=False),
         sa.Column("version", sa.String(), nullable=True),
         sa.Column("comments", sa.String(), nullable=True),
@@ -971,8 +974,8 @@ def upgrade() -> None:
         sa.Column("purchase_term", sa.String(), nullable=True),
         sa.Column("bandwidth", sa.Integer(), nullable=False, comment="Mbps"),
         sa.Column("comments", sa.TEXT(), nullable=True),
-        sa.Column("vendor_available_ip", postgresql.ARRAY(postgresql.INET()), nullable=True),
-        sa.Column("vendor_available_gateway", postgresql.ARRAY(postgresql.INET()), nullable=True),
+        sa.Column("vendor_available_ip", postgresql.ARRAY(src.db.db_types.PgIpInterface()), nullable=True),
+        sa.Column("vendor_available_gateway", postgresql.ARRAY(src.db.db_types.PgIpAddress()), nullable=True),
         sa.Column("isp_id", sa.Integer(), nullable=False),
         sa.Column("circuit_type_id", sa.Integer(), nullable=False),
         sa.Column("site_a_id", sa.Integer(), nullable=False),
@@ -1026,7 +1029,7 @@ def upgrade() -> None:
     op.create_table(
         "ip_address",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("address", postgresql.INET(), nullable=False),
+        sa.Column("address", src.db.db_types.PgIpInterface(), nullable=False),
         sa.Column("vrf_id", sa.Integer(), nullable=True),
         sa.Column("version", sa.Integer(), nullable=False),
         sa.Column("status", sqlalchemy_utils.types.choice.ChoiceType(IPAddressStatus), nullable=False),
@@ -1125,6 +1128,7 @@ def downgrade() -> None:
     op.drop_table("rack_role_audit_log")
     op.drop_index(op.f("ix_rack_created_at"), table_name="rack")
     op.drop_table("rack")
+    op.drop_index(op.f("ix_prefix_prefix"), table_name="prefix")
     op.drop_index(op.f("ix_prefix_created_at"), table_name="prefix")
     op.drop_table("prefix")
     op.drop_table("platform_audit_log")

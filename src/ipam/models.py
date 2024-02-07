@@ -1,13 +1,12 @@
 from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey, Integer, UniqueConstraint
-from sqlalchemy.dialects.postgresql import CIDR, INET
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils.types import ChoiceType
 
 from src.consts import IPAddressStatus, IPRangeStatus, PrefixStatus, VLANStatus
 from src.db.base import Base
-from src.db.db_types import bool_false, bool_true, int_pk
+from src.db.db_types import IPvAnyInterface, IPvAnyNetwork, PgCIDR, PgIpInterface, bool_false, bool_true, int_pk
 from src.db.mixins import AuditLogMixin
 
 if TYPE_CHECKING:
@@ -47,8 +46,12 @@ class Block(Base, AuditLogMixin):
     __tablename__ = "block"
     __visible_name__ = {"en_US": "IP Block", "zh_CN": "IP地址段"}
     __search_fields__ = {"block"}
+    # __org__ = True
+    # __table_args__ = UniqueConstraint("pregix", "organization_id")
     id: Mapped[int_pk]
-    block: Mapped[str] = mapped_column(CIDR, unique=True)
+    name: Mapped[str]
+    block: Mapped[IPvAnyNetwork] = mapped_column(PgCIDR, unique=True)
+    is_private: Mapped[bool]
     description: Mapped[str | None]
 
 
@@ -56,8 +59,10 @@ class Prefix(Base, AuditLogMixin):
     __tablename__ = "prefix"
     __visible_name__ = {"en_US": "IP Prefix", "zh_CN": "IP子网段"}
     __search_fields__ = {"prefix"}
+    # __org__ = True
+    # __table_args__ = UniqueConstraint("prefix", "organization_id")
     id: Mapped[int_pk]
-    prefix: Mapped[str] = mapped_column(CIDR, unique=True)
+    prefix: Mapped[IPvAnyNetwork] = mapped_column(PgCIDR, unique=True, index=True)
     status: Mapped[PrefixStatus] = mapped_column(ChoiceType(PrefixStatus))
     is_dhcp_pool: Mapped[bool_true]
     is_full: Mapped[bool_false]
@@ -67,6 +72,8 @@ class Prefix(Base, AuditLogMixin):
     site: Mapped["Site"] = relationship(backref="prefix")
     role_id: Mapped[int | None] = mapped_column(ForeignKey("ip_role.id", ondelete="SET NULL"))
     role: Mapped["IPRole"] = relationship(back_populates="prefix")
+    vrf_id: Mapped[int | None] = mapped_column(ForeignKey("vrf.id", ondelete="SET NULL"))
+    vrf: Mapped["VRF"] = relationship(backref=prefix)
 
 
 class ASN(Base, AuditLogMixin):
@@ -84,13 +91,16 @@ class IPRange(Base, AuditLogMixin):
     __tablename__ = "ip_range"
     __visible_name__ = {"en_US": "IP Range", "zh_CN": "IP地址串"}
     id: Mapped[int_pk]
-    start_address: Mapped[str] = mapped_column(INET)
-    end_address: Mapped[str] = mapped_column(INET)
+    start_address: Mapped[IPvAnyInterface] = mapped_column(PgIpInterface)
+    end_address: Mapped[IPvAnyInterface] = mapped_column(PgIpInterface)
     status: Mapped[IPRangeStatus] = mapped_column(ChoiceType(IPRangeStatus))
-    size: Mapped[int]
     description: Mapped[str | None]
     vrf_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("vrf.id", ondelete="SET NULL"))
     vrf: Mapped["VRF"] = relationship("VRF", backref="ip_range")
+
+    @property
+    def size(self) -> int:
+        return int(self.end_address) - int(self.start_address)
 
 
 class IPAddress(Base, AuditLogMixin):
@@ -98,7 +108,7 @@ class IPAddress(Base, AuditLogMixin):
     __visible_name__ = {"en_US": "IP Address", "zh_CN": "IP地址"}
     __search_fields__ = {"address"}
     id: Mapped[int_pk]
-    address: Mapped[str] = mapped_column(INET)
+    address: Mapped[IPvAnyInterface] = mapped_column(PgIpInterface)
     vrf_id: Mapped[int | None] = mapped_column(ForeignKey("vrf.id", ondelete="SET NULL"))
     vrf: Mapped["VRF"] = relationship(backref="ip_address")
     version: Mapped[int]
