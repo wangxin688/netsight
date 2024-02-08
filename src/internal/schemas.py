@@ -74,6 +74,10 @@ class InterfaceBrief(BaseModel):
     description: str | None = None
 
 
+class InterfaceToDevice(InterfaceBrief):
+    device: DeviceBrief
+
+
 class VendorBrief(BaseModel):
     id: int
     name: I18nField
