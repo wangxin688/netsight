@@ -7,13 +7,10 @@ from src.arch.models import CircuitType
 from src.auth.models import User
 from src.cbv import cbv
 from src.circuit import schemas
-from src.circuit.models import ISP, Circuit
 from src.circuit.services import CircuitDto
+from src.db import ASN, ISP, Circuit, Device, Interface, Site
 from src.db.dtobase import DtoBase
-from src.dcim.models import Device, Interface
 from src.deps import auth, get_session
-from src.ipam.models import ASN
-from src.org.models import Site
 
 router = APIRouter()
 

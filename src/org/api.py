@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src._types import IdResponse, ListT
-from src.auth.models import User
 from src.cbv import cbv
+from src.db import SiteGroup, User
 from src.deps import auth, get_session
-from src.org import models, schemas, services
+from src.org import schemas, services
 
 router = APIRouter()
 
@@ -14,7 +14,7 @@ router = APIRouter()
 class SiteGroupAPI:
     session: AsyncSession = Depends(get_session)
     user: User = Depends(auth)
-    dto = services.SiteGroupDto(models.SiteGroup)
+    dto = services.SiteGroupDto(SiteGroup)
 
     @router.post("/site-groups", operation_id="4c6595c8-1aa1-4613-b128-37e7bca87e28")
     async def create_site_group(self, site_group: schemas.SiteGroupCreate) -> IdResponse:

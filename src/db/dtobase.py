@@ -12,7 +12,7 @@ from sqlalchemy.sql.base import ExecutableOption
 
 from src._types import Order, QueryParams
 from src.context import locale_ctx
-from src.db.base import Base
+from src.db import Base
 from src.db.session import async_engine
 from src.exceptions import ExistError, NotFoundError
 

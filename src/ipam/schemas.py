@@ -1,8 +1,9 @@
 from fastapi import Query
 from pydantic import Field, IPvAnyInterface, IPvAnyNetwork
 
-from src._types import BaseModel, QueryParams
+from src._types import BaseModel, IdCreate, QueryParams
 from src.consts import IPRangeStatus, PrefixStatus
+from src.internal import schemas
 
 
 class BlockCreate(BaseModel):
@@ -56,6 +57,36 @@ class PrefixQuery(QueryParams):
     site_id: list[int] | None = Field(Query(default=[]))
     role_id: list[int] | None = Field(Query(default=[]))
     vrf_id: list[int] | None = Field(Query(default=[]))
+
+
+class ASNBase(BaseModel):
+    asn: int
+    description: str | None = None
+
+
+class ASNCreate(ASNBase):
+    isp: list[IdCreate] | None = None
+    site: list[IdCreate] | None = None
+
+
+class ASNUpdate(ASNCreate):
+    asn: int | None
+
+
+class ASNQuery(QueryParams):
+    asn: list[int] | None = Field(Query(default=[]))
+
+
+class ASN(ASNBase):
+    id: int
+    site: list[schemas.SiteBrief]
+    isp: list[schemas.ISPBrief]
+
+
+class ASNList(ASNBase):
+    id: int
+    site_count: int
+    isp_count: int
 
 
 class IPRangeBase(BaseModel):

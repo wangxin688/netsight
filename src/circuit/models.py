@@ -6,15 +6,12 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils.types import ChoiceType
 
 from src.consts import CircuitStatus
-from src.db.base import Base
+from src.db import Base
 from src.db.db_types import IPvAnyAddress, IPvAnyInterface, PgIpAddress, PgIpInterface, date_optional, i18n_name, int_pk
 from src.db.mixins import AuditLogMixin
 
 if TYPE_CHECKING:
-    from src.arch.models import CircuitType
-    from src.dcim.models import Device, Interface
-    from src.ipam.models import ASN
-    from src.org.models import CircuitContact, Site
+    from src.db import ASN, CircuitContact, CircuitType, Device, Interface, Site
 
 __all__ = ("Circuit", "ISP", "ISPASN")
 

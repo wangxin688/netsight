@@ -5,9 +5,9 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth import schemas
-from src.auth.models import Menu, Permission, User
 from src.auth.schemas import PermissionCreate, PermissionUpdate
 from src.context import locale_ctx
+from src.db import Menu, Permission, User
 from src.db.dtobase import DtoBase
 from src.exceptions import NotFoundError, PermissionDenyError
 from src.security import verify_password

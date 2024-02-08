@@ -3,12 +3,12 @@ from typing import TYPE_CHECKING
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.db.base import Base
+from src.db import Base
 from src.db.db_types import EncryptedString, int_pk
 from src.db.mixins import AuditLogMixin
 
 if TYPE_CHECKING:
-    from src.dcim.models import Platform
+    from src.db import Platform
 
 
 class BaseLineConfig(Base, AuditLogMixin):

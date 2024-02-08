@@ -3,9 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src._types import AuditLog, IdResponse, ListT
 from src.arch import schemas
-from src.arch.models import CircuitType, DeviceRole, IPRole, RackRole
-from src.auth.models import User
 from src.cbv import cbv
+from src.db import CircuitType, DeviceRole, IPRole, RackRole, User
 from src.db.dtobase import DtoBase
 from src.deps import auth, get_session
 

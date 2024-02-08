@@ -2,15 +2,12 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.db.base import Base
+from src.db import Base
 from src.db.db_types import i18n_name, int_pk
 from src.db.mixins import AuditLogMixin
 
 if TYPE_CHECKING:
-    from src.circuit.models import Circuit
-    from src.ipam.models import VLAN, Prefix
-
-__all__ = ("RackRole", "DeviceRole", "IPRole", "CircuitType")
+    from src.db import VLAN, Circuit, Prefix
 
 
 class RackRole(Base, AuditLogMixin):

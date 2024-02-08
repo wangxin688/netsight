@@ -3,7 +3,7 @@ from sqlalchemy import delete, select
 
 from src._types import ResultT
 from src.auth import schemas
-from src.auth.models import Permission
+from src.db import Permission
 from src.deps import AuthUser, SqlaSession
 
 router = APIRouter()

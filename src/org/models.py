@@ -6,14 +6,12 @@ from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy_utils.types import ChoiceType
 
 from src.consts import LocationStatus, LocationType, SiteStatus
-from src.db.base import Base
+from src.db import Base
 from src.db.db_types import int_pk
 from src.db.mixins import AuditLogMixin
 
 if TYPE_CHECKING:
-    from src.ipam.models import ASN
-
-__all__ = ("SiteGroup", "Site", "Location", "ContactRole", "Contact", "SiteContact", "CircuitContact")
+    from src.db import ASN
 
 
 class SiteGroup(Base, AuditLogMixin):

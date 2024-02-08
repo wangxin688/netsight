@@ -9,14 +9,14 @@ from sqlalchemy.orm import Mapped, class_mapper, mapped_column, relationship
 from sqlalchemy.orm.attributes import get_history
 
 from src.context import orm_diff_ctx, request_id_ctx, user_ctx
-from src.db.base import Base
+from src.db import Base
 from src.db.db_types import int_pk
 
 if TYPE_CHECKING:
     from sqlalchemy.engine import Connection
     from sqlalchemy.orm import Mapper
 
-    from src.auth.models import User
+    from src.db import User
 
 
 class AuditTimeMixin:

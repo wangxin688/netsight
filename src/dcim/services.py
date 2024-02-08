@@ -2,11 +2,10 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 from src.consts import DeviceStatus, RackStatus
+from src.db import Device, DeviceType, Location, Rack
 from src.db.dtobase import DtoBase
 from src.dcim import schemas
-from src.dcim.models import Device, DeviceType, Rack
 from src.dcim.schemas import DeviceCreate, RackCreate, RackUpdate
-from src.org.models import Location
 from src.org.services import LocationDto
 
 if TYPE_CHECKING:

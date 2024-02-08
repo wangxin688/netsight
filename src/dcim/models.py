@@ -5,15 +5,12 @@ from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 from sqlalchemy_utils.types import ChoiceType
 
 from src.consts import DeviceStatus, EntityPhysicalClass, InterfaceAdminStatus, RackStatus
-from src.db.base import Base
+from src.db import Base
 from src.db.db_types import IPvAnyAddress, PgIpAddress, i18n_name, int_pk
 from src.db.mixins import AuditLogMixin
 
 if TYPE_CHECKING:
-    from src.arch.models import DeviceRole, RackRole
-    from src.ipam.models import VLAN, VRF, IPAddress
-    from src.netconfig.models import TextFsmTemplate
-    from src.org.models import Location, Site
+    from src.db import VLAN, VRF, DeviceRole, IPAddress, Location, RackRole, Site, TextFsmTemplate
 
 __all__ = ("Rack", "Vendor", "DeviceType", "Platform", "Device", "Interface", "DeviceEntity", "DeviceGroup")
 

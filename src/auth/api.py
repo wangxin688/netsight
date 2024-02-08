@@ -6,9 +6,9 @@ from sqlalchemy.orm import selectinload
 from src import errors
 from src._types import IdResponse, ListT
 from src.auth import schemas
-from src.auth.models import Group, Menu, Role, User
 from src.auth.services import MenuDto, UserDto
 from src.cbv import cbv
+from src.db import Group, Menu, Role, User
 from src.db.dtobase import DtoBase
 from src.deps import auth, get_session
 from src.exceptions import GenerError

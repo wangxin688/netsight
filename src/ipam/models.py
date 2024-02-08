@@ -5,15 +5,12 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils.types import ChoiceType
 
 from src.consts import IPAddressStatus, IPRangeStatus, PrefixStatus, VLANStatus
-from src.db.base import Base
+from src.db import Base
 from src.db.db_types import IPvAnyInterface, IPvAnyNetwork, PgCIDR, PgIpInterface, bool_false, bool_true, int_pk
 from src.db.mixins import AuditLogMixin
 
 if TYPE_CHECKING:
-    from src.arch.models import IPRole
-    from src.auth.models import User
-    from src.circuit.models import ISP
-    from src.dcim.models import Interface, Site
+    from src.db import ISP, Interface, IPRole, Site, User
 
 __all__ = (
     "IPAddress",

@@ -3,15 +3,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src._types import AuditLog, IdResponse, ListT
-from src.arch.models import RackRole
-from src.auth.models import User
 from src.cbv import cbv
+from src.db import Device, DeviceEntity, DeviceGroup, DeviceType, Location, Platform, Rack, RackRole, Site, User, Vendor
 from src.db.dtobase import DtoBase
 from src.dcim import schemas
-from src.dcim.models import Device, DeviceEntity, DeviceGroup, DeviceType, Platform, Rack, Vendor
 from src.dcim.services import RackDto
 from src.deps import auth, get_session
-from src.org.models import Location, Site
 
 router = APIRouter()
 
