@@ -1,18 +1,20 @@
+from ipaddress import IPv4Address, IPv6Address
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Float, ForeignKey, Integer, UniqueConstraint, func, select
+from sqlalchemy.dialects.postgresql import MACADDR
 from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 from sqlalchemy_utils.types import ChoiceType
 
-from src.consts import DeviceStatus, EntityPhysicalClass, InterfaceAdminStatus, RackStatus
+from src.consts import APMode, APStatus, DeviceStatus, EntityPhysicalClass, InterfaceAdminStatus, RackStatus
 from src.db import Base
 from src.db.db_types import IPvAnyAddress, PgIpAddress, i18n_name, int_pk
-from src.db.mixins import AuditLogMixin
+from src.db.mixins import AuditLogMixin, AuditTimeMixin
 
 if TYPE_CHECKING:
     from src.db import VLAN, VRF, DeviceRole, IPAddress, Location, RackRole, Site, TextFsmTemplate
 
-__all__ = ("Rack", "Vendor", "DeviceType", "Platform", "Device", "Interface", "DeviceEntity", "DeviceGroup")
+__all__ = ("Rack", "Vendor", "DeviceType", "Platform", "Device", "Interface", "DeviceEntity", "DeviceGroup", "AP")
 
 
 class Rack(Base, AuditLogMixin):
@@ -77,8 +79,8 @@ class Device(Base, AuditLogMixin):
     __search_fields__ = {"name", "management_ipv4", "management_ipv6", "serial_num", "oob_ip"}
     id: Mapped[int_pk]
     name: Mapped[str] = mapped_column(index=True)
-    management_ipv4: Mapped[IPvAnyAddress | None] = mapped_column(PgIpAddress, index=True, nullable=True)
-    management_ipv6: Mapped[IPvAnyAddress | None] = mapped_column(PgIpAddress, index=True, nullable=True)
+    management_ipv4: Mapped[IPv4Address | None] = mapped_column(PgIpAddress, index=True, nullable=True)
+    management_ipv6: Mapped[IPv6Address | None] = mapped_column(PgIpAddress, index=True, nullable=True)
     oob_ip: Mapped[IPvAnyAddress | None] = mapped_column(PgIpAddress, nullable=True)
     status: Mapped[DeviceStatus] = mapped_column(ChoiceType(DeviceStatus))
     version: Mapped[str | None]
@@ -102,6 +104,31 @@ class Device(Base, AuditLogMixin):
     device_group: Mapped["DeviceGroup"] = relationship(backref="device")
     interface: Mapped[list["Interface"]] = relationship(back_populates="device", passive_deletes=True)
     device_entity: Mapped[list["DeviceEntity"]] = relationship(back_populates="device")
+
+
+class AP(Base, AuditTimeMixin):
+    __tablename__ = "ap"
+    __visible_name__ = {"en_US": "AccessPoint", "zh_CN": "无线AP"}
+    __search_fields__ = {"name", "ip"}
+    __table_args__ = (UniqueConstraint("site_id", "name"),)
+    id: Mapped[int_pk]
+    name: Mapped[str]
+    status: Mapped[APStatus] = mapped_column(ChoiceType(APStatus))
+    mode: Mapped[APMode] = mapped_column(ChoiceType(APMode))
+    mac_address: Mapped[str] = mapped_column(MACADDR)
+    serial_num: Mapped[str | None] = mapped_column(unique=True)
+    asset_tag: Mapped[str | None]
+    device_type_id: Mapped[int] = mapped_column(ForeignKey("device_type.id", ondelete="RESTRICT"))
+    device_type: Mapped["DeviceType"] = relationship(backref="ap")
+    ap_group: Mapped[str | None]
+    management_ipv4: Mapped[IPv4Address | None] = mapped_column(PgIpAddress, index=True)
+    management_ipv6: Mapped[IPv6Address | None] = mapped_column(PgIpAddress, index=True)
+    site_id: Mapped[int] = mapped_column(ForeignKey("site.id", ondelete="RESTRICT"))
+    site: Mapped["Site"] = relationship(backref="ap")
+    location_id: Mapped[int | None] = mapped_column(ForeignKey("location.id", ondelete="SET NULL"))
+    location: Mapped["Location"] = relationship(backref="ap")
+    interface_id: Mapped[int | None] = mapped_column(ForeignKey("interface.id", ondelete="SET NULL"))
+    interface: Mapped["Interface"] = relationship(back_populates="ap")
 
 
 class DeviceEntity(Base, AuditLogMixin):
@@ -160,6 +187,7 @@ class Interface(Base):
     vlan_id: Mapped[int | None] = mapped_column(ForeignKey("vlan.id", ondelete="SET NULL"))
     vlan: Mapped["VLAN"] = relationship(backref="interface")
     ip_address: Mapped[list["IPAddress"]] = relationship("IPAddress", back_populates="interface")
+    ap: Mapped["AP"] = relationship("AP", back_populates="interface", uselist=False)
 
 
 class DeviceGroup(Base, AuditLogMixin):

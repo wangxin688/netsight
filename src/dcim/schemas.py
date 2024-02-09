@@ -9,11 +9,12 @@ from src._types import (
     BaseModel,
     I18nField,
     IdCreate,
+    MacAddress,
     NameChineseStr,
     NameStr,
     QueryParams,
 )
-from src.consts import DeviceStatus, EntityPhysicalClass, RackStatus
+from src.consts import APMode, APStatus, DeviceStatus, EntityPhysicalClass, RackStatus
 from src.internal import schemas
 
 
@@ -215,6 +216,58 @@ class Device(DeviceBase, AuditTime):
     device_group: schemas.DeviceGroupBrief | None = None
     interface_count: int
     device_entity_count: int
+
+
+class APBase(BaseModel):
+    name: str
+    status: APStatus
+    mode: APMode
+    mac_address: str
+    serial_num: str | None = None
+    asset_tag: str | None = None
+    ap_group: str | None
+    management_ipv4: IPv4Address | None = None
+    management_ipv6: IPv6Address | None = None
+
+
+class APCreate(APBase):
+    name: NameStr
+    mac_address: MacAddress
+    site_id: int
+    location_id: int | None = None
+    interface_id: int | None = None
+    device_type_id: int
+
+
+class APUpdate(APCreate):
+    name: NameStr | None = None
+    mac_address: MacAddress | None = None
+    site_id: int | None = None
+    device_type_id: int | None = None
+
+
+class APQuery(QueryParams):
+    name: list[NameStr] | None = Field(Query(default=[]))
+    status: list[APStatus] | None = Field(Query(default=[]))
+    mac_address: list[MacAddress] | None = Field(Query(default=[]))
+    mode: APMode | None = None
+    management_ipv4: list[IPv4Address] | None = Field(Query(default=[]))
+    management_ipv6: list[IPv6Address] | None = Field(Query(default=[]))
+    serial_num: list[str] | None = Field(Query(default=[]))
+    ap_group: list[str] | None = Field(Query(default=[]))
+    asset_tag: list[str] | None = Field(Query(default=[]))
+    device_type_id: list[int] | None = Field(Query(default=[]))
+    site_id: list[int] | None = Field(Query(default=[]))
+    location_id: list[int] | None = Field(Query(default=[]))
+    interface_id: list[int] | None = Field(Query(default=[]))
+
+
+class AP(APBase, AuditTime):
+    id: int
+    device_type: schemas.DeviceTypeBrief
+    site: schemas.SiteBrief
+    location: schemas.LocationBrief | None = None
+    interface: schemas.InterfaceToDevice | None = None
 
 
 class DeviceEntityBase(BaseModel):

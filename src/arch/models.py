@@ -9,6 +9,8 @@ from src.db.mixins import AuditLogMixin
 if TYPE_CHECKING:
     from src.db import VLAN, Circuit, Prefix
 
+__all__ = ("RackRole", "DeviceRole", "IPRole", "CircuitType")
+
 
 class RackRole(Base, AuditLogMixin):
     __tablename__ = "rack_role"

@@ -45,24 +45,24 @@ class UserAPI:
         operation_id="276a8c69-2f5c-40d5-91c4-d0ddd1c24766",
         summary="获取单个用户/Get user information by ID",
     )
-    async def get_user(self, id: int) -> schemas.UserDetail:
+    async def get_user(self, id: int) -> schemas.User:
         db_user = await self.dto.get_one_or_404(
             self.session,
             id,
             selectinload(User.role).load_only(Role.id, Role.name),
             selectinload(User.group).load_only(Group.id, Group.name),
         )
-        return schemas.UserDetail.model_validate(db_user)
+        return schemas.User.model_validate(db_user)
 
     @router.get("/users", operation_id="2485e2a2-4d81-4601-a6fd-c633b23ce5fc")
-    async def get_users(self, query: schemas.UserQuery = Depends()) -> ListT[schemas.UserDetail]:
+    async def get_users(self, query: schemas.UserQuery = Depends()) -> ListT[schemas.User]:
         count, results = await self.dto.list_and_count(
             self.session,
             query,
             selectinload(User.role).load_only(Role.id, Role.name),
             selectinload(User.group).load_only(Group.id, Group.name),
         )
-        return ListT(count=count, results=[schemas.UserDetail.model_validate(r) for r in results])
+        return ListT(count=count, results=[schemas.User.model_validate(r) for r in results])
 
     @router.put("/users/{id}", operation_id="ea0078b9-7f16-4b55-9264-fa7ba48737a9")
     async def update_user(self, id: int, user: schemas.UserUpdate) -> IdResponse:
@@ -92,14 +92,14 @@ class GroupAPI:
         return IdResponse(id=new_group.id)
 
     @router.get("/groups/{id}", operation_id="00327087-9443-4d24-8d04-e396e3244744")
-    async def get_group(self, id: int) -> schemas.GroupDetail:
+    async def get_group(self, id: int) -> schemas.Group:
         db_group = await self.dto.get_one_or_404(self.session, id, undefer_load=True)
-        return schemas.GroupDetail.model_validate(db_group)
+        return schemas.Group.model_validate(db_group)
 
     @router.get("/groups", operation_id="a1d1f8f1-4d4d-4fab-868b-3f977df26e05")
-    async def get_groups(self, query: schemas.GroupQuery = Depends()) -> ListT[schemas.GroupDetail]:
+    async def get_groups(self, query: schemas.GroupQuery = Depends()) -> ListT[schemas.Group]:
         count, results = await self.dto.list_and_count(self.session, query)
-        return ListT(count=count, results=[schemas.GroupDetail.model_validate(r) for r in results])
+        return ListT(count=count, results=[schemas.Group.model_validate(r) for r in results])
 
     @router.put("/groups/{id}", operation_id="3d5badd1-665c-49f8-85c4-6f6d7f3a1b2a")
     async def update_group(self, id: int, group: schemas.GroupUpdate) -> IdResponse:
@@ -126,9 +126,9 @@ class RoleAPI:
         return IdResponse(id=new_role.id)
 
     @router.get("/roles/{id}", operation_id="2b45f59a-77a1-45d4-bf43-94373da517e3")
-    async def get_role(self, id: int) -> schemas.RoleDetail:
+    async def get_role(self, id: int) -> schemas.Role:
         db_role = await self.dto.get_one_or_404(self.session, id, selectinload(Role.permission), undefer_load=True)
-        return schemas.RoleDetail.model_validate(db_role)
+        return schemas.Role.model_validate(db_role)
 
     @router.get("/roles", operation_id="c5f793b1-7adf-4b4e-a498-732b0fa7d758")
     async def get_roles(self, query: schemas.RoleQuery = Depends()) -> ListT[schemas.RoleList]:

@@ -152,19 +152,19 @@ class RoleUpdate(RoleCreate):
     description: str | None = None
 
 
-class UserDetail(UserBase, AuditTime):
+class User(UserBase, AuditTime):
     id: int
     role: RoleBrief
     group: GroupBrief
 
 
-class GroupDetail(GroupBase, AuditTime):
+class Group(GroupBase, AuditTime):
     id: int
     user_count: int
     role: RoleBrief
 
 
-class RoleDetail(RoleBase, AuditTime):
+class Role(RoleBase, AuditTime):
     id: int
     permission: list[Permission]
     user_count: int

@@ -1,4 +1,4 @@
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, func, select, or_
 from sqlalchemy.orm import column_property
 
 from src.db.base import Base
@@ -59,5 +59,41 @@ DeviceRole.device_count = column_property(
 )
 RackRole.rack_count = column_property(
     select(func.count(Rack.id)).where(Rack.rack_role_id == RackRole.id).correlate_except(RackRole).scalar_subquery(),
+    deferred=True,
+)
+
+Site.device_count = column_property(
+    select(func.count(Device.id)).where(Device.site_id == Site.id).correlate_except(Site).scalar_subquery(),
+    deferred=True,
+)
+Site.circuit_count = column_property(
+    select(func.count(Circuit.id))
+    .where(or_(Circuit.site_a_id == Site.id, Circuit.site_z_id == Site.id))
+    .correlate_except(Circuit)
+    .scalar_subquery(),
+    deferred=True,
+)
+Site.prefix_count = column_property(
+    select(func.count(Prefix.id)).where(Prefix.site_id == Site.id).correlate_except(Site).scalar_subquery(),
+    deferred=True,
+)
+Site.vlan_count = column_property(
+    select(func.count(VLAN.id)).where(VLAN.site_id == Site.id).correlate_except(Site).scalar_subquery(),
+    deferred=True,
+)
+Site.rack_count = column_property(
+    select(func.count(Rack.id)).where(Rack.site_id == Site.id).correlate_except(Rack).scalar_subquery(),
+    deferred=True,
+)
+Site.asn_count = column_property(
+    select(func.count(ASN.id)).where(and_(SiteASN.site_id == Site.id, SiteASN.asn_id == ASN.id)).scalar_subquery(),
+    deferred=True,
+)
+Site.ap_count = column_property(
+    select(func.count(AP.id)).where(AP.site_id == AP.id).correlate_except(AP).scalar_subquery(),
+    deferred=True,
+)
+SiteGroup.site_count = column_property(
+    select(func.count(Site.id)).where(Site.site_group_id == SiteGroup.id).correlate_except(SiteGroup).scalar_subquery(),
     deferred=True,
 )

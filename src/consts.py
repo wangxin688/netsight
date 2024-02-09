@@ -39,6 +39,17 @@ class DeviceStatus(StrEnum):
     Inventory = "Inventory"
 
 
+class APStatus(StrEnum):
+    Active = "Active"
+    Offline = "Offline"
+    Inventory = "Inventory"
+
+
+class APMode(StrEnum):
+    Fix = "Fix"
+    Fat = "Fat"
+
+
 class RackStatus(StrEnum):
     Active = "Active"
     Offline = "Offline"

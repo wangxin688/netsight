@@ -4,7 +4,20 @@ from sqlalchemy.orm import selectinload
 
 from src._types import AuditLog, IdResponse, ListT
 from src.cbv import cbv
-from src.db import Device, DeviceEntity, DeviceGroup, DeviceType, Location, Platform, Rack, RackRole, Site, User, Vendor
+from src.db import (
+    AP,
+    Device,
+    DeviceEntity,
+    DeviceGroup,
+    DeviceType,
+    Location,
+    Platform,
+    Rack,
+    RackRole,
+    Site,
+    User,
+    Vendor,
+)
 from src.db.dtobase import DtoBase
 from src.dcim import schemas
 from src.dcim.services import RackDto
@@ -327,3 +340,37 @@ class DeviceGroupAPI:
         if not results:
             return ListT(count=0, results=None)
         return ListT(count=count, results=[AuditLog.model_validate(r) for r in results])
+
+
+@cbv(router)
+class APAPI:
+    session: AsyncSession = Depends(get_session)
+    user: User = Depends(auth)
+    dto = DtoBase(AP)
+
+    @router.post("/aps", operation_id="deed76e4-3575-4d9d-8922-90684ad36e73")
+    async def create_ap(self, ap: schemas.APCreate) -> IdResponse:
+        new_ap = await self.dto.create(self.session, ap)
+        return IdResponse(id=new_ap.id)
+
+    @router.put("/aps/{id}", operation_id="af348d5b-8adf-4611-a835-8028a4c9178d")
+    async def update_ap(self, id: int, ap: schemas.APUpdate) -> IdResponse:
+        db_ap = await self.dto.get_one_or_404(self.session, id)
+        await self.dto.update(self.session, db_ap, ap)
+        return IdResponse(id=id)
+
+    @router.get("/aps/{id}", operation_id="d1ea839c-0181-4cbf-97af-c99793ede788")
+    async def get_ap(self, id: int) -> schemas.AP:
+        db_ap = await self.dto.get_one_or_404(self.session, id, undefer_load=True)
+        return schemas.AP.model_validate(db_ap)
+
+    @router.get("/aps", operation_id="b3fab230-cc6f-4bbd-9671-09618a36114b")
+    async def get_aps(self, q: schemas.APQuery = Depends()) -> ListT[schemas.AP]:
+        count, results = await self.dto.list_and_count(self.session, q)
+        return ListT(count=count, results=[schemas.AP.model_validate(r) for r in results])
+
+    @router.delete("/aps/{id}", operation_id="cfe0a299-9462-413f-a57e-d566a8691cda")
+    async def delete_ap(self, id: int) -> IdResponse:
+        db_ap = await self.dto.get_one_or_404(self.session, id)
+        await self.dto.delete(self.session, db_ap)
+        return IdResponse(id=id)

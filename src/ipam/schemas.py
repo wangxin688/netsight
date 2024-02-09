@@ -1,7 +1,7 @@
 from fastapi import Query
 from pydantic import Field, IPvAnyInterface, IPvAnyNetwork, model_validator
 
-from src._types import BaseModel, IdCreate, NameChineseStr, NameStr, QueryParams
+from src._types import AuditTime, BaseModel, IdCreate, NameChineseStr, NameStr, QueryParams
 from src.auth.schemas import UserBrief
 from src.consts import IPRangeStatus, PrefixStatus, VLANStatus
 from src.internal import schemas
@@ -29,7 +29,7 @@ class BlockQuery(QueryParams):
     is_private: bool | None = None
 
 
-class Block(BlockBase):
+class Block(BlockBase, AuditTime):
     id: int
 
 
@@ -65,7 +65,7 @@ class PrefixQuery(QueryParams):
     vrf_id: list[int] | None = Field(Query(default=[]))
 
 
-class Prefix(PrefixBase):
+class Prefix(PrefixBase, AuditTime):
     id: int
     site: schemas.SiteBrief
     role: schemas.IPRoleBrief
@@ -92,13 +92,13 @@ class ASNQuery(QueryParams):
     asn: list[int] | None = Field(Query(default=[]))
 
 
-class ASN(ASNBase):
+class ASN(ASNBase, AuditTime):
     id: int
     site: list[schemas.SiteBrief]
     isp: list[schemas.ISPBrief]
 
 
-class ASNList(ASNBase):
+class ASNList(ASNBase, AuditTime):
     id: int
     site_count: int
     isp_count: int
@@ -125,7 +125,7 @@ class IPRangeQuery(QueryParams):
     ...
 
 
-class IPRange(IPRangeBase):
+class IPRange(IPRangeBase, AuditTime):
     id: int
     vrf: schemas.VRFBrief
 
@@ -161,7 +161,7 @@ class IPAddressQuery(QueryParams):
     interface_id: list[int] | None = Field(Query(default=[]))
 
 
-class IPAddress(IPAddressBase):
+class IPAddress(IPAddressBase, AuditTime):
     id: int
     vrf: schemas.VRFBrief
     owner: list[UserBrief]
@@ -196,7 +196,7 @@ class VLANQuery(QueryParams):
     role_id: list[int] | None = Field(Query(default=[]))
 
 
-class VLAN(VLANBase):
+class VLAN(VLANBase, AuditTime):
     id: int
     site: schemas.SiteBrief
     role: schemas.IPRoleBrief
@@ -223,7 +223,7 @@ class VRFQuery(QueryParams):
     rd: list[str] | None = Field(Query(default=[]))
 
 
-class VRF(VRFBase):
+class VRF(VRFBase, AuditTime):
     id: int
     route_target: list[schemas.RouteTarget]
 
@@ -245,6 +245,6 @@ class RouteTargetQuery(QueryParams):
     name: list[str] | None = Field(Query(default=[]))
 
 
-class RouteTarget(RouteTargetBase):
+class RouteTarget(RouteTargetBase, AuditTime):
     id: int
     vrf: list[schemas.VRFBrief] | None = None

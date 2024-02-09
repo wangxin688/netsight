@@ -11,6 +11,8 @@ from sqlalchemy.orm.collections import attribute_mapped_collection
 from src.db import Base, db_types
 from src.db.mixins import AuditTimeMixin
 
+__all__ = ("RolePermission", "RoleMenu", "Role", "Permission", "Group", "User", "Menu")
+
 
 class RolePermission(Base):
     __tablename__ = "role_permission"

@@ -14,6 +14,8 @@ from sqlalchemy.dialects import postgresql
 import src
 from alembic import op
 from src.consts import (
+    APMode,
+    APStatus,
     CircuitStatus,
     DeviceStatus,
     EntityPhysicalClass,
@@ -951,6 +953,35 @@ def upgrade() -> None:
         sa.UniqueConstraint("device_id", "name"),
     )
     op.create_table(
+        "ap",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("name", sa.String(), nullable=False),
+        sa.Column("status", sqlalchemy_utils.types.choice.ChoiceType(APStatus), nullable=False),
+        sa.Column("mode", sqlalchemy_utils.types.choice.ChoiceType(APMode), nullable=False),
+        sa.Column("mac_address", postgresql.MACADDR(), nullable=False),
+        sa.Column("serial_num", sa.String(), nullable=True),
+        sa.Column("asset_tag", sa.String(), nullable=True),
+        sa.Column("device_type_id", sa.Integer(), nullable=False),
+        sa.Column("ap_group", sa.String(), nullable=True),
+        sa.Column("management_ipv4", src.db.db_types.PgIpAddress(), nullable=True),
+        sa.Column("management_ipv6", src.db.db_types.PgIpAddress(), nullable=True),
+        sa.Column("site_id", sa.Integer(), nullable=False),
+        sa.Column("location_id", sa.Integer(), nullable=True),
+        sa.Column("interface_id", sa.Integer(), nullable=True),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+        sa.ForeignKeyConstraint(["device_type_id"], ["device_type.id"], ondelete="RESTRICT"),
+        sa.ForeignKeyConstraint(["interface_id"], ["interface.id"], ondelete="SET NULL"),
+        sa.ForeignKeyConstraint(["location_id"], ["location.id"], ondelete="SET NULL"),
+        sa.ForeignKeyConstraint(["site_id"], ["site.id"], ondelete="RESTRICT"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("serial_num"),
+        sa.UniqueConstraint("site_id", "name"),
+    )
+    op.create_index(op.f("ix_ap_created_at"), "ap", ["created_at"], unique=False)
+    op.create_index(op.f("ix_ap_management_ipv4"), "ap", ["management_ipv4"], unique=False)
+    op.create_index(op.f("ix_ap_management_ipv6"), "ap", ["management_ipv6"], unique=False)
+    op.create_table(
         "baseline_config_audit_log",
         sa.Column("parent_id", sa.Integer(), nullable=True),
         sa.Column("id", sa.Integer(), nullable=False),
@@ -1104,6 +1135,10 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_circuit_created_at"), table_name="circuit")
     op.drop_table("circuit")
     op.drop_table("baseline_config_audit_log")
+    op.drop_index(op.f("ix_ap_management_ipv6"), table_name="ap")
+    op.drop_index(op.f("ix_ap_management_ipv4"), table_name="ap")
+    op.drop_index(op.f("ix_ap_created_at"), table_name="ap")
+    op.drop_table("ap")
     op.drop_table("interface")
     op.drop_index(op.f("ix_device_entity_created_at"), table_name="device_entity")
     op.drop_table("device_entity")
