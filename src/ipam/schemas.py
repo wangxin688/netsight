@@ -225,7 +225,7 @@ class VRFQuery(QueryParams):
 
 class VRF(VRFBase, AuditTime):
     id: int
-    route_target: list[schemas.RouteTarget]
+    route_target: list[schemas.RouteTargetBrief]
 
 
 class RouteTargetBase(BaseModel):
