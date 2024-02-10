@@ -56,6 +56,8 @@ def upgrade() -> None:
         sa.Column("name", sa.String(), nullable=False),
         sa.Column("block", src.db.db_types.PgCIDR(), nullable=False),
         sa.Column("is_private", sa.Boolean(), nullable=False),
+        sa.Column("size", sa.Integer(), nullable=False),
+        sa.Column("range", sa.String(), nullable=False),
         sa.Column("description", sa.String(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),

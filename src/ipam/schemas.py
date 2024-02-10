@@ -71,6 +71,7 @@ class Prefix(PrefixBase, AuditTime):
     role: schemas.IPRoleBrief
     vrf: schemas.VRFBrief
     vlan: schemas.VLANBrief
+    children_count: int
 
 
 class ASNBase(BaseModel):

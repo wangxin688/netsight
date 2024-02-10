@@ -12,7 +12,7 @@ from src.db.db_types import IPvAnyAddress, PgIpAddress, i18n_name, int_pk
 from src.db.mixins import AuditLogMixin, AuditTimeMixin
 
 if TYPE_CHECKING:
-    from src.db import VLAN, VRF, DeviceRole, IPAddress, Location, RackRole, Site, TextFsmTemplate
+    from src.db import VLAN, VRF, DeviceRole, IPAddress, Location, RackRole, Site
 
 __all__ = ("Rack", "Vendor", "DeviceType", "Platform", "Device", "Interface", "DeviceEntity", "DeviceGroup", "AP")
 
@@ -69,7 +69,6 @@ class Platform(Base, AuditLogMixin):
     slug: Mapped[str] = mapped_column(unique=True)
     description: Mapped[str | None]
     netmiko_driver: Mapped[str | None]
-    textfsm_template: Mapped[list["TextFsmTemplate"]] = relationship(back_populates="platform")
 
 
 class Device(Base, AuditLogMixin):
@@ -183,11 +182,11 @@ class Interface(Base):
         foreign_keys=[parent_interface_id], lazy="selectin", join_depth=1, cascade="all, delete-orphan"
     )
     vrf_id: Mapped[int | None] = mapped_column(ForeignKey("vrf.id", ondelete="SET NULL"))
-    vrf: Mapped["VRF"] = relationship("VRF", backref="interface")
+    vrf: Mapped["VRF"] = relationship(backref="interface")
     vlan_id: Mapped[int | None] = mapped_column(ForeignKey("vlan.id", ondelete="SET NULL"))
     vlan: Mapped["VLAN"] = relationship(backref="interface")
-    ip_address: Mapped[list["IPAddress"]] = relationship("IPAddress", back_populates="interface")
-    ap: Mapped["AP"] = relationship("AP", back_populates="interface", uselist=False)
+    ip_address: Mapped[list["IPAddress"]] = relationship(back_populates="interface")
+    ap: Mapped["AP"] = relationship(back_populates="interface", uselist=False)
 
 
 class DeviceGroup(Base, AuditLogMixin):

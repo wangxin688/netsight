@@ -57,7 +57,7 @@ def check_user_active(is_active: bool) -> None:
 
 
 def check_privileged_role(slug: str, operation_id: str) -> bool:
-    if slug == ReservedRoleSlug.ADMIN:
+    if slug == ReservedRoleSlug.ADMIN.value:
         return True
     if operation_id in API_WHITE_LISTS:
         return True

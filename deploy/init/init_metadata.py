@@ -1,16 +1,39 @@
 import json
 from pathlib import Path
 from typing import TYPE_CHECKING
+from uuid import uuid4
 
 from anyio import open_file, run
 
-from src.circuit.models import CircuitType, DeviceRole, IPRole, RackRole
 from src.config import PROJECT_DIR
+from src.consts import ReservedRoleSlug
+from src.context import request_id_ctx, user_ctx
+from src.db import Block, CircuitType, DeviceRole, DeviceType, Group, IPRole, Platform, RackRole, Role, User, Vendor
 from src.db.session import async_session
-from src.dcim.models import DeviceType, Platform, Vendor
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
+
+
+async def init_user(session: "AsyncSession") -> None:
+    new_role = Role(
+        name="Administrator", slug=ReservedRoleSlug.ADMIN.value, description="Administrator with full authority"
+    )
+    session.add(new_role)
+    await session.commit()
+    new_group = Group(name="Administrators", description="Administrators group", role_id=new_role.id)
+    session.add(new_group)
+    await session.commit()
+    new_user = User(
+        name="admin",
+        email="admin@netsight.com",
+        password="admin",  # noqa: S106
+        group_id=new_group.id,
+        role_id=new_role.id,
+    )
+    session.add(new_user)
+    await session.commit()
+    user_ctx.set(new_user.id)
 
 
 async def init_platform(session: "AsyncSession") -> None:
@@ -31,7 +54,7 @@ async def init_vendor(session: "AsyncSession") -> None:
         await session.commit()
 
 
-async def init_device_types(session: "AsyncSession") -> None:
+async def init_device_type(session: "AsyncSession") -> None:
     path = Path(f"{PROJECT_DIR}/deploy/collectiions/devices_types")
     for file in path.glob("*.json"):
         async with await open_file(file) as f:
@@ -42,8 +65,8 @@ async def init_device_types(session: "AsyncSession") -> None:
     await session.commit()
 
 
-async def init_circuit_types(session: "AsyncSession") -> None:
-    async with await open_file(f"{PROJECT_DIR}/deploy/collections/metadata/circuit_types.json") as f:
+async def init_circuit_type(session: "AsyncSession") -> None:
+    async with await open_file(f"{PROJECT_DIR}/deploy/collections/metadata/circuit_type.json") as f:
         contents = await f.read()
         circuit_types = json.loads(contents)
         new_circuit_types = [CircuitType(**c) for c in circuit_types]
@@ -51,8 +74,8 @@ async def init_circuit_types(session: "AsyncSession") -> None:
         await session.commit()
 
 
-async def init_device_roles(session: "AsyncSession") -> None:
-    async with await open_file(f"{PROJECT_DIR}/deploy/collections/metadata/device_roles.json") as f:
+async def init_device_role(session: "AsyncSession") -> None:
+    async with await open_file(f"{PROJECT_DIR}/deploy/collections/metadata/device_role.json") as f:
         contents = await f.read()
         device_roles = json.loads(contents)
         new_device_roles = [DeviceRole(**d) for d in device_roles]
@@ -60,8 +83,8 @@ async def init_device_roles(session: "AsyncSession") -> None:
         await session.commit()
 
 
-async def init_rack_roles(session: "AsyncSession") -> None:
-    async with await open_file(f"{PROJECT_DIR}/deploy/collections/metadata/rack_roles.json") as f:
+async def init_rack_role(session: "AsyncSession") -> None:
+    async with await open_file(f"{PROJECT_DIR}/deploy/collections/metadata/rack_role.json") as f:
         contents = await f.read()
         rack_roles = json.loads(contents)
         new_rack_roles = [RackRole(**r) for r in rack_roles]
@@ -69,8 +92,8 @@ async def init_rack_roles(session: "AsyncSession") -> None:
         await session.commit()
 
 
-async def init_ip_roles(session: "AsyncSession") -> None:
-    async with await open_file(f"{PROJECT_DIR}/deploy/collections/metadata/ip_roles.json") as f:
+async def init_ip_role(session: "AsyncSession") -> None:
+    async with await open_file(f"{PROJECT_DIR}/deploy/collections/metadata/ip_role.json") as f:
         contents = await f.read()
         ip_roles = json.loads(contents)
         new_ip_roles = [IPRole(**i) for i in ip_roles]
@@ -78,14 +101,25 @@ async def init_ip_roles(session: "AsyncSession") -> None:
         await session.commit()
 
 
+async def init_block(session: "AsyncSession") -> None:
+    async with await open_file(f"{PROJECT_DIR}/deploy/collections/metadata/block.json") as f:
+        contents = await f.read()
+        blocks = json.loads(contents)
+        new_blocks = [Block(**b) for b in blocks]
+        session.add_all(new_blocks)
+        await session.commit()
+
+
 async def init_meta() -> None:
+    request_id_ctx.set(str(uuid4()))
     async with async_session() as session:
+        await init_user(session)
         await init_platform(session)
         await init_vendor(session)
-        await init_device_types(session)
-        await init_circuit_types(session)
-        await init_device_roles(session)
-        await init_rack_roles(session)
+        await init_device_type(session)
+        await init_circuit_type(session)
+        await init_device_role(session)
+        await init_rack_role(session)
 
 
 if __name__ == "__main__":

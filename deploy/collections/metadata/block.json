@@ -1,0 +1,34 @@
+[
+    {
+        "name": "RFC 1918",
+        "block": "10.0.0.0/8",
+        "is_private": true,
+        "range": "10.0.0.0-10.255.255.255",
+        "size": 16777216,
+        "description": "single class A network/A类地址"
+    },
+    {
+        "name": "RFC 1918",
+        "block": "172.16.0.0/12",
+        "is_private": true,
+        "range": "172.16.0.0-172.31.255.255",
+        "size": 1048576,
+        "description": "16 contiguous class B networks/16位B类地址"
+    },
+    {
+        "name": "RFC 1918",
+        "block": "192.168.0.0/16",
+        "is_private": true,
+        "range": "192.168.0.0-192.168.255.255",
+        "size": 65536,
+        "description": "256 contiguous class C networks/256位C类地址"
+    },
+    {
+        "name": "RFC 6598",
+        "block": "100.64.0.0/16",
+        "is_private": true,
+        "range": "100.64.0.0-100.127.255.255",
+        "size": 4194304,
+        "description": "Shared Address Space./共享地址空间"
+    }
+]

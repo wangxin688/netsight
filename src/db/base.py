@@ -15,6 +15,7 @@ class Base(DeclarativeBase):
 
     def dict(self, exclude: set[str] | None = None, native_dict: bool = False) -> dict[str, Any]:
         """Return dict representation of model."""
+        exclude = exclude if exclude else set()
         if not native_dict:
             return jsonable_encoder(self, exclude=exclude)
         return {c.name: getattr(self, c.name) for c in self.__table__.columns if c.name not in exclude}

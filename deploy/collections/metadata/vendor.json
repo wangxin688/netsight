@@ -28,7 +28,7 @@
         "id": 6,
         "name": {"en_US": "VMware", "zh_CN": "VMware"},
         "slug": "vmware"
-    }
+    },
     {
         "id": 7,
         "name": {"en_US": "H3C", "zh_CN": "新华三"},

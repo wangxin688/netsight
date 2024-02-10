@@ -58,7 +58,7 @@ class TextFsmTemplate(Base):
     name: Mapped[str]
     commonad: Mapped[str]
     platform_id: Mapped[int] = mapped_column(ForeignKey("platform.id", ondelete="RESTRICT"))
-    platform: Mapped["Platform"] = relationship(back_populates="textfsm_template")
+    platform: Mapped["Platform"] = relationship(backref="textfsm_template")
 
 
 class JinjaTemplate(Base):
@@ -67,4 +67,4 @@ class JinjaTemplate(Base):
     id: Mapped[int_pk]
     name: Mapped[str]
     platform_id: Mapped[int] = mapped_column(ForeignKey("platform.id", ondelete="RESTRICT"))
-    platform: Mapped["Platform"] = relationship(back_populates="jinja_template")
+    platform: Mapped["Platform"] = relationship(backref="jinja_template")

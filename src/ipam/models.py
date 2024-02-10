@@ -48,6 +48,8 @@ class Block(Base, AuditLogMixin):
     id: Mapped[int_pk]
     name: Mapped[str]
     block: Mapped[IPvAnyNetwork] = mapped_column(PgCIDR, unique=True)
+    size: Mapped[int]
+    range: Mapped[str]
     is_private: Mapped[bool]
     description: Mapped[str | None]
 
@@ -70,7 +72,7 @@ class Prefix(Base, AuditLogMixin):
     role_id: Mapped[int | None] = mapped_column(ForeignKey("ip_role.id", ondelete="SET NULL"))
     role: Mapped["IPRole"] = relationship(back_populates="prefix")
     vrf_id: Mapped[int | None] = mapped_column(ForeignKey("vrf.id", ondelete="SET NULL"))
-    vrf: Mapped["VRF"] = relationship(backref=prefix)
+    vrf: Mapped["VRF"] = relationship(backref="prefix")
 
 
 class ASN(Base, AuditLogMixin):
@@ -93,7 +95,7 @@ class IPRange(Base, AuditLogMixin):
     status: Mapped[IPRangeStatus] = mapped_column(ChoiceType(IPRangeStatus))
     description: Mapped[str | None]
     vrf_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("vrf.id", ondelete="SET NULL"))
-    vrf: Mapped["VRF"] = relationship("VRF", backref="ip_range")
+    vrf: Mapped["VRF"] = relationship(backref="ip_range")
 
     @property
     def size(self) -> int:
@@ -157,3 +159,11 @@ class RouteTarget(Base, AuditLogMixin):
     name: Mapped[str] = mapped_column(unique=True)
     description: Mapped[str | None]
     vrf: Mapped[list["VRF"]] = relationship(secondary="vrf_route_target", back_populates="route_target")
+
+
+# Prefix.children_count = column_property(
+#     select(func.count(Prefix.id))
+#     .where(Prefix.prefix.op("<<")(Prefix.prefix))
+#     .correlate_except(Prefix)
+#     .scalar_subquery()
+# )

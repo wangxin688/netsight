@@ -56,42 +56,42 @@
         "netmiko_driver": "ruijie_os"
     },
     {
-        "id": 8,
+        "id": 9,
         "name": "Aruba OS",
         "slug": "aruba-os",
         "description": "Aruba OS platform",
         "netmiko_driver": "aruba_os"
     },
     {
-        "id": 9,
+        "id": 10,
         "name": "Arista EOS",
         "slug": "arista-eos",
         "description": "Arista EOS platform",
         "netmiko_driver": "arista_eos"
     },
     {
-        "id": 10,
+        "id": 11,
         "name": "Juniper Junos",
         "slug": "juniper-junos",
         "description": "Juniper Junos platform",
         "netmiko_driver": "juniper_junos"
     },
     {
-        "id": 11,
+        "id": 12,
         "name": "PlatAlto PANOS",
         "slug": "platalto-panos",
         "description": "PlatAlto PANOS platform",
         "netmiko_driver": "platalto_panos"
     },
     {
-        "id": 12,
+        "id": 13,
         "name": "Linux",
         "slug": "linux",
         "description": "Linux Platform",
         "netmiko_driver": "linux"
     },
     {
-        "id": 13,
+        "id": 14,
         "name": "Fortinet",
         "slug": "fortinet",
         "description": "Fortinet platform",
