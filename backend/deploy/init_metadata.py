@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 from anyio import open_file, run
@@ -9,15 +9,12 @@ from sqlalchemy import select
 from app.config import PROJECT_DIR
 from app.consts import ReservedRoleSlug
 from app.db import Block, CircuitType, DeviceRole, DeviceType, Group, IPRole, Platform, RackRole, Role, User, Vendor
-from app.db.database import Base, sessionmanager
-from app.utils.context import request_id_ctx, user_ctx
+from app.db.database import sessionmanager
 from app.security import get_password_hash
+from app.utils.context import request_id_ctx, user_ctx
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
-
-
-T = TypeVar("T", bound=Base)
 
 
 async def init_user(session: "AsyncSession") -> None:
@@ -48,17 +45,13 @@ async def init_user(session: "AsyncSession") -> None:
         user = User(
             name="admin",
             email="admin@netsight.com",
-            password=get_password_hash("admin"),  # noqa: S106
+            password=get_password_hash("admin"),
             group_id=group.id,
             role_id=role.id,
         )
         session.add(user)
         await session.commit()
     user_ctx.set(user.id)
-
-
-async def upsert_and_sync_data(session: "AsyncSession", objs: list[T], obj: type[T]) -> None:
-    db_objs = (await session.scalars(select(obj))).all()
 
 
 async def init_platform(session: "AsyncSession") -> None:

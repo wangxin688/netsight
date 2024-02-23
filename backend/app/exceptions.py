@@ -2,7 +2,7 @@ import logging
 import sys
 import traceback
 from ipaddress import IPv4Address, IPv4Interface, IPv4Network, IPv6Address, IPv6Interface, IPv6Network
-from typing import Any, NamedTuple, NewType
+from typing import Any, NamedTuple, TypeVar
 from uuid import UUID
 
 from fastapi import Request, status
@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 from app.utils.context import locale_ctx, request_id_ctx
 from app.utils.i18n import _
 
-_E = NewType("_E", Exception)
+_E = TypeVar("_E", bound=Exception)
 logger = logging.getLogger(__name__)
 
 
@@ -112,15 +112,15 @@ def log_exception(exc: _E, logger_trace_info: bool) -> None:
         N/A
     """
     ex_type, _tmp, ex_traceback = sys.exc_info()
-   # trace_back = traceback.format_list(traceback.extract_tb(ex_traceback)[-1:])[-1]
+    trace_back = traceback.format_list(traceback.extract_tb(ex_traceback)[-1:])[-1]
 
     logger.warning(f"ErrorMessage: {exc}")
     logger.warning(f"Exception Type {ex_type.__name__}: ") if ex_type else None
 
     if not logger_trace_info:
-        logger.warning(f"Stack trace: {ex_traceback}")
+        logger.warning(f"Stack trace: {trace_back}")
     else:
-        logger.exception(f"Stack trace: {ex_traceback}")
+        logger.exception(f"Stack trace: {trace_back}")
 
 
 async def token_invalid_handler(request: Request, exc: TokenInvalidError) -> JSONResponse:
