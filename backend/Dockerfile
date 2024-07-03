@@ -1,9 +1,16 @@
-FROM python3.11
+FROM python:3.12-slim-bullseye as base
 
-RUN mkdir /app
-WORKDIR /app
+FROM base AS install
 
-COPY requirements.lock ./
-RUN pip install --no-cache-dir -r requirements.lock
+WORKDIR /home/app
+ENV PYTHONPATH=/home/app PYTHONHASHSEED=0
 
-COPY . .
+
+COPY alembic.ini .env requirements.lock pyproject.toml README.md ./
+COPY src/ src/
+COPY alembic/ alembic/
+RUN chmod 755 .env
+RUN PYTHONDONTWRITEBYTECODE=1 pip install -r requirements.lock
+RUN alembic upgrade head
+
+CMD ["python", "src/__main__.py"]

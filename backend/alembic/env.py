@@ -4,7 +4,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool, Connection
 from sqlalchemy.ext.asyncio import AsyncEngine
 import asyncio
-from app import config as app_config
+from src.core import config as app_config
 from alembic import context
 
 
@@ -20,7 +20,7 @@ fileConfig(config.config_file_name)  # PGH003
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from app.db import Base  # noqa: E402
+from src.db import Base  # noqa: E402
 
 target_metadata = Base.metadata
 

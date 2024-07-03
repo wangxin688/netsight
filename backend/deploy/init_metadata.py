@@ -6,12 +6,12 @@ from uuid import uuid4
 from anyio import open_file, run
 from sqlalchemy import select
 
-from app.config import PROJECT_DIR
-from app.consts import ReservedRoleSlug
-from app.db import Block, CircuitType, DeviceRole, DeviceType, Group, IPRole, Platform, RackRole, Role, User, Vendor
-from app.db.database import sessionmanager
-from app.security import get_password_hash
-from app.utils.context import request_id_ctx, user_ctx
+from src.core.config import PROJECT_DIR
+from src.core.utils.context import request_id_ctx, user_ctx
+from src.db import Block, CircuitType, DeviceRole, DeviceType, Group, IPRole, Platform, RackRole, Role, User, Vendor
+from src.db.database import sessionmanager
+from src.features.admin.security import get_password_hash
+from src.features.consts import ReservedRoleSlug
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession

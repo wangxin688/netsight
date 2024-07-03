@@ -3,7 +3,7 @@ import logging
 
 from sqlalchemy import text
 
-from app.db.database import sessionmanager
+from src.db.database import sessionmanager
 
 
 async def create_db_extensions() -> None:

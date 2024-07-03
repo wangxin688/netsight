@@ -5,15 +5,16 @@ Revises:
 Create Date: 2024-02-07 15:13:01.581591
 
 """
+
 from collections.abc import Sequence
 
 import sqlalchemy as sa
 import sqlalchemy_utils
 from sqlalchemy.dialects import postgresql
 
-import app
+import src
 from alembic import op
-from app.consts import (
+from src.features.consts import (
     APMode,
     APStatus,
     CircuitStatus,
@@ -54,7 +55,7 @@ def upgrade() -> None:
         "block",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(), nullable=False),
-        sa.Column("block", app.db.db_types.PgCIDR(), nullable=False),
+        sa.Column("block", src.db.db_types.PgCIDR(), nullable=False),
         sa.Column("is_private", sa.Boolean(), nullable=False),
         sa.Column("size", sa.Integer(), nullable=False),
         sa.Column("range", sa.String(), nullable=False),
@@ -327,8 +328,8 @@ def upgrade() -> None:
     op.create_table(
         "ip_range",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("start_address", app.db.db_types.PgIpInterface(), nullable=False),
-        sa.Column("end_address", app.db.db_types.PgIpInterface(), nullable=False),
+        sa.Column("start_address", src.db.db_types.PgIpInterface(), nullable=False),
+        sa.Column("end_address", src.db.db_types.PgIpInterface(), nullable=False),
         sa.Column("status", sqlalchemy_utils.types.choice.ChoiceType(IPRangeStatus), nullable=False),
         sa.Column("description", sa.String(), nullable=True),
         sa.Column("vrf_id", sa.Integer(), nullable=True),
@@ -660,7 +661,7 @@ def upgrade() -> None:
     op.create_table(
         "prefix",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("prefix", app.db.db_types.PgCIDR(), nullable=False),
+        sa.Column("prefix", src.db.db_types.PgCIDR(), nullable=False),
         sa.Column("status", sqlalchemy_utils.types.choice.ChoiceType(PrefixStatus), nullable=False),
         sa.Column("is_dhcp_pool", sa.Boolean(), server_default=sa.text("true"), nullable=False),
         sa.Column("is_full", sa.Boolean(), server_default=sa.text("false"), nullable=False),
@@ -795,9 +796,9 @@ def upgrade() -> None:
         "device",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(), nullable=False),
-        sa.Column("management_ipv4", app.db.db_types.PgIpAddress(), nullable=True),
-        sa.Column("management_ipv6", app.db.db_types.PgIpAddress(), nullable=True),
-        sa.Column("oob_ip", app.db.db_types.PgIpAddress(), nullable=True),
+        sa.Column("management_ipv4", src.db.db_types.PgIpAddress(), nullable=True),
+        sa.Column("management_ipv6", src.db.db_types.PgIpAddress(), nullable=True),
+        sa.Column("oob_ip", src.db.db_types.PgIpAddress(), nullable=True),
         sa.Column("status", sqlalchemy_utils.types.choice.ChoiceType(DeviceStatus), nullable=False),
         sa.Column("version", sa.String(), nullable=True),
         sa.Column("comments", sa.String(), nullable=True),
@@ -857,12 +858,12 @@ def upgrade() -> None:
     op.create_table(
         "baseline_config",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("aaa_server", app.db.db_types.EncryptedString(), nullable=True),
-        sa.Column("dhcp_server", app.db.db_types.EncryptedString(), nullable=True),
-        sa.Column("dns_server", app.db.db_types.EncryptedString(), nullable=True),
-        sa.Column("ntp_server", app.db.db_types.EncryptedString(), nullable=True),
-        sa.Column("syslog_server", app.db.db_types.EncryptedString(), nullable=True),
-        sa.Column("netflow_server", app.db.db_types.EncryptedString(), nullable=True),
+        sa.Column("aaa_server", src.db.db_types.EncryptedString(), nullable=True),
+        sa.Column("dhcp_server", src.db.db_types.EncryptedString(), nullable=True),
+        sa.Column("dns_server", src.db.db_types.EncryptedString(), nullable=True),
+        sa.Column("ntp_server", src.db.db_types.EncryptedString(), nullable=True),
+        sa.Column("syslog_server", src.db.db_types.EncryptedString(), nullable=True),
+        sa.Column("netflow_server", src.db.db_types.EncryptedString(), nullable=True),
         sa.Column("site_group_id", sa.Integer(), nullable=True),
         sa.Column("site_id", sa.Integer(), nullable=True),
         sa.Column("device_group_id", sa.Integer(), nullable=True),
@@ -892,12 +893,12 @@ def upgrade() -> None:
     op.create_table(
         "device_credential",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("cli", app.db.db_types.EncryptedString(), nullable=True),
-        sa.Column("snmpv2_read", app.db.db_types.EncryptedString(), nullable=True),
-        sa.Column("snmpv2_write", app.db.db_types.EncryptedString(), nullable=True),
-        sa.Column("snmpv3", app.db.db_types.EncryptedString(), nullable=True),
-        sa.Column("http_read", app.db.db_types.EncryptedString(), nullable=True),
-        sa.Column("http_write", app.db.db_types.EncryptedString(), nullable=True),
+        sa.Column("cli", src.db.db_types.EncryptedString(), nullable=True),
+        sa.Column("snmpv2_read", src.db.db_types.EncryptedString(), nullable=True),
+        sa.Column("snmpv2_write", src.db.db_types.EncryptedString(), nullable=True),
+        sa.Column("snmpv3", src.db.db_types.EncryptedString(), nullable=True),
+        sa.Column("http_read", src.db.db_types.EncryptedString(), nullable=True),
+        sa.Column("http_write", src.db.db_types.EncryptedString(), nullable=True),
         sa.Column("site_group_id", sa.Integer(), nullable=True),
         sa.Column("site_id", sa.Integer(), nullable=True),
         sa.Column("device_group_id", sa.Integer(), nullable=True),
@@ -965,8 +966,8 @@ def upgrade() -> None:
         sa.Column("asset_tag", sa.String(), nullable=True),
         sa.Column("device_type_id", sa.Integer(), nullable=False),
         sa.Column("ap_group", sa.String(), nullable=True),
-        sa.Column("management_ipv4", app.db.db_types.PgIpAddress(), nullable=True),
-        sa.Column("management_ipv6", app.db.db_types.PgIpAddress(), nullable=True),
+        sa.Column("management_ipv4", src.db.db_types.PgIpAddress(), nullable=True),
+        sa.Column("management_ipv6", src.db.db_types.PgIpAddress(), nullable=True),
         sa.Column("site_id", sa.Integer(), nullable=False),
         sa.Column("location_id", sa.Integer(), nullable=True),
         sa.Column("interface_id", sa.Integer(), nullable=True),
@@ -1007,8 +1008,8 @@ def upgrade() -> None:
         sa.Column("purchase_term", sa.String(), nullable=True),
         sa.Column("bandwidth", sa.Integer(), nullable=False, comment="Mbps"),
         sa.Column("comments", sa.TEXT(), nullable=True),
-        sa.Column("vendor_available_ip", postgresql.ARRAY(app.db.db_types.PgIpInterface()), nullable=True),
-        sa.Column("vendor_available_gateway", postgresql.ARRAY(app.db.db_types.PgIpAddress()), nullable=True),
+        sa.Column("vendor_available_ip", postgresql.ARRAY(src.db.db_types.PgIpInterface()), nullable=True),
+        sa.Column("vendor_available_gateway", postgresql.ARRAY(src.db.db_types.PgIpAddress()), nullable=True),
         sa.Column("isp_id", sa.Integer(), nullable=False),
         sa.Column("circuit_type_id", sa.Integer(), nullable=False),
         sa.Column("site_a_id", sa.Integer(), nullable=False),
@@ -1062,7 +1063,7 @@ def upgrade() -> None:
     op.create_table(
         "ip_address",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("address", app.db.db_types.PgIpInterface(), nullable=False),
+        sa.Column("address", src.db.db_types.PgIpInterface(), nullable=False),
         sa.Column("vrf_id", sa.Integer(), nullable=True),
         sa.Column("version", sa.Integer(), nullable=False),
         sa.Column("status", sqlalchemy_utils.types.choice.ChoiceType(IPAddressStatus), nullable=False),
