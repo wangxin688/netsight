@@ -170,10 +170,9 @@ class DeviceCreate(DeviceBase):
     site_id: int | None = None
     location_id: int | None = None
     rack_id: int | None = None
-    device_group_id: int | None = None
 
     @model_validator(mode="after")
-    def validate_device_create(self) -> "DeviceCreate":
+    def validate_device_create(self):
         if not self.management_ipv4 and not self.management_ipv6:
             raise ValueError("Management IPv4 or IPv6 address must be specified any one of them")
         if not self.site_id and not self.location_id:
@@ -187,7 +186,6 @@ class DeviceUpdate(DeviceBase):
     site_id: int | None = None
     location_id: int | None = None
     rack_id: int | None = None
-    device_group_id: int | None = None
     name: NameStr | None = None
     status: DeviceStatus | None = None
 
@@ -213,7 +211,6 @@ class Device(DeviceBase, AuditTime):
     site: schemas.SiteBrief
     location: schemas.LocationBrief | None = None
     rack: schemas.RackRoleBrief | None = None
-    device_group: schemas.DeviceGroupBrief | None = None
     interface_count: int
     device_entity_count: int
 
@@ -302,29 +299,3 @@ class DeviceEntity(DeviceEntityBase, AuditTime):
     device: schemas.DeviceBrief
 
 
-class DeviceGroupBase(BaseModel):
-    name: str
-    description: str | None = None
-
-
-class DeviceGroupCreate(DeviceGroupBase):
-    name: NameChineseStr
-    device: list[IdCreate] | None = None
-
-
-class DeviceGroupUpdate(DeviceGroupCreate):
-    name: NameChineseStr | None = None
-
-
-class DeviceGroupQuery(QueryParams):
-    name: list[NameChineseStr] | None = Field(Query(default=[]))
-
-
-class DeviceGroup(DeviceGroupBase, AuditTime):
-    id: int
-    devices: list[schemas.DeviceBrief]
-
-
-class DeviceGroupList(DeviceGroupBase, AuditTime):
-    id: int
-    device_count: int

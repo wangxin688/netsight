@@ -94,10 +94,6 @@ class PlatformBrief(BaseModel):
     netmiko_driver: str
 
 
-class DeviceGroupBrief(BaseModel):
-    id: int
-    name: str
-
 
 ## -------ORG-----------
 class SiteGroupBrief(BaseModel):

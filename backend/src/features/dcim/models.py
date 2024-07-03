@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from src.features.ipam.models import VLAN, VRF, IPAddress
     from src.features.org.models import Location, Site
 
-__all__ = ("Rack", "Vendor", "DeviceType", "Platform", "Device", "Interface", "DeviceEntity", "DeviceGroup", "AP")
+__all__ = ("Rack", "Vendor", "DeviceType", "Platform", "Device", "Interface", "DeviceEntity", "AP")
 
 
 class Rack(Base, AuditLogMixin):
@@ -102,8 +102,6 @@ class Device(Base, AuditLogMixin):
     location: Mapped["Location"] = relationship(backref="device")
     rack_id: Mapped[int | None] = mapped_column(ForeignKey("rack.id", ondelete="SET NULL"))
     rack: Mapped["Rack"] = relationship(back_populates="device")
-    device_group_id: Mapped[int | None] = mapped_column(ForeignKey("device_group.id", ondelete="SET NULL"))
-    device_group: Mapped["DeviceGroup"] = relationship(backref="device")
     interface: Mapped[list["Interface"]] = relationship(back_populates="device", passive_deletes=True)
     device_entity: Mapped[list["DeviceEntity"]] = relationship(back_populates="device")
 
@@ -192,13 +190,6 @@ class Interface(Base):
     ap: Mapped["AP"] = relationship(back_populates="interface", uselist=False)
 
 
-class DeviceGroup(Base, AuditLogMixin):
-    __tablename__ = "device_group"
-    __visible_name__ = {"en_US": "Device Group", "zh_CN": "设备组"}
-    id: Mapped[int_pk]
-    name: Mapped[str]
-    description: Mapped[str | None]
-
 
 Rack.device_count = column_property(
     select(func.count(Device.id)).where(Device.rack_id == Rack.id).correlate_except(Rack).scalar_subquery(),
@@ -241,13 +232,6 @@ Device.device_entity_count = column_property(
     select(func.count(DeviceEntity.id))
     .where(DeviceEntity.device_id == Device.id)
     .correlate_except(Device)
-    .scalar_subquery(),
-    deferred=True,
-)
-DeviceGroup.device_count = column_property(
-    select(func.count(Device.id))
-    .where(Device.device_group_id == DeviceGroup.id)
-    .correlate_except(DeviceGroup)
     .scalar_subquery(),
     deferred=True,
 )

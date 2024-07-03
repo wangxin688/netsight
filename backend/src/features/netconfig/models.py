@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, String
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.database.types import EncryptedString, int_pk
@@ -10,38 +11,35 @@ from src.core.models.mixins import AuditLogMixin
 if TYPE_CHECKING:
     from src.features.dcim.models import Platform
 
-__all__ = ("BaseLineConfig", "DeviceCredential", "WLANConfig", "TextFsmTemplate", "JinjaTemplate")
+__all__ = ("BaseLineConfig", "AuthCredential", "WLANConfig", "TextFsmTemplate", "JinjaTemplate")
 
 
 class BaseLineConfig(Base, AuditLogMixin):
     __tablename__ = "baseline_config"
     __visible_name__ = {"en_US": "Baseline Configuration", "zh_CN": "基线配置"}
     id: Mapped[int_pk]
-    aaa_server: Mapped[str | None] = mapped_column(EncryptedString())
-    dhcp_server: Mapped[str | None] = mapped_column(EncryptedString())
-    dns_server: Mapped[str | None] = mapped_column(EncryptedString())
-    ntp_server: Mapped[str | None] = mapped_column(EncryptedString())
-    syslog_server: Mapped[str | None] = mapped_column(EncryptedString())
-    netflow_server: Mapped[str | None] = mapped_column(EncryptedString())
+    aaa_server: Mapped[list[str] | None] = mapped_column(ARRAY(String, dimensions=1))
+    dhcp_server:  Mapped[list[str] | None] = mapped_column(ARRAY(String, dimensions=1))
+    dns_server:  Mapped[list[str] | None] = mapped_column(ARRAY(String, dimensions=1))
+    ntp_server:  Mapped[list[str] | None] = mapped_column(ARRAY(String, dimensions=1))
+    syslog_server:  Mapped[list[str] | None] = mapped_column(ARRAY(String, dimensions=1))
+    netflow_server:  Mapped[list[str] | None] = mapped_column(ARRAY(String, dimensions=1))
     site_group_id: Mapped[int | None] = mapped_column(ForeignKey("site_group.id", ondelete="CASCADE"))
     site_id: Mapped[int | None] = mapped_column(ForeignKey("site.id", ondelete="CASCADE"))
-    device_group_id: Mapped[int | None] = mapped_column(ForeignKey("device_group.id", ondelete="CASCADE"))
     device_id: Mapped[int | None] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))
 
 
-class DeviceCredential(Base, AuditLogMixin):
-    __tablename__ = "device_credential"
-    __visible_name__ = {"en_US": "Baseline Configuration", "zh_CN": "基线配置"}
+class AuthCredential(Base, AuditLogMixin):
+    __tablename__ = "auth_credential"
+    __visible_name__ = {"en_US": "Auth Crendential", "zh_CN": "认证凭证"}
     id: Mapped[int_pk]
     cli: Mapped[str | None] = mapped_column(EncryptedString())
-    snmpv2_read: Mapped[str | None] = mapped_column(EncryptedString())
-    snmpv2_write: Mapped[str | None] = mapped_column(EncryptedString())
+    snmpv2_community: Mapped[str | None] = mapped_column(EncryptedString())
     snmpv3: Mapped[str | None] = mapped_column(EncryptedString())
     http_read: Mapped[str | None] = mapped_column(EncryptedString())
     http_write: Mapped[str | None] = mapped_column(EncryptedString())
     site_group_id: Mapped[int | None] = mapped_column(ForeignKey("site_group.id", ondelete="CASCADE"))
     site_id: Mapped[int | None] = mapped_column(ForeignKey("site.id", ondelete="CASCADE"))
-    device_group_id: Mapped[int | None] = mapped_column(ForeignKey("device_group.id", ondelete="CASCADE"))
     device_id: Mapped[int | None] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))
 
 

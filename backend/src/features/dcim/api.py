@@ -12,7 +12,6 @@ from src.features.dcim.models import (
     AP,
     Device,
     DeviceEntity,
-    DeviceGroup,
     DeviceType,
     Platform,
     Rack,
@@ -294,47 +293,6 @@ class DeviceEntityAPI:
 
     @router.get("/device-entities/{id}/auditlogs", operation_id="9b077eb6-4119-420f-a51f-727b63f748be")
     async def get_device_entity_audit_logs(self, id: int) -> ListT[AuditLog]:
-        count, results = await self.dto.get_audit_log(self.session, id)
-        if not results:
-            return ListT(count=0, results=None)
-        return ListT(count=count, results=[AuditLog.model_validate(r) for r in results])
-
-
-@cbv(router)
-class DeviceGroupAPI:
-    session: AsyncSession = Depends(get_session)
-    user: User = Depends(auth)
-    dto = BaseRepository(DeviceGroup)
-
-    @router.post("/device-groups", operation_id="a70c2ef2-8591-4e67-a490-473c9e28b8ea")
-    async def create_device_group(self, device_group: schemas.DeviceGroupCreate) -> IdResponse:
-        new_device_group = await self.dto.create(self.session, device_group)
-        return IdResponse(id=new_device_group.id)
-
-    @router.put("/device-groups/{id}", operation_id="d0133321-d06f-4ebb-baba-ffa1fc96bafd")
-    async def update_device_group(self, id: int, device_group: schemas.DeviceGroupUpdate) -> IdResponse:
-        db_device_group = await self.dto.get_one_or_404(self.session, id)
-        await self.dto.update(self.session, db_device_group, device_group)
-        return IdResponse(id=id)
-
-    @router.get("/device-groups/{id}", operation_id="4a6a2560-bde2-43f2-be3e-8c370d653ac2")
-    async def get_device_group(self, id: int) -> schemas.DeviceGroup:
-        db_device_group = await self.dto.get_one_or_404(self.session, id, undefer_load=True)
-        return schemas.DeviceGroup.model_validate(db_device_group)
-
-    @router.get("/device-groups", operation_id="81d1172e-950b-4134-9b2f-9a5cd56bf985")
-    async def get_device_groups(self, q: schemas.DeviceGroupQuery = Depends()) -> ListT[schemas.DeviceGroup]:
-        count, results = await self.dto.list_and_count(self.session, q)
-        return ListT(count=count, results=[schemas.DeviceGroup.model_validate(r) for r in results])
-
-    @router.delete("/device-groups/{id}", operation_id="a782f23c-a9b4-4b1d-a276-c0a94f71a127")
-    async def delete_device_group(self, id: int) -> IdResponse:
-        db_device_group = await self.dto.get_one_or_404(self.session, id)
-        await self.dto.delete(self.session, db_device_group)
-        return IdResponse(id=id)
-
-    @router.get("/device-groups/{id}/auditlogs", operation_id="2ac1c868-a0b7-4b86-9f6a-42b77a47b96c")
-    async def get_device_group_audit_logs(self, id: int) -> ListT[AuditLog]:
         count, results = await self.dto.get_audit_log(self.session, id)
         if not results:
             return ListT(count=0, results=None)
