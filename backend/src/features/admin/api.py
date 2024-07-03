@@ -3,12 +3,12 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from src.core._types import IdResponse, ListT
 from src.core.errors.err_codes import ERR_10005
 from src.core.errors.exceptions import GenerError
 from src.core.repositories import BaseRepository
 from src.core.utils.cbv import cbv
 from src.core.utils.validators import list_to_tree
+from src.features._types import IdResponse, ListT
 from src.features.admin import schemas
 from src.features.admin.models import Group, Menu, Role, User
 from src.features.admin.security import generate_access_token_response

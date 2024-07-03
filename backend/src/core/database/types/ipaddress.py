@@ -4,7 +4,7 @@ from sqlalchemy import Dialect
 from sqlalchemy.dialects.postgresql import CIDR, INET
 from sqlalchemy.types import TypeDecorator
 
-from src.core._types import IPvAnyAddress, IPvAnyInterface, IPvAnyNetwork
+from src.features._types import IPvAnyAddress, IPvAnyInterface, IPvAnyNetwork
 
 
 class PgIpInterface(TypeDecorator):

@@ -10,11 +10,11 @@ from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy.orm import InstrumentedAttribute, selectinload, undefer
 from sqlalchemy.sql.base import ExecutableOption
 
-from src.core._types import Order, QueryParams
 from src.core.database.session import async_engine
 from src.core.errors.exceptions import ExistError, NotFoundError
 from src.core.models.base import Base
 from src.core.utils.context import locale_ctx
+from src.features._types import Order, QueryParams
 
 if TYPE_CHECKING:
     from sqlalchemy.engine.interfaces import ReflectedForeignKeyConstraint, ReflectedUniqueConstraint

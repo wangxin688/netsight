@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic_extra_types.phone_numbers import PhoneNumber
 
-from src.core._types import AuditTime, BaseModel, IdCreate, QueryParams
+from src.features._types import AuditTime, BaseModel, IdCreate, QueryParams
 
 
 class AccessToken(BaseModel):

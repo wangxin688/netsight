@@ -3,7 +3,7 @@ from ipaddress import IPv4Address, IPv6Address
 from fastapi import Query
 from pydantic import AnyHttpUrl, Field, IPvAnyAddress, model_validator
 
-from src.core._types import (
+from src.features._types import (
     AuditTime,
     AuditTimeQuery,
     BaseModel,

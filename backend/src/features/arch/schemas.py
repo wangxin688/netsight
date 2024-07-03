@@ -1,7 +1,7 @@
 from fastapi import Query
 from pydantic import Field
 
-from src.core._types import AuditTime, BaseModel, I18nField, QueryParams
+from src.features._types import AuditTime, BaseModel, I18nField, QueryParams
 
 
 class CircuitTypeCreate(BaseModel):

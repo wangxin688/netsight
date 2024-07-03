@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core._types import IdResponse, ListT
 from src.core.utils.cbv import cbv
+from src.features._types import IdResponse, ListT
 from src.features.admin.models import User
 from src.features.deps import auth, get_session
 from src.features.org import schemas, services

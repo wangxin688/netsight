@@ -4,10 +4,10 @@ from sqlalchemy import ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils.types import ChoiceType
 
-from src.core._types import IPvAnyInterface, IPvAnyNetwork
 from src.core.database.types import PgCIDR, PgIpInterface, bool_false, bool_true, int_pk
 from src.core.models.base import Base
 from src.core.models.mixins import AuditLogMixin
+from src.features._types import IPvAnyInterface, IPvAnyNetwork
 from src.features.consts import IPAddressStatus, IPRangeStatus, PrefixStatus, VLANStatus
 
 if TYPE_CHECKING:

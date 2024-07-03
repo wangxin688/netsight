@@ -1,7 +1,7 @@
 from fastapi import Query
 from pydantic import Field, IPvAnyInterface, IPvAnyNetwork, model_validator
 
-from src.core._types import AuditTime, BaseModel, IdCreate, NameChineseStr, NameStr, QueryParams
+from src.features._types import AuditTime, BaseModel, IdCreate, NameChineseStr, NameStr, QueryParams
 from src.features.admin.schemas import UserBrief
 from src.features.consts import IPRangeStatus, PrefixStatus, VLANStatus
 from src.features.internal import schemas

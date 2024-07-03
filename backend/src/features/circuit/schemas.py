@@ -3,7 +3,7 @@ from datetime import date
 from fastapi import Query
 from pydantic import AnyHttpUrl, EmailStr, Field, IPvAnyAddress, IPvAnyNetwork
 
-from src.core._types import (
+from src.features._types import (
     AuditTime,
     AuditTimeQuery,
     BaseModel,

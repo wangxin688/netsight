@@ -6,10 +6,10 @@ from sqlalchemy.dialects.postgresql import MACADDR
 from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 from sqlalchemy_utils.types import ChoiceType
 
-from src.core._types import IPvAnyAddress
 from src.core.database.types import PgIpAddress, i18n_name, int_pk
 from src.core.models.base import Base
 from src.core.models.mixins import AuditLogMixin, AuditTimeMixin
+from src.features._types import IPvAnyAddress
 from src.features.consts import APMode, APStatus, DeviceStatus, EntityPhysicalClass, InterfaceAdminStatus, RackStatus
 
 if TYPE_CHECKING:

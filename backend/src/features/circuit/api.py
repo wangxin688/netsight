@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from src.core._types import AuditLog, IdResponse, ListT
 from src.core.repositories import BaseRepository
 from src.core.utils.cbv import cbv
+from src.features._types import AuditLog, IdResponse, ListT
 from src.features.admin.models import User
 from src.features.arch.models import CircuitType
 from src.features.circuit import schemas

@@ -8,9 +8,9 @@ from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.sql import expression
 
-from src.core._types import VisibleName
 from src.core.database.types.datetime import DateTimeTZ
 from src.core.database.types.guid import GUID
+from src.features._types import VisibleName
 
 uuid_pk = Annotated[uuid.UUID, mapped_column(GUID, default=uuid.uuid4, primary_key=True, index=True, nullable=False)]
 int_pk = Annotated[int, mapped_column(Integer, primary_key=True, index=True, nullable=False)]

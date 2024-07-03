@@ -3,7 +3,7 @@ from typing import Any, ClassVar, TypeVar
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import DeclarativeBase
 
-from src.core._types import VisibleName
+from src.features._types import VisibleName
 
 
 class Base(DeclarativeBase):

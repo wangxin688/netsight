@@ -5,9 +5,17 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils.types import ChoiceType
 
-from src.core._types import IPvAnyAddress, IPvAnyInterface, PgIpAddress, PgIpInterface, date_optional, i18n_name, int_pk
 from src.core.models.base import Base
 from src.core.models.mixins import AuditLogMixin
+from src.features._types import (
+    IPvAnyAddress,
+    IPvAnyInterface,
+    PgIpAddress,
+    PgIpInterface,
+    date_optional,
+    i18n_name,
+    int_pk,
+)
 from src.features.consts import CircuitStatus
 
 if TYPE_CHECKING:

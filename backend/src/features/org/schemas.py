@@ -2,7 +2,7 @@ from fastapi import Query
 from pydantic import EmailStr, Field, model_validator
 from pydantic_extra_types.phone_numbers import PhoneNumber
 
-from src.core._types import (
+from src.features._types import (
     AuditTime,
     BaseModel,
     IdCreate,
