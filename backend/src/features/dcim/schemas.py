@@ -122,34 +122,6 @@ class DeviceType(DeviceTypeBase, AuditTime):
     platform: schemas.PlatformBrief
 
 
-class PlatformBase(BaseModel):
-    name: str
-    slug: str
-    description: str | None = None
-    netmiko_driver: str | None = None
-
-
-class PlatformCreate(PlatformBase):
-    name: NameStr
-    slug: NameStr
-
-
-class PlatformUpdate(PlatformCreate):
-    name: NameStr | None = None
-    slug: NameStr | None = None
-
-
-class PlatformQuery(QueryParams):
-    name: list[str] | None = Field(Query(default=[]))
-    slug: list[str] | None = Field(Query(default=[]))
-
-
-class Platform(PlatformBase, AuditTime):
-    id: int
-    device_type_count: int
-    device_count: int
-    textfsm_template_count: int
-
 
 class DeviceBase(BaseModel):
     name: str

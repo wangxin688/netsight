@@ -171,46 +171,6 @@ class DeviceTypeAPI:
         return ListT(count=count, results=[AuditLog.model_validate(r) for r in results])
 
 
-@cbv(router)
-class PlatformAPI:
-    session: AsyncSession = Depends(get_session)
-    user: User = Depends(auth)
-    dto = BaseRepository(Platform)
-
-    @router.post("/platforms", operation_id="38e18494-e38c-4060-962f-64dfd37a61af")
-    async def create_platform(self, platform: schemas.PlatformCreate) -> IdResponse:
-        new_platform = await self.dto.create(self.session, platform)
-        return IdResponse(id=new_platform.id)
-
-    @router.put("/platforms/{id}", operation_id="a452765a-91b7-4b37-bca1-11864e1be028")
-    async def update_platform(self, id: int, platform: schemas.PlatformUpdate) -> IdResponse:
-        db_platform = await self.dto.get_one_or_404(self.session, id)
-        await self.dto.update(self.session, db_platform, platform)
-        return IdResponse(id=id)
-
-    @router.get("/platforms/{id}", operation_id="9324bde0-600f-4470-98da-343fc498289c")
-    async def get_platform(self, id: int) -> schemas.Platform:
-        db_platform = await self.dto.get_one_or_404(self.session, id, undefer_load=True)
-        return schemas.Platform.model_validate(db_platform)
-
-    @router.get("/platforms", operation_id="d47d8d64-f8cc-4ddc-9db9-51d6a1f3b9e3")
-    async def get_platforms(self, q: schemas.PlatformQuery = Depends()) -> ListT[schemas.Platform]:
-        count, results = await self.dto.list_and_count(self.session, q)
-        return ListT(count=count, results=[schemas.Platform.model_validate(r) for r in results])
-
-    @router.delete("/platforms/{id}", operation_id="73a00be4-be83-4d24-a034-d36926bae8e1")
-    async def delete_platform(self, id: int) -> IdResponse:
-        db_platform = await self.dto.get_one_or_404(self.session, id)
-        await self.dto.delete(self.session, db_platform)
-        return IdResponse(id=id)
-
-    @router.get("/platforms/{id}/auditlogs", operation_id="62ca0f32-56b3-47bb-838f-20402c2bb1f4")
-    async def get_platform_audit_logs(self, id: int) -> ListT[AuditLog]:
-        count, results = await self.dto.get_audit_log(self.session, id)
-        if not results:
-            return ListT(count=0, results=None)
-        return ListT(count=count, results=[AuditLog.model_validate(r) for r in results])
-
 
 @cbv(router)
 class DeviceAPI:

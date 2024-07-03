@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from fastapi.encoders import jsonable_encoder
@@ -12,7 +13,6 @@ from src.core.models.base import Base
 from src.core.utils.context import orm_diff_ctx, request_id_ctx, user_ctx
 
 if TYPE_CHECKING:
-    from datetime import datetime
 
     from src.core.models.base import ModelT
     from src.features.admin.models import User
@@ -41,7 +41,7 @@ def get_object_change(obj: Mapper) -> dict:
 
 class AuditLog:
     id: Mapped[int_pk]
-    created_at: Mapped["datetime"] = mapped_column(DateTimeTZ, default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTimeTZ, default=func.now())
     request_id: Mapped[str]
     action: Mapped[str] = mapped_column(String, nullable=False)
     diff: Mapped[dict | None] = mapped_column(JSON)

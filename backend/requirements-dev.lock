@@ -25,6 +25,8 @@ certifi==2023.11.17
     # via httpcore
     # via httpx
     # via sentry-sdk
+cffi==1.16.0
+    # via cryptography
 cfgv==3.4.0
     # via pre-commit
 click==8.1.7
@@ -33,6 +35,8 @@ click==8.1.7
     # via uvicorn
 coverage==7.4.0
     # via pytest-cov
+cryptography==42.0.8
+    # via netsight
 distlib==0.3.8
     # via virtualenv
 dnspython==2.5.0
@@ -108,6 +112,8 @@ platformdirs==4.1.0
 pluggy==1.3.0
     # via pytest
 pre-commit==3.6.0
+pycparser==2.22
+    # via cffi
 pydantic==2.5.3
     # via fastapi
     # via pydantic-extra-types

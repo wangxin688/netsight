@@ -12,6 +12,7 @@ class ReservedRoleSlug(StrEnum):
 
 class SiteStatus(StrEnum):
     Planning = "Planning"
+    Deploying = "Deploying"
     Vlidating = "Validating"
     Active = "Active"
     Retired = "Retired"
@@ -35,12 +36,16 @@ class DeviceStatus(StrEnum):
     Offline = "Offline"
     Staged = "Staged"
     Inventory = "Inventory"
+    Scrapped = "Scrapped"
+
 
 
 class APStatus(StrEnum):
     Active = "Active"
     Offline = "Offline"
+    Staged = "Staged"
     Inventory = "Inventory"
+    Scrapped = "Scrapped"
 
 
 class APMode(StrEnum):

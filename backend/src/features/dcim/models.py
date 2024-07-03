@@ -13,11 +13,11 @@ from src.features._types import IPvAnyAddress
 from src.features.consts import APMode, APStatus, DeviceStatus, EntityPhysicalClass, InterfaceAdminStatus, RackStatus
 
 if TYPE_CHECKING:
-    from src.features.arch.models import DeviceRole, RackRole
+    from src.features.arch.models import DeviceRole, Platform, RackRole
     from src.features.ipam.models import VLAN, VRF, IPAddress
     from src.features.org.models import Location, Site
 
-__all__ = ("Rack", "Vendor", "DeviceType", "Platform", "Device", "Interface", "DeviceEntity", "AP")
+__all__ = ("Rack", "Vendor", "DeviceType", "Device", "Interface", "DeviceEntity", "AP")
 
 
 class Rack(Base, AuditLogMixin):
@@ -65,13 +65,6 @@ class DeviceType(Base, AuditLogMixin):
     platform: Mapped["Platform"] = relationship(backref="device_type")
 
 
-class Platform(Base, AuditLogMixin):
-    __tablename__ = "platform"
-    id: Mapped[int_pk]
-    name: Mapped[str] = mapped_column(unique=True)
-    slug: Mapped[str] = mapped_column(unique=True)
-    description: Mapped[str | None]
-    netmiko_driver: Mapped[str | None]
 
 
 class Device(Base, AuditLogMixin):
@@ -210,17 +203,6 @@ DeviceType.device_count = column_property(
     select(func.count(Device.id))
     .where(Device.device_type_id == DeviceType.id)
     .correlate_except(DeviceType)
-    .scalar_subquery(),
-    deferred=True,
-)
-Platform.device_count = column_property(
-    select(func.count(Device.id)).where(Device.platform_id == Platform.id).correlate_except(Platform).scalar_subquery(),
-    deferred=True,
-)
-Platform.device_type_count = column_property(
-    select(func.count(DeviceType.id))
-    .where(DeviceType.platform_id == Platform.id)
-    .correlate_except(Platform)
     .scalar_subquery(),
     deferred=True,
 )
