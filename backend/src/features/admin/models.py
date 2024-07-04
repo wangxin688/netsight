@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import ClassVar
 from uuid import UUID
 
-from sqlalchemy import TEXT, DateTime, ForeignKey, Integer, and_, func, select
+from sqlalchemy import DateTime, ForeignKey, Integer, and_, func, select
 from sqlalchemy.dialects.postgresql import ARRAY, JSON
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import Mapped, backref, column_property, mapped_column, relationship
@@ -78,7 +78,7 @@ class User(Base, AuditTimeMixin):
     group: Mapped["Group"] = relationship(back_populates="user", passive_deletes=True)
     role_id: Mapped[int] = mapped_column(ForeignKey(Role.id, ondelete="CASCADE"))
     role: Mapped["Role"] = relationship(backref="user", passive_deletes=True)
-    auth_info: Mapped[dict | None] = mapped_column(MutableDict.as_mutable(JSON(astext_type=TEXT)))
+    auth_info: Mapped[dict | None] = mapped_column(MutableDict.as_mutable(JSON))
 
 
 class Menu(Base):

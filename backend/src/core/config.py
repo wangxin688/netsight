@@ -38,11 +38,11 @@ class Settings(BaseSettings):
     SENTRY_TRACES_SAMPLE_RATE: float | None = Field(default=None, gt=0.0, le=1.0)
 
     SQLALCHEMY_DATABASE_URI: str = Field(
-        default="postgresql+asyncpg://demo:91fb8e9e009f5b9ce1854d947e6fe4a3@localhost:5432/demo"
-    )
+        default="postgresql+asyncpg://netsight:netsight@localhost:5432/netsight"
+    )  # cover with env with your production database
     DATABASE_POOL_SIZE: int | None = Field(default=50)
     DATABASE_POOL_MAX_OVERFLOW: int | None = Field(default=10)
-    REDIS_DSN: str = Field(default="redis://:cfe1c2c4703abb205d71abdc07cc3f3d@localhost:6379")
+    REDIS_DSN: str = Field(default="redis://localhost:6379")  # cover with env with your production redis
 
     ENV: str = _Env.DEV.name
     RUNNING_MODE: Literal["uvicorn", "gunicorn"] | None = Field(default="uvicorn")

@@ -2,7 +2,7 @@ import uuid
 from datetime import date, datetime
 from typing import Annotated
 
-from sqlalchemy import TEXT, Boolean, Date, Integer
+from sqlalchemy import Boolean, Date, Integer
 from sqlalchemy.dialects.postgresql import HSTORE
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import mapped_column
@@ -10,7 +10,6 @@ from sqlalchemy.sql import expression
 
 from src.core.database.types.datetime import DateTimeTZ
 from src.core.database.types.guid import GUID
-from src.features._types import VisibleName
 
 uuid_pk = Annotated[uuid.UUID, mapped_column(GUID, default=uuid.uuid4, primary_key=True, index=True, nullable=False)]
 int_pk = Annotated[int, mapped_column(Integer, primary_key=True, index=True, nullable=False)]
@@ -20,4 +19,4 @@ datetime_required = Annotated[datetime, mapped_column(DateTimeTZ, nullable=False
 datetime_optional = Annotated[datetime, mapped_column(DateTimeTZ, nullable=True)]
 date_required = Annotated[date, mapped_column(Date, nullable=False)]
 date_optional = Annotated[date | None, mapped_column(Date, nullable=True)]
-i18n_name = Annotated[VisibleName, mapped_column(MutableDict.as_mutable(HSTORE(text_type=TEXT)), unique=True)]
+i18n_name = Annotated[dict, mapped_column(MutableDict.as_mutable(HSTORE))]

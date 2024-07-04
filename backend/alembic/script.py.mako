@@ -12,7 +12,7 @@ import sqlalchemy as sa
 import sqlalchemy_utils
 ${imports if imports else ""}
 
-import app
+import src
 
 # revision identifiers, used by Alembic.
 revision: str = ${repr(up_revision)}
