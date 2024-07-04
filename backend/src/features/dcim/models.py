@@ -71,7 +71,7 @@ class DeviceModule(Base):
     serial_number: Mapped[str | None] = mapped_column(unique=True)
     part_number: Mapped[str | None]
     hardware_version: Mapped[str | None]
-    phsical_index: Mapped[int | None]  # cisco physical_index, huawei slot_id
+    physical_index: Mapped[int | None]  # cisco physical_index, huawei slot_id
     replaceable: Mapped[bool | None]
     device_id: Mapped[int] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))
 

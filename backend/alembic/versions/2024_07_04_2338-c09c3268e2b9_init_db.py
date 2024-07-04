@@ -7,7 +7,6 @@ Create Date: 2024-07-04 23:38:05.566902
 """
 
 from collections.abc import Sequence
-from typing import Union
 
 import sqlalchemy as sa
 import sqlalchemy_utils
@@ -18,9 +17,9 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "c09c3268e2b9"
-down_revision: Union[str, None] = None
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = None
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -444,7 +443,7 @@ def upgrade() -> None:
         sa.Column("description", sa.String(), nullable=True),
         sa.Column("status", sqlalchemy_utils.types.choice.ChoiceType(length=255), nullable=False),
         sa.Column("ip_address", sa.String(), nullable=False),
-        sa.Column("associted_interfaces", postgresql.ARRAY(sa.String(), dimensions=1), nullable=True),
+        sa.Column("associated_interfaces", postgresql.ARRAY(sa.String(), dimensions=1), nullable=True),
         sa.Column("site_id", sa.Integer(), nullable=False),
         sa.Column("role_id", sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(["role_id"], ["ip_role.id"], ondelete="SET NULL"),
@@ -788,7 +787,7 @@ def upgrade() -> None:
         sa.Column("serial_number", sa.String(), nullable=True),
         sa.Column("part_number", sa.String(), nullable=True),
         sa.Column("hardware_version", sa.String(), nullable=True),
-        sa.Column("phsical_index", sa.Integer(), nullable=True),
+        sa.Column("physical_index", sa.Integer(), nullable=True),
         sa.Column("replaceable", sa.Boolean(), nullable=True),
         sa.Column("device_id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(["device_id"], ["device.id"], ondelete="CASCADE"),

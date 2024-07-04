@@ -8,8 +8,8 @@ from src.features._types import AuditLog, IdResponse, ListT
 from src.features.admin.models import User
 from src.features.dcim import schemas
 from src.features.dcim.models import Device
-from src.features.intend.models import DeviceType
 from src.features.deps import auth, get_session
+from src.features.intend.models import DeviceType
 
 router = APIRouter()
 

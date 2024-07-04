@@ -11,12 +11,7 @@ from sqlalchemy.orm import selectinload
 
 from src.core.config import settings
 from src.core.database.session import async_session
-from src.core.errors.exception_handlers import (
-    NotFoundError,
-    TokenExpireError,
-    TokenInvalidError,
-    PermissionDenyError
-)
+from src.core.errors.exception_handlers import NotFoundError, PermissionDenyError, TokenExpireError, TokenInvalidError
 from src.core.utils.context import locale_ctx
 from src.features.admin.models import RolePermission, User
 from src.features.admin.security import API_WHITE_LISTS, JWT_ALGORITHM, JwtTokenPayload
@@ -54,7 +49,7 @@ async def auth(
     check_user_active(user.is_active)
     operation_id = request.scope["route"].operation_id
     if not operation_id:
-        raise
+        return user
     privileged = check_privileged_role(user.role.slug, operation_id)
     if privileged:
         return user
@@ -70,9 +65,7 @@ def check_user_active(is_active: bool) -> None:
 def check_privileged_role(slug: str, operation_id: str) -> bool:
     if slug == ReservedRoleSlug.ADMIN:
         return True
-    if operation_id in API_WHITE_LISTS:
-        return True
-    return False
+    return operation_id in API_WHITE_LISTS
 
 
 async def check_role_permissions(role_id: int, session: AsyncSession, operation_id: str) -> None:

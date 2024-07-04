@@ -101,42 +101,42 @@ def log_exception(exc: type[BaseException] | Exception, logger_trace_info: bool)
         logger.exception(f"Stack trace: {trace_back}")
 
 
-async def token_invalid_handler(request: Request, exc: TokenInvalidError) -> JSONResponse:
+async def token_invalid_handler(request: Request, exc: TokenInvalidError) -> JSONResponse:  # noqa: ARG001
     log_exception(exc, False)
     response_content = err_codes.ERR_10002.dict()
     return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content=response_content)
 
 
-async def invalid_token_for_refresh_handler(request: Request, exc: TokenInvalidForRefreshError) -> JSONResponse:
+async def invalid_token_for_refresh_handler(request: Request, exc: TokenInvalidForRefreshError) -> JSONResponse:  # noqa: ARG001
     log_exception(exc, False)
     return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content=err_codes.ERR_10004.dict())
 
 
-async def token_expired_handler(request: Request, exc: TokenExpireError) -> JSONResponse:
+async def token_expired_handler(request: Request, exc: TokenExpireError) -> JSONResponse:  # noqa: ARG001
     log_exception(exc, False)
     return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content=err_codes.ERR_10003.dict())
 
 
-async def permission_deny_handler(request: Request, exc: PermissionDenyError) -> JSONResponse:
+async def permission_deny_handler(request: Request, exc: PermissionDenyError) -> JSONResponse:  # noqa: ARG001
     log_exception(exc, False)
     return JSONResponse(status_code=status.HTTP_403_FORBIDDEN, content=err_codes.ERR_10004.dict())
 
 
-async def resource_not_found_handler(request: Request, exc: NotFoundError) -> JSONResponse:
+async def resource_not_found_handler(request: Request, exc: NotFoundError) -> JSONResponse:  # noqa: ARG001
     log_exception(exc, True)
     error_message = _(err_codes.ERR_404.message, name=exc.name, filed=exc.field, value=exc.value)
     content = {"error": err_codes.ERR_404.error, "message": error_message}
     return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=content)
 
 
-async def resource_exist_handler(request: Request, exc: ExistError) -> JSONResponse:
+async def resource_exist_handler(request: Request, exc: ExistError) -> JSONResponse:  # noqa: ARG001
     log_exception(exc, True)
     error_message = _(err_codes.ERR_409.message, name=exc.name, filed=exc.field, value=exc.value)
     content = {"error": err_codes.ERR_409.error, "message": error_message}
     return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=content)
 
 
-def gener_error_handler(request: Request, exc: GenerError) -> JSONResponse:
+def gener_error_handler(request: Request, exc: GenerError) -> JSONResponse:  # noqa: ARG001
     log_exception(exc, True)
     return JSONResponse(
         status_code=exc.status_code,
@@ -147,7 +147,7 @@ def gener_error_handler(request: Request, exc: GenerError) -> JSONResponse:
     )
 
 
-def default_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+def default_exception_handler(request: Request, exc: Exception) -> JSONResponse:  # noqa: ARG001
     log_exception(exc, logger_trace_info=True)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
