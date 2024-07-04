@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 
 from src.features.admin.api import router as auth_router
-from src.features.arch.api import router as arch_router
 from src.features.circuit.api import router as circuit_router
 from src.features.dcim.api import router as dcim_router
+from src.features.intend.api import router as intend_router
 from src.features.internal.api import router as internal_router
 from src.features.ipam.api import router as ipam_router
 from src.features.org.api import router as org_router
@@ -14,7 +14,7 @@ def register_router() -> APIRouter:
     root_router.include_router(auth_router, prefix="/auth", tags=["Auth"])
     root_router.include_router(dcim_router, prefix="/dcim", tags=["DCIM"])
     root_router.include_router(ipam_router, prefix="/ipam", tags=["IPAM"])
-    root_router.include_router(arch_router, prefix="/arch", tags=["Architecture"])
+    root_router.include_router(intend_router, prefix="/arch", tags=["Intend"])
     root_router.include_router(org_router, prefix="/org", tags=["Organization"])
     root_router.include_router(circuit_router, prefix="/circuit", tags=["Circuit"])
     root_router.include_router(internal_router, prefix="/internal", tags=["Internal"])

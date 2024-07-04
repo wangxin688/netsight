@@ -8,7 +8,7 @@ from ipaddress import (
     IPv6Interface,
     IPv6Network,
 )
-from typing import Annotated, Generic, Literal, ParamSpec, TypedDict, TypeVar
+from typing import Annotated, Generic, Literal, ParamSpec, TypeVar
 
 import pydantic
 from fastapi import Query
@@ -111,11 +111,6 @@ class BatchUpdate(BaseModel):
 class I18nField(BaseModel):
     en_US: str  # noqa: N815
     zh_CN: str  # noqa: N815
-
-
-class VisibleName(TypedDict, total=True):
-    en_US: str
-    zh_CN: str
 
 
 class IdResponse(BaseModel):

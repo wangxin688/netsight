@@ -7,8 +7,9 @@ from src.core.utils.cbv import cbv
 from src.features._types import AuditLog, IdResponse, ListT
 from src.features.admin.models import User
 from src.features.deps import auth, get_session
+from src.features.intend.models import IPRole
 from src.features.ipam import schemas
-from src.features.ipam.models import ASN, VLAN, VRF, Block, IPAddress, IPRange, IPRole, Prefix
+from src.features.ipam.models import ASN, VLAN, VRF, Block, IPAddress, IPRange, Prefix
 from src.features.org.models import Site
 
 router = APIRouter()

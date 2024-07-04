@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.errors.exceptions import NotFoundError, PermissionDenyError
+from src.core.errors.exception_handlers import NotFoundError, PermissionDenyError
 from src.core.repositories import BaseRepository
 from src.core.utils.context import locale_ctx
 from src.features.admin import schemas

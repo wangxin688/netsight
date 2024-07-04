@@ -9,8 +9,8 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.errors import ServerErrorMiddleware
 
 from src.core.config import _Env, settings
-from src.core.errors.exceptions import default_exception_handler, exception_handlers, sentry_ignore_errors
-from src.libs.redis import cache
+from src.core.errors.exception_handlers import default_exception_handler, exception_handlers, sentry_ignore_errors
+from src.libs.redis import session
 from src.register.middlewares import RequestMiddleware
 from src.register.openapi import get_open_api_intro, get_stoplight_elements_html
 from src.register.routers import router
@@ -20,9 +20,9 @@ def create_app() -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:  # noqa: ARG001
         pool = aioreids.ConnectionPool.from_url(
-            settings.REDIS_DSN, encoding="utf-8", db=cache.RedisDBType.DEFAULT, decode_response=True
+            settings.REDIS_DSN, encoding="utf-8", db=session.RedisDBType.DEFAULT, decode_response=True
         )
-        cache.redis_client = cache.FastapiCache(connection_pool=pool)
+        session.redis_client = session.FastapiCache(connection_pool=pool)
         yield
         await pool.disconnect()
 

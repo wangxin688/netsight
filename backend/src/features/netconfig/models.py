@@ -4,9 +4,9 @@ from sqlalchemy import ForeignKey, String
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from src.core.database.base import Base
+from src.core.database.mixins import AuditLogMixin
 from src.core.database.types import EncryptedString, int_pk
-from src.core.models.base import Base
-from src.core.models.mixins import AuditLogMixin
 
 if TYPE_CHECKING:
     from src.features.dcim.models import Platform
@@ -19,11 +19,11 @@ class BaseLineConfig(Base, AuditLogMixin):
     __visible_name__ = {"en_US": "Baseline Configuration", "zh_CN": "基线配置"}
     id: Mapped[int_pk]
     aaa_server: Mapped[list[str] | None] = mapped_column(ARRAY(String, dimensions=1))
-    dhcp_server:  Mapped[list[str] | None] = mapped_column(ARRAY(String, dimensions=1))
-    dns_server:  Mapped[list[str] | None] = mapped_column(ARRAY(String, dimensions=1))
-    ntp_server:  Mapped[list[str] | None] = mapped_column(ARRAY(String, dimensions=1))
-    syslog_server:  Mapped[list[str] | None] = mapped_column(ARRAY(String, dimensions=1))
-    netflow_server:  Mapped[list[str] | None] = mapped_column(ARRAY(String, dimensions=1))
+    dhcp_server: Mapped[list[str] | None] = mapped_column(ARRAY(String, dimensions=1))
+    dns_server: Mapped[list[str] | None] = mapped_column(ARRAY(String, dimensions=1))
+    ntp_server: Mapped[list[str] | None] = mapped_column(ARRAY(String, dimensions=1))
+    syslog_server: Mapped[list[str] | None] = mapped_column(ARRAY(String, dimensions=1))
+    netflow_server: Mapped[list[str] | None] = mapped_column(ARRAY(String, dimensions=1))
     site_group_id: Mapped[int | None] = mapped_column(ForeignKey("site_group.id", ondelete="CASCADE"))
     site_id: Mapped[int | None] = mapped_column(ForeignKey("site.id", ondelete="CASCADE"))
     device_id: Mapped[int | None] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))

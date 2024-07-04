@@ -8,9 +8,9 @@ from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import Mapped, backref, column_property, mapped_column, relationship
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
+from src.core.database.base import Base
+from src.core.database.mixins import AuditTimeMixin
 from src.core.database.types import bool_false, bool_true, int_pk, uuid_pk
-from src.core.models.base import Base
-from src.core.models.mixins import AuditTimeMixin
 
 __all__ = ("RolePermission", "RoleMenu", "Role", "Permission", "Group", "User", "Menu")
 

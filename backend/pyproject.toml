@@ -91,7 +91,7 @@ fixable = ["ALL"]
 "deps.py" = ["B008"]
 "src/features/internal/api.py" = ["ARG001"]
 "src/features/admin/schemas.py" = ["N815"]        # frontend menu
-"alembic/*.py" = ["INP001", "UP007"]
+"alembic/*.py" = ["INP001", "UP007", "PLR0915", "E402", "F403"]
 "__init__.py" = ["F403"]
 
 [tool.ruff.lint.flake8-bugbear]

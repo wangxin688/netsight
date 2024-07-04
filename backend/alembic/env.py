@@ -14,19 +14,19 @@ config = context.config
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
-fileConfig(config.config_file_name)  # PGH003
+fileConfig(config.config_file_name)  # type: ignore  # noqa: PGH003
 
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from src.core.models.base import Base  # noqa: E402
+from src.core.database.base import Base
 from src.features.admin.models import *
 from src.features.dcim.models import *
 from src.features.ipam.models import *
 from src.features.circuit.models import *
 from src.features.netconfig.models import *
-from src.features.arch.models import *
+from src.features.intend.models import *
 from src.features.org.models import *
 
 target_metadata = Base.metadata

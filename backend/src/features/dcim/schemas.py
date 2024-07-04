@@ -1,126 +1,16 @@
 from ipaddress import IPv4Address, IPv6Address
 
 from fastapi import Query
-from pydantic import AnyHttpUrl, Field, IPvAnyAddress, model_validator
+from pydantic import Field, IPvAnyAddress, model_validator
 
 from src.features._types import (
     AuditTime,
-    AuditTimeQuery,
     BaseModel,
-    I18nField,
-    IdCreate,
-    MacAddress,
-    NameChineseStr,
     NameStr,
     QueryParams,
 )
-from src.features.consts import APMode, APStatus, DeviceStatus, EntityPhysicalClass, RackStatus
+from src.features.consts import DeviceStatus, EntityPhysicalClass
 from src.features.internal import schemas
-
-
-class RackBase(BaseModel):
-    name: str
-    status: RackStatus
-    serial_num: str | None = None
-    asset_tag: str | None = None
-    u_width: float | None = None
-    u_height: float | None = None
-
-
-class RackCreate(RackBase):
-    name: NameChineseStr
-    site_id: int | None = None
-    location_id: int | None = None
-    rack_role_id: int
-
-
-class RackUpdate(RackCreate):
-    name: NameChineseStr | None = None
-    status: RackStatus | None = Field(
-        default=None, description="When rack status is offline, all devices associated will be offlined"
-    )
-    site_id: int | None = None
-    location_id: int | None = None
-    rack_role_id: int | None = None
-
-
-class RackQuery(QueryParams, AuditTimeQuery):
-    name: list[NameChineseStr] | None = Field(Query(default=[]))
-    status: list[RackStatus] | None = Field(Query(default=[]))
-    site_id: list[int] | None = Field(Query(default=[]))
-    location_id: list[int] | None = Field(Query(default=[]))
-    rack_role_id: list[int] | None = Field(Query(default=[]))
-
-
-class Rack(RackBase, AuditTime):
-    site: schemas.SiteBrief
-    location: schemas.LocationBrief | None = None
-    rack_role: schemas.RackRoleBrief
-    device_count: int
-
-
-class VendorCreate(BaseModel):
-    name: I18nField
-    slug: NameStr
-    description: str | None = None
-
-
-class VendorUpdate(VendorCreate):
-    name: I18nField | None = None
-    slug: NameStr | None = None
-
-
-class VendorQuery(QueryParams):
-    name: list[str] | None = Field(Query(default=[]))
-    slug: list[NameStr] | None = Field(Query(default=[]))
-
-
-class Vendor(VendorCreate, AuditTime):
-    id: int
-    device_type_count: int
-    device_count: int
-
-
-class DeviceTypeBase(BaseModel):
-    name: str
-    snmp_sysobjectid: str
-    u_height: float
-    front_image: AnyHttpUrl | None = None
-    rear_image: AnyHttpUrl | None = None
-
-
-class DeviceTypeCreate(DeviceTypeBase):
-    name: NameStr
-    vendor_id: int
-    platform_id: int
-
-
-class DeviceTypeUpdate(DeviceTypeCreate):
-    name: NameStr | None = None
-    snmp_sysobjectid: str | None = None
-    u_height: float | None = None
-    vendor_id: int | None = None
-    platform_id: int | None = None
-
-
-class DeviceTypeQuery(QueryParams):
-    name: list[NameStr] | None = Field(Query(default=[]))
-    vendor_id: list[int] | None = Field(Query(default=[]))
-    platform_id: list[int] | None = Field(Query(default=[]))
-
-
-class DeviceTypeInfo(DeviceTypeBase):
-    id: int
-    vendor: schemas.VendorBrief
-    platform: schemas.PlatformBrief
-
-
-class DeviceType(DeviceTypeBase, AuditTime):
-    id: int
-    device_count: int
-    vendor: schemas.VendorBrief
-    platform: schemas.PlatformBrief
-
 
 
 class DeviceBase(BaseModel):
@@ -141,7 +31,6 @@ class DeviceCreate(DeviceBase):
     device_role_id: int
     site_id: int | None = None
     location_id: int | None = None
-    rack_id: int | None = None
 
     @model_validator(mode="after")
     def validate_device_create(self):
@@ -157,7 +46,6 @@ class DeviceUpdate(DeviceBase):
     device_role_id: int | None = None
     site_id: int | None = None
     location_id: int | None = None
-    rack_id: int | None = None
     name: NameStr | None = None
     status: DeviceStatus | None = None
 
@@ -167,10 +55,9 @@ class DeviceQuery(QueryParams):
     status: list[DeviceStatus] | None = Field(Query(default=[]))
     site_id: list[int] | None = Field(Query(default=[]))
     location_id: list[int] | None = Field(Query(default=[]))
-    rack_id: list[int] | None = Field(Query(default=[]))
     device_role_id: list[int] | None = Field(Query(default=[]))
     platform_id: list[int] | None = Field(Query(default=[]))
-    vendor_id: list[int] | None = Field(Query(default=[]))
+    manufacturer_id: list[int] | None = Field(Query(default=[]))
     device_type_id: list[int] | None = Field(Query(default=[]))
     management_ipv4: list[IPv4Address] | None = Field(Query(default=[]))
     management_ipv6: list[IPv6Address] | None = Field(Query(default=[]))
@@ -178,65 +65,12 @@ class DeviceQuery(QueryParams):
 
 class Device(DeviceBase, AuditTime):
     id: int
-    device_type: DeviceTypeInfo
+    device_type: schemas.DeviceTypeBrief
     device_role: schemas.DeviceRoleBrief
     site: schemas.SiteBrief
     location: schemas.LocationBrief | None = None
-    rack: schemas.RackRoleBrief | None = None
     interface_count: int
     device_entity_count: int
-
-
-class APBase(BaseModel):
-    name: str
-    status: APStatus
-    mode: APMode
-    mac_address: str
-    serial_num: str | None = None
-    asset_tag: str | None = None
-    ap_group: str | None
-    management_ipv4: IPv4Address | None = None
-    management_ipv6: IPv6Address | None = None
-
-
-class APCreate(APBase):
-    name: NameStr
-    mac_address: MacAddress
-    site_id: int
-    location_id: int | None = None
-    interface_id: int | None = None
-    device_type_id: int
-
-
-class APUpdate(APCreate):
-    name: NameStr | None = None
-    mac_address: MacAddress | None = None
-    site_id: int | None = None
-    device_type_id: int | None = None
-
-
-class APQuery(QueryParams):
-    name: list[NameStr] | None = Field(Query(default=[]))
-    status: list[APStatus] | None = Field(Query(default=[]))
-    mac_address: list[MacAddress] | None = Field(Query(default=[]))
-    mode: APMode | None = None
-    management_ipv4: list[IPv4Address] | None = Field(Query(default=[]))
-    management_ipv6: list[IPv6Address] | None = Field(Query(default=[]))
-    serial_num: list[str] | None = Field(Query(default=[]))
-    ap_group: list[str] | None = Field(Query(default=[]))
-    asset_tag: list[str] | None = Field(Query(default=[]))
-    device_type_id: list[int] | None = Field(Query(default=[]))
-    site_id: list[int] | None = Field(Query(default=[]))
-    location_id: list[int] | None = Field(Query(default=[]))
-    interface_id: list[int] | None = Field(Query(default=[]))
-
-
-class AP(APBase, AuditTime):
-    id: int
-    device_type: schemas.DeviceTypeBrief
-    site: schemas.SiteBrief
-    location: schemas.LocationBrief | None = None
-    interface: schemas.InterfaceToDevice | None = None
 
 
 class DeviceEntityBase(BaseModel):
@@ -271,3 +105,7 @@ class DeviceEntity(DeviceEntityBase, AuditTime):
     device: schemas.DeviceBrief
 
 
+class ConfigSyslogEvent(BaseModel):
+    username: str
+    config_method: str
+    login_ip: IPvAnyAddress

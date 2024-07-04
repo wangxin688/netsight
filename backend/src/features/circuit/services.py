@@ -2,9 +2,11 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy.orm import selectinload
 
-from src.circuit import schemas
 from src.core.repositories import BaseRepository
-from src.db import Circuit, Device, Interface, Site
+from src.features.circuit import schemas
+from src.features.circuit.models import Circuit
+from src.features.dcim.models import Device, Interface
+from src.features.org.models import Site
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession

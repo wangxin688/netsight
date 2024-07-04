@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from src.core.repositories import BaseRepository
 from src.core.utils.cbv import cbv
 from src.features._types import AuditLog, IdResponse, ListT
 from src.features.admin.models import User
-from src.features.arch import schemas
-from src.features.arch.models import CircuitType, DeviceRole, IPRole, RackRole
 from src.features.deps import auth, get_session
+from src.features.intend import schemas
+from src.features.intend.models import CircuitType, DeviceRole, DeviceType, IPRole, Manufacturer, Platform
 
 router = APIRouter()
 
@@ -95,47 +96,6 @@ class DeviceRoleAPI:
 
 
 @cbv(router)
-class RackRoleAPI:
-    session: AsyncSession = Depends(get_session)
-    user: User = Depends(auth)
-    dto = BaseRepository(RackRole)
-
-    @router.post("/rack-roles", operation_id="60f2f8e2-5694-48bf-82c1-8780639504b8")
-    async def create_rack_role(self, rack_role: schemas.RackRoleCreate) -> IdResponse:
-        new_obj = await self.dto.create(self.session, rack_role)
-        return IdResponse(id=new_obj.id)
-
-    @router.put("/rack-roles/{id}", operation_id="9ab5b8b1-3134-411c-b792-ba5f1a2cc114")
-    async def update_rack_role(self, id: int, rack_role: schemas.RackRoleUpdate) -> IdResponse:
-        db_obj = await self.dto.get_one_or_404(self.session, id)
-        await self.dto.update(self.session, db_obj, rack_role)
-        return IdResponse(id=id)
-
-    @router.get("/rack-roles/{id}", operation_id="1e3b906c-b381-4482-929d-d27435c2e49b")
-    async def get_rack_role(self, id: int) -> schemas.RackRole:
-        db_obj = await self.dto.get_one_or_404(self.session, id, undefer_load=True)
-        return schemas.RackRole.model_validate(db_obj)
-
-    @router.get("/rack-roles", operation_id="1fe1c9b0-31a1-41c4-82e5-6f96e1c18113")
-    async def get_rack_roles(self, q: schemas.RackRoleQuery = Depends()) -> ListT[schemas.RackRole]:
-        count, results = await self.dto.list_and_count(self.session, q)
-        return ListT(count=count, results=[schemas.RackRole.model_validate(r) for r in results])
-
-    @router.delete("/rack-roles/{id}", operation_id="c384b7b7-c266-4d01-976a-1867ed526b5e")
-    async def delete_rack_role(self, id: int) -> IdResponse:
-        db_obj = await self.dto.get_one_or_404(self.session, id)
-        await self.dto.delete(self.session, db_obj)
-        return IdResponse(id=id)
-
-    @router.get("/rack-roles/{id}/auditlogs", operation_id="9583bb25-1898-4500-8c87-aa81c8059525")
-    async def get_rack_role_auditlogs(self, id: int) -> ListT[AuditLog]:
-        count, results = await self.dto.get_audit_log(self.session, id)
-        if not results:
-            return ListT(count=0, results=None)
-        return ListT(count=count, results=[AuditLog.model_validate(r) for r in results])
-
-
-@cbv(router)
 class IPRoleAPI:
     session: AsyncSession = Depends(get_session)
     user: User = Depends(auth)
@@ -211,6 +171,99 @@ class PlatformAPI:
 
     @router.get("/platforms/{id}/auditlogs", operation_id="62ca0f32-56b3-47bb-838f-20402c2bb1f4")
     async def get_platform_audit_logs(self, id: int) -> ListT[AuditLog]:
+        count, results = await self.dto.get_audit_log(self.session, id)
+        if not results:
+            return ListT(count=0, results=None)
+        return ListT(count=count, results=[AuditLog.model_validate(r) for r in results])
+
+
+@cbv(router)
+class ManufacturerAPI:
+    session: AsyncSession = Depends(get_session)
+    user: User = Depends(auth)
+    dto = BaseRepository(Manufacturer)
+
+    @router.post("/manufacturers", operation_id="e56edca5-f270-494f-894b-e80b76ed6e5e")
+    async def create_manufacturer(self, manufacturer: schemas.ManufacturerCreate) -> IdResponse:
+        new_manufacturer = await self.dto.create(self.session, manufacturer)
+        return IdResponse(id=new_manufacturer.id)
+
+    @router.put("/manufacturers/{id}", operation_id="f79ca68c-1768-4e6e-a568-020a6ff844e5")
+    async def update_manufacturer(self, id: int, manufacturer: schemas.ManufacturerUpdate) -> IdResponse:
+        db_manufacturer = await self.dto.get_one_or_404(self.session, id)
+        await self.dto.update(self.session, db_manufacturer, manufacturer)
+        return IdResponse(id=id)
+
+    @router.get("/manufacturers/{id}", operation_id="f7500762-95de-4125-87b7-8b9dc4cb4201")
+    async def get_manufacturer(self, id: int) -> schemas.Manufacturer:
+        db_manufacturer = await self.dto.get_one_or_404(self.session, id, undefer_load=True)
+        return schemas.Manufacturer.model_validate(db_manufacturer)
+
+    @router.get("/manufacturers", operation_id="a30fb40d-04b3-41fd-a7ba-3040270a191b")
+    async def get_manufacturers(self, q: schemas.ManufacturerQuery = Depends()) -> ListT[schemas.Manufacturer]:
+        count, results = await self.dto.list_and_count(self.session, q)
+        return ListT(count=count, results=[schemas.Manufacturer.model_validate(r) for r in results])
+
+    @router.delete("/manufacturers/{id}", operation_id="f9b8b6d9-6b7a-4c0e-8b6a-4b0e8b6d9f9b")
+    async def delete_manufacturer(self, id: int) -> IdResponse:
+        db_manufacturer = await self.dto.get_one_or_404(self.session, id)
+        await self.dto.delete(self.session, db_manufacturer)
+        return IdResponse(id=id)
+
+    @router.get("/manufacturers/{id}/auditlogs", operation_id="1cc7297f-b208-4381-8ef1-97ad092a82cb")
+    async def get_manufacturer_audit_logs(self, id: int) -> ListT[AuditLog]:
+        count, results = await self.dto.get_audit_log(self.session, id)
+        if not results:
+            return ListT(count=0, results=None)
+        return ListT(count=count, results=[AuditLog.model_validate(r) for r in results])
+
+
+@cbv(router)
+class DeviceTypeAPI:
+    session: AsyncSession = Depends(get_session)
+    user: User = Depends(auth)
+    dto = BaseRepository(DeviceType)
+
+    @router.post("/device-types", operation_id="cea5008c-0a32-4bdb-9c17-709230168e2b")
+    async def create_device_type(self, device_type: schemas.DeviceTypeCreate) -> IdResponse:
+        new_device_type = await self.dto.create(self.session, device_type)
+        return IdResponse(id=new_device_type.id)
+
+    @router.put("/device-types/{id}", operation_id="505c9f48-1880-43cd-845b-c517a22d4fd5")
+    async def update_device_type(self, id: int, device_type: schemas.DeviceTypeUpdate) -> IdResponse:
+        db_device_type = await self.dto.get_one_or_404(self.session, id)
+        await self.dto.update(self.session, db_device_type, device_type)
+        return IdResponse(id=id)
+
+    @router.get("/device-types/{id}", operation_id="653e2c8f-11a8-4e04-87c1-a674c0be55d1")
+    async def get_device_type(self, id: int) -> schemas.DeviceType:
+        db_device_type = await self.dto.get_one_or_404(
+            self.session,
+            id,
+            selectinload(DeviceType.manufacturer).load_only(Manufacturer.id, Manufacturer.name),
+            selectinload(DeviceType.platform).load_only(Platform.id, Platform.name, Platform.netmiko_driver),
+            undefer_load=True,
+        )
+        return schemas.DeviceType.model_validate(db_device_type)
+
+    @router.get("/device-types", operation_id="e67dcd2d-7b9c-4701-856c-55f95d2925a5")
+    async def get_device_types(self, q: schemas.DeviceTypeQuery = Depends()) -> ListT[schemas.DeviceType]:
+        count, results = await self.dto.list_and_count(
+            self.session,
+            q,
+            selectinload(DeviceType.manufacturer).load_only(Manufacturer.id, Manufacturer.name),
+            selectinload(DeviceType.platform).load_only(Platform.id, Platform.name, Platform.netmiko_driver),
+        )
+        return ListT(count=count, results=[schemas.DeviceType.model_validate(r) for r in results])
+
+    @router.delete("/device-types/{id}", operation_id="551aef93-9346-4db6-803c-14d88c2b69c7")
+    async def delete_device_type(self, id: int) -> IdResponse:
+        db_device_type = await self.dto.get_one_or_404(self.session, id)
+        await self.dto.delete(self.session, db_device_type)
+        return IdResponse(id=id)
+
+    @router.get("/device-types/{id}/auditlogs", operation_id="1b376206-f410-410c-87a9-e31d6ff2ae87")
+    async def get_device_type_audit_logs(self, id: int) -> ListT[AuditLog]:
         count, results = await self.dto.get_audit_log(self.session, id)
         if not results:
             return ListT(count=0, results=None)

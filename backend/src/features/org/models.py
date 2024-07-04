@@ -5,9 +5,9 @@ from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy_utils.types import ChoiceType
 
+from src.core.database.base import Base
+from src.core.database.mixins import AuditLogMixin
 from src.core.database.types import int_pk
-from src.core.models.base import Base
-from src.core.models.mixins import AuditLogMixin
 from src.features.consts import LocationStatus, LocationType, SiteStatus
 
 if TYPE_CHECKING:

@@ -1,20 +1,21 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, Integer, UniqueConstraint
+from sqlalchemy import ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils.types import ChoiceType
 
+from src.core.database.base import Base
+from src.core.database.mixins import AuditLogMixin
 from src.core.database.types import PgCIDR, PgIpInterface, bool_false, bool_true, int_pk
-from src.core.models.base import Base
-from src.core.models.mixins import AuditLogMixin
 from src.features._types import IPvAnyInterface, IPvAnyNetwork
 from src.features.consts import IPAddressStatus, IPRangeStatus, PrefixStatus, VLANStatus
 
 if TYPE_CHECKING:
     from src.features.admin.models import User
-    from src.features.arch.models import IPRole
     from src.features.circuit.models import ISP
     from src.features.dcim.models import Interface
+    from src.features.intend.models import IPRole
     from src.features.org.models import Site
 
 __all__ = (
@@ -129,6 +130,8 @@ class VLAN(Base, AuditLogMixin):
     vid: Mapped[int]
     description: Mapped[str | None]
     status: Mapped[VLANStatus] = mapped_column(ChoiceType(VLANStatus))
+    ip_address: Mapped[str]
+    associted_interfaces: Mapped[list[str]] = mapped_column(ARRAY(String, dimensions=1), nullable=True)
     site_id: Mapped[int] = mapped_column(ForeignKey("site.id", ondelete="CASCADE"))
     site: Mapped["Site"] = relationship(backref="vlan", passive_deletes=True)
     role_id: Mapped[int | None] = mapped_column(ForeignKey("ip_role.id", ondelete="SET NULL"))
@@ -160,11 +163,3 @@ class RouteTarget(Base, AuditLogMixin):
     name: Mapped[str] = mapped_column(unique=True)
     description: Mapped[str | None]
     vrf: Mapped[list["VRF"]] = relationship(secondary="vrf_route_target", back_populates="route_target")
-
-
-# Prefix.children_count = column_property(
-#     select(func.count(Prefix.id))
-#     .where(Prefix.prefix.op("<<")(Prefix.prefix))
-#     .correlate_except(Prefix)
-#     .scalar_subquery()
-# )

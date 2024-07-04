@@ -1,10 +1,12 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import TEXT, ForeignKey, String
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils.types import ChoiceType
 
+from src.core.database.base import Base
+from src.core.database.mixins import AuditLogMixin, AuditUserMixin
 from src.core.database.types import (
     PgIpAddress,
     PgIpInterface,
@@ -12,35 +14,34 @@ from src.core.database.types import (
     i18n_name,
     int_pk,
 )
-from src.core.models.base import Base
-from src.core.models.mixins import AuditLogMixin
 from src.features._types import IPvAnyAddress, IPvAnyInterface
 from src.features.consts import CircuitStatus
 
 if TYPE_CHECKING:
-    from src.features.arch.models import CircuitType
     from src.features.dcim.models import Device, Interface
+    from src.features.intend.models import CircuitType
     from src.features.ipam.models import ASN
     from src.features.org.models import CircuitContact, Site
 
 __all__ = ("Circuit", "ISP", "ISPASN")
 
 
-class Circuit(Base, AuditLogMixin):
+class Circuit(Base, AuditUserMixin, AuditLogMixin):
     __tablename__ = "circuit"
     __visible_name__ = {"en_US": "Circuit", "zh_CN": "线路"}
     __search_fields__ = {"name", "slug", "cid"}
     id: Mapped[int_pk]
     name: Mapped[str] = mapped_column(unique=True)
-    slug: Mapped[str] = mapped_column(unique=True)
     cid: Mapped[str | None] = mapped_column(unique=True)
     status: Mapped[CircuitStatus] = mapped_column(ChoiceType(CircuitStatus))
     install_date: Mapped[date_optional]
     purchase_term: Mapped[str | None]
     bandwidth: Mapped[int] = mapped_column(comment="Mbps")
-    comments: Mapped[str | None] = mapped_column(TEXT, nullable=True)
-    vendor_available_ip: Mapped[list[IPvAnyInterface] | None] = mapped_column(ARRAY(PgIpInterface), nullable=True)
-    vendor_available_gateway: Mapped[list[IPvAnyAddress] | None] = mapped_column(ARRAY(PgIpAddress), nullable=True)
+    comments: Mapped[str | None] = mapped_column(String, nullable=True)
+    manufacturer_available_ip: Mapped[list[IPvAnyInterface] | None] = mapped_column(ARRAY(PgIpInterface), nullable=True)
+    manufacturer_available_gateway: Mapped[list[IPvAnyAddress] | None] = mapped_column(
+        ARRAY(PgIpAddress), nullable=True
+    )
     isp_id: Mapped[int] = mapped_column(ForeignKey("isp.id", ondelete="RESTRICT"))
     isp: Mapped["ISP"] = relationship(back_populates="circuit")
     circuit_type_id: Mapped[int] = mapped_column(ForeignKey("circuit_type.id", ondelete="RESTRICT"))
@@ -60,15 +61,13 @@ class Circuit(Base, AuditLogMixin):
     circuit_contact: Mapped["CircuitContact"] = relationship(backref="circuit", passive_deletes=True)
 
 
-class ISP(Base, AuditLogMixin):
+class ISP(Base, AuditUserMixin, AuditLogMixin):
     __tablename__ = "isp"
     __visible_name__ = {"en_US": "ISP", "zh_CN": "营运商"}
     __i18n_fields__ = {"name"}
     __search_fields__ = {"name", "slug"}
     id: Mapped[int_pk]
     name: Mapped[i18n_name]
-    slug: Mapped[str] = mapped_column(unique=True)
-    description: Mapped[str | None]
     account: Mapped[str | None]
     portal: Mapped[str | None] = mapped_column(String, nullable=True)
     noc_contact: Mapped[list[str | None] | None] = mapped_column(ARRAY(String), nullable=True)

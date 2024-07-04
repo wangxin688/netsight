@@ -39,24 +39,20 @@ class DeviceStatus(StrEnum):
     Scrapped = "Scrapped"
 
 
+class DeviceEquipmentType(StrEnum):
+    Power = "Power"
+    Fan = "Fan"
+    SFP = "SFP"
 
-class APStatus(StrEnum):
-    Active = "Active"
-    Offline = "Offline"
-    Staged = "Staged"
-    Inventory = "Inventory"
-    Scrapped = "Scrapped"
+
+class DeviceConfigChangeType(StrEnum):
+    Manual = "Manual"
+    Event = "Event"
 
 
 class APMode(StrEnum):
     Fix = "Fix"
     Fat = "Fat"
-
-
-class RackStatus(StrEnum):
-    Active = "Active"
-    Offline = "Offline"
-    Reserved = "Reserved"
 
 
 class InterfaceAdminStatus(StrEnum):

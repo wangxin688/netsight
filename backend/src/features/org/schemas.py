@@ -104,7 +104,6 @@ class Site(SiteBase):
     circuit_count: int
     ap_count: int
     prefix_count: int
-    rack_count: int
     vlan_count: int
 
 

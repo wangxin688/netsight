@@ -78,7 +78,7 @@ class InterfaceToDevice(InterfaceBrief):
     device: DeviceBrief
 
 
-class VendorBrief(BaseModel):
+class ManufacturerBrief(BaseModel):
     id: int
     name: I18nField
 
@@ -92,7 +92,6 @@ class PlatformBrief(BaseModel):
     id: int
     name: str
     netmiko_driver: str
-
 
 
 ## -------ORG-----------
@@ -126,11 +125,6 @@ class CircuitTypeBrief(BaseModel):
 
 
 class DeviceRoleBrief(BaseModel):
-    id: int
-    name: I18nField
-
-
-class RackRoleBrief(BaseModel):
     id: int
     name: I18nField
 

@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from src.core.errors.err_codes import ERR_20001
-from src.core.errors.exceptions import GenerError
+from src.core.errors.exception_handlers import GenerError
 from src.core.repositories import BaseRepository
 from src.features.org import schemas
 from src.features.org.models import Contact, ContactRole, Location, Site, SiteGroup

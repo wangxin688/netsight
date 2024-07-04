@@ -1,7 +1,8 @@
 from fastapi import Query
-from pydantic import Field
+from pydantic import AnyHttpUrl, Field
 
 from src.features._types import AuditTime, BaseModel, I18nField, NameStr, QueryParams
+from src.features.internal import schemas
 
 
 class CircuitTypeCreate(BaseModel):
@@ -23,27 +24,6 @@ class CircuitTypeQuery(QueryParams):
 class CircuitType(CircuitTypeCreate, AuditTime):
     id: int
     circuit_count: int
-
-
-class RackRoleCreate(BaseModel):
-    name: I18nField
-    slug: str
-    description: str | None = None
-
-
-class RackRoleUpdate(RackRoleCreate):
-    name: I18nField | None = None
-    slug: str | None = None
-
-
-class RackRoleQuery(QueryParams):
-    name: list[str] | None = Field(Query(default=[]))
-    slug: list[str] | None = Field(Query(default=[]))
-
-
-class RackRole(RackRoleCreate, AuditTime):
-    id: int
-    rack_count: int
 
 
 class DeviceRoleCreate(BaseModel):
@@ -118,3 +98,66 @@ class Platform(PlatformBase, AuditTime):
     device_type_count: int
     device_count: int
     textfsm_template_count: int
+
+
+class ManufacturerCreate(BaseModel):
+    name: I18nField
+    slug: NameStr
+    description: str | None = None
+
+
+class ManufacturerUpdate(ManufacturerCreate):
+    name: I18nField | None = None
+    slug: NameStr | None = None
+
+
+class ManufacturerQuery(QueryParams):
+    name: list[str] | None = Field(Query(default=[]))
+    slug: list[NameStr] | None = Field(Query(default=[]))
+
+
+class Manufacturer(ManufacturerCreate, AuditTime):
+    id: int
+    device_type_count: int
+    device_count: int
+
+
+class DeviceTypeBase(BaseModel):
+    name: str
+    snmp_sysobjectid: str
+    u_height: float
+    front_image: AnyHttpUrl | None = None
+    rear_image: AnyHttpUrl | None = None
+
+
+class DeviceTypeCreate(DeviceTypeBase):
+    name: NameStr
+    manufacturer_id: int
+    platform_id: int
+
+
+class DeviceTypeUpdate(DeviceTypeCreate):
+    name: NameStr | None = None
+    snmp_sysobjectid: str | None = None
+    u_height: float | None = None
+    manufacturer_id: int | None = None
+    platform_id: int | None = None
+
+
+class DeviceTypeQuery(QueryParams):
+    name: list[NameStr] | None = Field(Query(default=[]))
+    manufacturer_id: list[int] | None = Field(Query(default=[]))
+    platform_id: list[int] | None = Field(Query(default=[]))
+
+
+class DeviceTypeInfo(DeviceTypeBase):
+    id: int
+    manufacturer: schemas.ManufacturerBrief
+    platform: schemas.PlatformBrief
+
+
+class DeviceType(DeviceTypeBase, AuditTime):
+    id: int
+    device_count: int
+    manufacturer: schemas.ManufacturerBrief
+    platform: schemas.PlatformBrief

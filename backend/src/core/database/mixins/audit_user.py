@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Integer, func
@@ -8,14 +9,12 @@ from src.core.database.types import DateTimeTZ
 from src.core.utils.context import user_ctx
 
 if TYPE_CHECKING:
-    from datetime import datetime
-
     from src.features.admin.models import User
 
 
 class AuditUserMixin:
-    created_at: Mapped["datetime"] = mapped_column(DateTimeTZ, default=func.now(), index=True)
-    updated_at: Mapped["datetime"] = mapped_column(DateTimeTZ, default=func.now(), onupdate=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTimeTZ, default=func.now(), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTimeTZ, default=func.now(), onupdate=func.now())
 
     @declared_attr
     @classmethod

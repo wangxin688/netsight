@@ -19,4 +19,4 @@ datetime_required = Annotated[datetime, mapped_column(DateTimeTZ, nullable=False
 datetime_optional = Annotated[datetime, mapped_column(DateTimeTZ, nullable=True)]
 date_required = Annotated[date, mapped_column(Date, nullable=False)]
 date_optional = Annotated[date | None, mapped_column(Date, nullable=True)]
-i18n_name = Annotated[dict, mapped_column(MutableDict.as_mutable(HSTORE))]
+i18n_name = Annotated[dict, mapped_column(MutableDict.as_mutable(HSTORE))]  # type: ignore  # noqa: PGH003

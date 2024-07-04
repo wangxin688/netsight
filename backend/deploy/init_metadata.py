@@ -7,11 +7,14 @@ from anyio import open_file, run
 from sqlalchemy import select
 
 from src.core.config import PROJECT_DIR
+from src.core.database.session import async_session
 from src.core.utils.context import request_id_ctx, user_ctx
-from src.db import Block, CircuitType, DeviceRole, DeviceType, Group, IPRole, Platform, RackRole, Role, User, Vendor
-from src.db.database import sessionmanager
+from src.features.admin.models import Group, Role, User
 from src.features.admin.security import get_password_hash
 from src.features.consts import ReservedRoleSlug
+from src.features.dcim.models import DeviceType, Manufacturer
+from src.features.intend.models import CircuitType, DeviceRole, IPRole, Platform
+from src.features.ipam.models import Block
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -70,12 +73,12 @@ async def init_platform(session: "AsyncSession") -> None:
         await session.commit()
 
 
-async def init_vendor(session: "AsyncSession") -> None:
+async def init_manufacturer(session: "AsyncSession") -> None:
     async with await open_file(f"{PROJECT_DIR}/deploy/collections/metadata/vendor.json") as f:
         contents = await f.read()
         vendors = json.loads(contents)
-        new_vendors = [Vendor(**p) for p in vendors]
-        db_objs = (await session.scalars(select(Vendor))).all()
+        new_vendors = [Manufacturer(**p) for p in vendors]
+        db_objs = (await session.scalars(select(Manufacturer))).all()
         if not db_objs:
             session.add_all(new_vendors)
         else:
@@ -136,22 +139,6 @@ async def init_device_role(session: "AsyncSession") -> None:
         await session.commit()
 
 
-async def init_rack_role(session: "AsyncSession") -> None:
-    async with await open_file(f"{PROJECT_DIR}/deploy/collections/metadata/rack_role.json") as f:
-        contents = await f.read()
-        rack_roles = json.loads(contents)
-        new_rack_roles = [RackRole(**r) for r in rack_roles]
-        db_objs = (await session.scalars(select(RackRole))).all()
-        if not db_objs:
-            session.add_all(new_rack_roles)
-        else:
-            slugs = [r.slug for r in db_objs]
-            for new_r in new_rack_roles:
-                if new_r.slug not in slugs:
-                    session.add(new_r)
-        await session.commit()
-
-
 async def init_ip_role(session: "AsyncSession") -> None:
     async with await open_file(f"{PROJECT_DIR}/deploy/collections/metadata/ip_role.json") as f:
         contents = await f.read()
@@ -186,14 +173,13 @@ async def init_block(session: "AsyncSession") -> None:
 
 async def init_meta() -> None:
     request_id_ctx.set(str(uuid4()))
-    async with sessionmanager.session() as session:
+    async with async_session() as session:
         await init_user(session)
         await init_platform(session)
-        await init_vendor(session)
+        await init_manufacturer(session)
         await init_device_type(session)
         await init_circuit_type(session)
         await init_device_role(session)
-        await init_rack_role(session)
 
 
 if __name__ == "__main__":

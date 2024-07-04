@@ -1,9 +1,12 @@
-from typing import Any, ClassVar, TypeVar
+from typing import Any, ClassVar, TypedDict, TypeVar
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import DeclarativeBase
 
-from src.features._types import VisibleName
+
+class VisibleName(TypedDict, total=True):
+    en_US: str
+    zh_CN: str
 
 
 class Base(DeclarativeBase):

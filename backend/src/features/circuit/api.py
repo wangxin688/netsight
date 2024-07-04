@@ -6,12 +6,12 @@ from src.core.repositories import BaseRepository
 from src.core.utils.cbv import cbv
 from src.features._types import AuditLog, IdResponse, ListT
 from src.features.admin.models import User
-from src.features.arch.models import CircuitType
 from src.features.circuit import schemas
 from src.features.circuit.models import ISP, Circuit
 from src.features.circuit.services import CircuitDto
 from src.features.dcim.models import Device, Interface
 from src.features.deps import auth, get_session
+from src.features.intend.models import CircuitType
 from src.features.ipam.models import ASN
 from src.features.org.models import Site
 

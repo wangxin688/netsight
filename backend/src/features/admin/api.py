@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src.core.errors.err_codes import ERR_10005
-from src.core.errors.exceptions import GenerError
+from src.core.errors.exception_handlers import GenerError
 from src.core.repositories import BaseRepository
 from src.core.utils.cbv import cbv
 from src.core.utils.validators import list_to_tree
