@@ -45,15 +45,11 @@ async def auth(
         raise TokenExpireError
     user = await session.get(User, token_data.sub, options=[selectinload(User.role)])
     if not user:
-        raise NotFoundError(User.__visible_name__[locale_ctx.get()], "id", id)
+        raise NotFoundError(User.__visible_name__[locale_ctx.get()], "id", token_data.sub)
     check_user_active(user.is_active)
     operation_id = request.scope["route"].operation_id
-    if not operation_id:
-        return user
-    privileged = check_privileged_role(user.role.slug, operation_id)
-    if privileged:
-        return user
-    await check_role_permissions(user.role_id, session, operation_id)
+    if operation_id and not check_privileged_role(user.role.slug, operation_id):
+        await check_role_permissions(user.role_id, session, operation_id)
     return user
 
 
