@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from src.features.dcim.models import Device, Interface
     from src.features.intend.models import CircuitType
     from src.features.ipam.models import ASN
-    from src.features.org.models import CircuitContact, Site
+    from src.features.org.models import Site
 
 __all__ = ("Circuit", "ISP", "ISPASN")
 
@@ -58,7 +58,6 @@ class Circuit(Base, AuditUserMixin, AuditLogMixin):
     device_z: Mapped["Device"] = relationship(foreign_keys=[device_z_id], backref="z_circuit")
     interface_z_id: Mapped[int | None] = mapped_column(ForeignKey("interface.id", ondelete="SET NULL"))
     interface_z: Mapped["Interface"] = relationship(foreign_keys=[interface_z_id], backref="z_circuit")
-    circuit_contact: Mapped["CircuitContact"] = relationship(backref="circuit", passive_deletes=True)
 
 
 class ISP(Base, AuditUserMixin, AuditLogMixin):
@@ -68,7 +67,6 @@ class ISP(Base, AuditUserMixin, AuditLogMixin):
     __search_fields__ = {"name", "slug"}
     id: Mapped[int_pk]
     name: Mapped[i18n_name]
-    account: Mapped[str | None]
     portal: Mapped[str | None] = mapped_column(String, nullable=True)
     noc_contact: Mapped[list[str | None] | None] = mapped_column(ARRAY(String), nullable=True)
     admin_contact: Mapped[list[str | None]] = mapped_column(ARRAY(String), nullable=True)

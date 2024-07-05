@@ -11,7 +11,7 @@ from src.core.database.types import EncryptedString, int_pk
 if TYPE_CHECKING:
     from src.features.dcim.models import Platform
 
-__all__ = ("BaseLineConfig", "AuthCredential", "WLANConfig", "TextFsmTemplate", "JinjaTemplate")
+__all__ = ("BaseLineConfig", "AuthCredential", "TextFsmTemplate", "JinjaTemplate")
 
 
 class BaseLineConfig(Base, AuditLogMixin):
@@ -36,17 +36,9 @@ class AuthCredential(Base, AuditLogMixin):
     cli: Mapped[str | None] = mapped_column(EncryptedString())
     snmpv2_community: Mapped[str | None] = mapped_column(EncryptedString())
     snmpv3: Mapped[str | None] = mapped_column(EncryptedString())
-    http_read: Mapped[str | None] = mapped_column(EncryptedString())
-    http_write: Mapped[str | None] = mapped_column(EncryptedString())
     site_group_id: Mapped[int | None] = mapped_column(ForeignKey("site_group.id", ondelete="CASCADE"))
     site_id: Mapped[int | None] = mapped_column(ForeignKey("site.id", ondelete="CASCADE"))
     device_id: Mapped[int | None] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))
-
-
-class WLANConfig(Base):
-    __tablename__ = "wlan_config"
-    __visible_name__ = {"en_US": "WLAN Configuration", "zh_CN": "无线配置"}
-    id: Mapped[int_pk]
 
 
 class TextFsmTemplate(Base):
