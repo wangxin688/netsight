@@ -1,3 +1,7 @@
+### HLEP WANTED for frontend development
+> Because of my personal time limitation, I don't have too much time for frontend size constructing.
+> If anyone is interested with frontend part I will be happy with contributions. (Vue3/React are both accepted ^_^)
+
 ### Background
 This project draws inspiration from Netbox, incorporating significant changes to better support built-in automation systems for netdevops. Having worked as a network engineer for over 5 years, I've managed more than 50,000 network devices, including but not limited to switches, routers, firewalls, SD-WAN, OVS, SDN, from various vendors in enterprise LAN/WAN/WLAN, and datacenter environments. Our team, consisting of more than 40 people, has been using Netbox for over 4 years. However, reaching a consensus on standards has proven challenging due to the lack of validations and limitations of netbox.
 
