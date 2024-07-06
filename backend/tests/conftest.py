@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 async def session() -> AsyncGenerator["AsyncSession", None]:
     async with async_session() as session:
         yield session
@@ -21,9 +21,7 @@ async def session() -> AsyncGenerator["AsyncSession", None]:
 @pytest.fixture(scope="session")
 async def admin_token() -> dict[str, str]:
     async with AsyncClient(app=app, base_url=settings.BASE_URL) as client:
-        response = await client.post(
-            "/api/v1/admin/pwd-login", data={"username": "admin@system.com", "password": "admin"}
-        )
+        response = await client.post("/api/admin/pwd-login", data={"username": "admin@system.com", "password": "admin"})
         return {"Authorization": f"Bearer {response.json()['access_token']}"}
 
 

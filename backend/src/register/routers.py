@@ -11,11 +11,11 @@ from src.features.org.api import router as org_router
 
 def register_router() -> APIRouter:
     root_router = APIRouter()
-    root_router.include_router(auth_router, prefix="/auth", tags=["Auth"])
+    root_router.include_router(auth_router, prefix="/admin", tags=["Administration"])
+    root_router.include_router(org_router, prefix="/org", tags=["Organization"])
+    root_router.include_router(intend_router, prefix="/arch", tags=["NetworkIntend"])
     root_router.include_router(dcim_router, prefix="/dcim", tags=["DCIM"])
     root_router.include_router(ipam_router, prefix="/ipam", tags=["IPAM"])
-    root_router.include_router(intend_router, prefix="/arch", tags=["Intend"])
-    root_router.include_router(org_router, prefix="/org", tags=["Organization"])
     root_router.include_router(circuit_router, prefix="/circuit", tags=["Circuit"])
     root_router.include_router(internal_router, prefix="/internal", tags=["Internal"])
     return root_router

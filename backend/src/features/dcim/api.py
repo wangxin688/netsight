@@ -105,7 +105,7 @@ class DeviceAPI:
     @router.get("/devices/{id}/equipment", operation_id="94a6902f-9b79-44fe-bebf-03a36c191f04")
     async def get_device_equipment(self, id: int) -> list[schemas.DeviceEquipment]: ...
 
-    @router.post("/devices/{id}/configurations", operation_id="7f848f5d-c75f-4fe1-b7f4-5ae734e9cb52")
+    @router.post("/devices/{id}/configurations", operation_id="dbcfb412-10a6-4811-a703-140c1a3c68ac")
     async def configuration_backup(self, id: int) -> IdResponse: ...
 
     @router.get("/devices/{id}/configurations", operation_id="933fe8b9-005d-40df-b918-59f5005b6747")
