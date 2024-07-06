@@ -23,6 +23,3 @@ ERR_10002 = ErrorCode(10002, "admin.token_invalid")
 ERR_10003 = ErrorCode(10003, "admin.token_expired")
 ERR_10004 = ErrorCode(10004, "admin.token_invalid_for_refresh")
 ERR_10005 = ErrorCode(10005, "admin.permission_deny")
-
-
-ERR_20001 = ErrorCode(20001, "admin.user_not_found")

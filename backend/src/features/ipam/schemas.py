@@ -1,7 +1,7 @@
 from fastapi import Query
 from pydantic import Field, IPvAnyInterface, IPvAnyNetwork, model_validator
 
-from src.features._types import AuditTime, BaseModel, IdCreate, NameChineseStr, NameStr, QueryParams
+from src.features._types import AuditTime, BaseModel, NameChineseStr, NameStr, QueryParams
 from src.features.admin.schemas import UserBrief
 from src.features.consts import IPRangeStatus, PrefixStatus, VLANStatus
 from src.features.internal import schemas
@@ -81,8 +81,8 @@ class ASNBase(BaseModel):
 
 class ASNCreate(ASNBase):
     asn: int = Field(ge=1, le=4294967295)
-    isp: list[IdCreate] | None = None
-    site: list[IdCreate] | None = None
+    isp: list[int] | None = None
+    site: list[int] | None = None
 
 
 class ASNUpdate(ASNCreate):
@@ -140,7 +140,7 @@ class IPAddressBase(BaseModel):
 
 class IPAddressCreate(IPAddressBase):
     vrf_id: int | None = None
-    owner: list[IdCreate] | None = None
+    owner: list[int] | None = None
     interface_id: int | None = None
 
     @model_validator(mode="after")
@@ -209,7 +209,7 @@ class VRFBase(BaseModel):
 
 
 class VRFCreate(VRFBase):
-    route_target: list[IdCreate] | None = None
+    route_target: list[int] | None = None
 
 
 class VRFUpdate(VRFCreate):
@@ -234,7 +234,7 @@ class RouteTargetBase(BaseModel):
 
 
 class RouteTargetCreate(RouteTargetBase):
-    vrf: list[IdCreate] | None = None
+    vrf: list[int] | None = None
 
 
 class RouteTargetUpdate(RouteTargetCreate):

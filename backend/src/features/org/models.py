@@ -6,7 +6,7 @@ from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy_utils.types import ChoiceType
 
 from src.core.database.base import Base
-from src.core.database.mixins import AuditLogMixin
+from src.core.database.mixins import AuditLogMixin, AuditUserMixin
 from src.core.database.types import int_pk
 from src.features.consts import LocationStatus, LocationType, SiteStatus
 
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 __all__ = ("SiteGroup", "Site", "Location")
 
 
-class Site(Base, AuditLogMixin):
+class Site(Base, AuditUserMixin, AuditLogMixin):
     """Office, Campus or data center"""
 
     __tablename__ = "site"
@@ -28,7 +28,7 @@ class Site(Base, AuditLogMixin):
     site_code: Mapped[str] = mapped_column(unique=True, index=True)
     status: Mapped[SiteStatus] = mapped_column(ChoiceType(SiteStatus))
     facility_code: Mapped[str | None]
-    time_zone: Mapped[str | None]
+    time_zone: Mapped[int | None]
     country: Mapped[str | None]
     city: Mapped[str | None]
     address: Mapped[str]
@@ -44,8 +44,30 @@ class Site(Base, AuditLogMixin):
     network_contact: Mapped["User"] = relationship(back_populates="site_network_contact")
     it_contact: Mapped["User"] = relationship(back_populates="site_it_contact")
 
+    if TYPE_CHECKING:
+        device_count: Mapped[int]
+        circuit_count: Mapped[int]
 
-class SiteGroup(Base, AuditLogMixin):
+    @classmethod
+    def __declare_last__(cls) -> None:
+        from sqlalchemy import func, or_, select
+
+        from src.features.circuit.models import Circuit
+        from src.features.dcim.models import Device
+
+        cls.device_count = column_property(
+            select(func.count(Device.id)).where(Device.site_id == cls.id).scalar_subquery(),
+            deferred=True,
+        )
+        cls.circuit_count = column_property(
+            select(func.count(Circuit.id))
+            .where(or_(Circuit.site_a_id == cls.id, Circuit.site_z_id == cls.id))
+            .scalar_subquery(),
+            deferred=True,
+        )
+
+
+class SiteGroup(Base, AuditUserMixin):
     """A aggregation of site or a set of data centor(available zone).
     site group can be used to manage the configuration/security/intend policy
     for the sites under this group.
@@ -56,7 +78,6 @@ class SiteGroup(Base, AuditLogMixin):
     __visible_name__ = {"en_US": "Site Group", "zh_CN": "站点组"}
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(unique=True)
-    slug: Mapped[str] = mapped_column(unique=True)
     description: Mapped[str | None]
     site: Mapped[list["Site"]] = relationship(back_populates="site_group")
     site_count: Mapped[int] = column_property(
@@ -65,7 +86,7 @@ class SiteGroup(Base, AuditLogMixin):
     )
 
 
-class Location(Base, AuditLogMixin):
+class Location(Base, AuditUserMixin, AuditLogMixin):
     """a sub location of site, like building, floor, idf, mdf and etc"""
 
     __tablename__ = "location"

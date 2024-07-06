@@ -587,8 +587,8 @@ class BaseRepository(Generic[ModelT, CreateSchemaType, UpdateSchemaType, QuerySc
         if m2m:
             for key, value in m2m.items():
                 if hasattr(obj_in, key) and getattr(obj_in, key) is not None:
-                    dto_m2m = BaseRepository(value)
-                    db_m2m = await dto_m2m.get_multi_by_pks_or_404(session, [r.id for r in getattr(obj_in, key)])
+                    service_m2m = BaseRepository(value)
+                    db_m2m = await service_m2m.get_multi_by_pks_or_404(session, getattr(obj_in, key))
                     setattr(new_obj, key, db_m2m)
                 setattr(obj_in, key, value)
         if commit:
@@ -632,7 +632,7 @@ class BaseRepository(Generic[ModelT, CreateSchemaType, UpdateSchemaType, QuerySc
             for key, value in m2m.items():
                 if hasattr(obj_in, key) and getattr(obj_in, key) is not None:
                     await self.update_relationship_field(
-                        session, db_obj, value, key, [r.id for r in getattr(obj_in, key)], self.id_attribute
+                        session, db_obj, value, key, getattr(obj_in, key), self.id_attribute
                     )
         db_obj = self._update_mutable_tracking(obj_in, db_obj, excludes)
         if commit:
@@ -671,9 +671,9 @@ class BaseRepository(Generic[ModelT, CreateSchemaType, UpdateSchemaType, QuerySc
                 if getattr(fk_value, relationship_pk_name) not in fk_values:
                     getattr(obj, relationship_name).remove(fk_value)
             for fk_value in fk_values:
-                target_dto = BaseRepository(model=m2m_model)
+                target_service = BaseRepository(model=m2m_model)
                 if fk_value not in local_fk_value_ids:
-                    target_obj = await target_dto.get_one_or_404(session, fk_value)
+                    target_obj = await target_service.get_one_or_404(session, fk_value)
                     getattr(obj, relationship_name).append(target_obj)
         else:
             setattr(obj, relationship_name, None)

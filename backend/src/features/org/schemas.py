@@ -1,11 +1,10 @@
 from fastapi import Query
-from pydantic import EmailStr, Field, model_validator
-from pydantic_extra_types.phone_numbers import PhoneNumber
+from pydantic import Field, model_validator
 
 from src.features._types import (
-    AuditTime,
+    AuditUser,
+    AuthUserBase,
     BaseModel,
-    IdCreate,
     NameChineseStr,
     NameStr,
     QueryParams,
@@ -16,33 +15,29 @@ from src.features.internal import schemas
 
 class SiteGroupBase(BaseModel):
     name: str
-    slug: str
     description: str | None = None
 
 
 class SiteGroupCreate(SiteGroupBase):
     name: NameChineseStr
-    slug: NameStr
-    site: list[IdCreate]
+    site: list[int]
 
 
 class SiteGroupUpdate(SiteGroupCreate):
     name: NameChineseStr | None = None
-    slug: NameStr | None = None
-    site: list[IdCreate] | None = None
+    site: list[int] | None = None
 
 
 class SiteGroupQuery(QueryParams):
     name: list[NameChineseStr] | None = Field(Query(default=[]))
-    slug: list[NameStr] | None = Field(Query(default=[]))
 
 
-class SiteGroup(SiteGroupBase, AuditTime):
+class SiteGroup(SiteGroupBase, AuditUser):
     id: int
     site: list[schemas.SiteBrief] | None = None
 
 
-class SiteGroupList(SiteGroupBase, AuditTime):
+class SiteGroupList(SiteGroupBase, AuditUser):
     id: int
     site_count: int
 
@@ -52,8 +47,8 @@ class SiteBase(BaseModel):
     site_code: str
     status: SiteStatus
     facility_code: str | None = None
-    time_zone: str | None = None
-    country: str | None = None
+    time_zone: int | None = None
+    country: str | None = Field(default=None, description="ISO 3166-1 alpha-2 code, timezone will be automatically set")
     city: str | None = None
     address: str
     latitude: float
@@ -62,17 +57,13 @@ class SiteBase(BaseModel):
     comments: str | None
 
 
-class SiteContactCreate(BaseModel):
-    contact_id: int
-    role_id: int
-
-
 class SiteCreate(SiteBase):
     name: NameChineseStr
     site_code: NameStr
     site_group_id: int | None = None
-    asn: list[IdCreate] | None = None
-    site_contact: list[SiteContactCreate] | None = None
+    asn: list[int] | None = None
+    it_contact_id: int | None = None
+    network_contact_id: int | None = None
 
 
 class SiteUpdate(SiteCreate):
@@ -91,20 +82,20 @@ class SiteQuery(QueryParams):
     site_group_id: list[int] | None = Field(Query(default=[]))
     country: list[str] | None = Field(Query(default=[]))
     city: list[str] | None = Field(Query(default=[]))
-    time_zone: list[str] | None = Field(Query(default=[]))
+    time_zone: list[int] | None = Field(Query(default=[]))
     classification: list[int] | None = Field(Query(default=[]))
+    it_contact_id: list[int] | None = Field(Query(default=[]))
+    network_contact_id: list[int] | None = Field(Query(default=[]))
 
 
-class Site(SiteBase):
+class Site(SiteBase, AuditUser):
     id: int
     asn: list[schemas.ASNBrief] | None = None
-    site_contact: list["SiteContact"] | None = None
-    site_group: list[schemas.SiteGroupBrief] | None = None
+    it_contact: AuthUserBase | None = None
+    network_contact: AuthUserBase | None = None
+    site_group: schemas.SiteGroupBrief | None = None
     device_count: int
     circuit_count: int
-    ap_count: int
-    prefix_count: int
-    vlan_count: int
 
 
 class LocationBase(BaseModel):
@@ -126,11 +117,11 @@ class LocationCreate(LocationBase):
         return self
 
 
-class LocationUpdate(LocationCreate):
+class LocationUpdate(LocationBase):
     name: NameChineseStr | None = None
     location_type: LocationType | None = None
     status: LocationStatus | None = None
-    site_id: int | None = None
+    parent_id: int | None = None
 
 
 class LocationQuery(QueryParams):
@@ -141,71 +132,11 @@ class LocationQuery(QueryParams):
     parent_id: list[int] | None = Field(Query(default=[]))
 
 
-class Location(LocationBase, AuditTime):
+class LocationTree(LocationBase):
+    id: int
+    children: list["LocationTree"] | None = None
+
+
+class Location(LocationBase, AuditUser):
     id: int
     site: schemas.SiteBrief
-    children: list["Location"] | None = None
-
-
-class ContactBase(BaseModel):
-    name: str
-    avatar: str | None = None
-    email: str | None = None
-    phone: str | None = None
-
-
-class ContactCreate(ContactBase):
-    name: NameChineseStr
-    email: EmailStr | None = None
-    phone: PhoneNumber | None = None
-
-    @model_validator(mode="after")
-    def check_email(self):
-        if not self.email or not self.phone:
-            raise ValueError("Email or phone should not be provided any one of it.")
-        return self
-
-
-class ContactUpdate(ContactBase):
-    name: NameChineseStr | None = None
-    email: EmailStr | None = None
-    phone: PhoneNumber | None = None
-
-
-class ContactQuery(QueryParams):
-    name: list[NameChineseStr] | None = Field(Query(default=[]))
-    email: list[EmailStr] | None = Field(Query(default=[]))
-    phone: list[PhoneNumber] | None = Field(Query(default=[]))
-
-
-class Contact(ContactBase):
-    id: int
-
-
-class SiteContact(ContactBase):
-    contact_role: schemas.ContactRoleBrief
-
-
-class ContactRoleBase(BaseModel):
-    name: str
-    description: str | None = None
-
-
-class ContactRoleCreate(ContactRoleBase):
-    name: NameChineseStr
-
-
-class ContactRoleUpdate(ContactRoleCreate):
-    name: NameChineseStr | None = None
-
-
-class ContactRole(ContactRoleBase):
-    id: int
-
-
-class ContactRoleQuery(QueryParams):
-    name: list[NameChineseStr] | None = Field(Query(default=[]))
-
-
-class CircuitContact(ContactBase):
-    contact_role: schemas.ContactRoleBrief

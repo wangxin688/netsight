@@ -12,7 +12,7 @@ from src.features._types import IdResponse, ListT
 from src.features.admin import schemas
 from src.features.admin.models import Group, Menu, Role, User
 from src.features.admin.security import generate_access_token_response
-from src.features.admin.services import MenuDto, UserDto
+from src.features.admin.services import MenuService, UserService
 from src.features.deps import auth, get_session
 
 router = APIRouter()
@@ -23,8 +23,8 @@ async def login_pwd(
     user: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(get_session),
 ) -> schemas.AccessToken:
-    dto = UserDto(User)
-    result = await dto.verify_user(session, user)
+    service = UserService(User)
+    result = await service.verify_user(session, user)
     return generate_access_token_response(result.id)
 
 
@@ -32,12 +32,12 @@ async def login_pwd(
 class UserAPI:
     user: User = Depends(auth)
     session: AsyncSession = Depends(get_session)
-    dto = UserDto(User)
+    service = UserService(User)
 
     @router.post("/users", operation_id="5091fff6-1adc-4a22-8a8c-ef0107122df7", summary="创建新用户/Create new user")
     async def create_user(self, user: schemas.UserCreate) -> IdResponse:
-        new_user = await self.dto.create(self.session, user)
-        result = await self.dto.commit(self.session, new_user)
+        new_user = await self.service.create(self.session, user)
+        result = await self.service.commit(self.session, new_user)
         return IdResponse(id=result.id)
 
     @router.get(
@@ -46,7 +46,7 @@ class UserAPI:
         summary="获取单个用户/Get user information by ID",
     )
     async def get_user(self, id: int) -> schemas.User:
-        db_user = await self.dto.get_one_or_404(
+        db_user = await self.service.get_one_or_404(
             self.session,
             id,
             selectinload(User.role).load_only(Role.id, Role.name),
@@ -56,7 +56,7 @@ class UserAPI:
 
     @router.get("/users", operation_id="2485e2a2-4d81-4601-a6fd-c633b23ce5fc")
     async def get_users(self, query: schemas.UserQuery = Depends()) -> ListT[schemas.User]:
-        count, results = await self.dto.list_and_count(
+        count, results = await self.service.list_and_count(
             self.session,
             query,
             selectinload(User.role).load_only(Role.id, Role.name),
@@ -69,14 +69,14 @@ class UserAPI:
         update_user = user.model_dump(exclude_unset=True)
         if "password" in update_user and update_user["password"] is None:
             raise GenerError(ERR_10005, status_code=status.HTTP_406_NOT_ACCEPTABLE)
-        db_user = await self.dto.get_one_or_404(self.session, id)
-        await self.dto.update(self.session, db_user, user)
+        db_user = await self.service.get_one_or_404(self.session, id)
+        await self.service.update(self.session, db_user, user)
         return IdResponse(id=id)
 
     @router.delete("/users/{id}", operation_id="78e48ceb-d7cf-46fe-bf9e-d04958aade7d")
     async def delete_user(self, id: int) -> IdResponse:
-        db_user = await self.dto.get_one_or_404(self.session, id)
-        await self.dto.delete(self.session, db_user)
+        db_user = await self.service.get_one_or_404(self.session, id)
+        await self.service.delete(self.session, db_user)
         return IdResponse(id=id)
 
 
@@ -84,33 +84,33 @@ class UserAPI:
 class GroupAPI:
     user: User = Depends(auth)
     session: AsyncSession = Depends(get_session)
-    dto = BaseRepository(Group)
+    service = BaseRepository(Group)
 
     @router.post("/groups", operation_id="9e3e639d-c694-467d-9209-717b038cf267")
     async def create_group(self, group: schemas.GroupCreate) -> IdResponse:
-        new_group = await self.dto.create(self.session, group)
+        new_group = await self.service.create(self.session, group)
         return IdResponse(id=new_group.id)
 
     @router.get("/groups/{id}", operation_id="00327087-9443-4d24-8d04-e396e3244744")
     async def get_group(self, id: int) -> schemas.Group:
-        db_group = await self.dto.get_one_or_404(self.session, id, undefer_load=True)
+        db_group = await self.service.get_one_or_404(self.session, id, undefer_load=True)
         return schemas.Group.model_validate(db_group)
 
     @router.get("/groups", operation_id="a1d1f8f1-4d4d-4fab-868b-3f977df26e05")
     async def get_groups(self, query: schemas.GroupQuery = Depends()) -> ListT[schemas.Group]:
-        count, results = await self.dto.list_and_count(self.session, query)
+        count, results = await self.service.list_and_count(self.session, query)
         return ListT(count=count, results=[schemas.Group.model_validate(r) for r in results])
 
     @router.put("/groups/{id}", operation_id="3d5badd1-665c-49f8-85c4-6f6d7f3a1b2a")
     async def update_group(self, id: int, group: schemas.GroupUpdate) -> IdResponse:
-        db_group = await self.dto.get_one_or_404(self.session, id, selectinload(Group.user))
-        await self.dto.update(self.session, db_group, group)
+        db_group = await self.service.get_one_or_404(self.session, id, selectinload(Group.user))
+        await self.service.update(self.session, db_group, group)
         return IdResponse(id=id)
 
     @router.delete("/groups/{id}", operation_id="e16830da-2973-4369-8e75-da9b4174ab72")
     async def delete_group(self, id: int) -> IdResponse:
-        db_group = await self.dto.get_one_or_404(self.session, id)
-        await self.dto.delete(self.session, db_group)
+        db_group = await self.service.get_one_or_404(self.session, id)
+        await self.service.delete(self.session, db_group)
         return IdResponse(id=id)
 
 
@@ -118,33 +118,33 @@ class GroupAPI:
 class RoleAPI:
     user: User = Depends(auth)
     session: AsyncSession = Depends(get_session)
-    dto = BaseRepository(Role)
+    service = BaseRepository(Role)
 
     @router.post("/roles", operation_id="a18a152b-e9e9-4128-b8be-8a8e9c842abb")
     async def create_role(self, role: schemas.RoleCreate) -> IdResponse:
-        new_role = await self.dto.create(self.session, role)
+        new_role = await self.service.create(self.session, role)
         return IdResponse(id=new_role.id)
 
     @router.get("/roles/{id}", operation_id="2b45f59a-77a1-45d4-bf43-94373da517e3")
     async def get_role(self, id: int) -> schemas.Role:
-        db_role = await self.dto.get_one_or_404(self.session, id, selectinload(Role.permission), undefer_load=True)
+        db_role = await self.service.get_one_or_404(self.session, id, selectinload(Role.permission), undefer_load=True)
         return schemas.Role.model_validate(db_role)
 
     @router.get("/roles", operation_id="c5f793b1-7adf-4b4e-a498-732b0fa7d758")
     async def get_roles(self, query: schemas.RoleQuery = Depends()) -> ListT[schemas.RoleList]:
-        count, results = await self.dto.list_and_count(self.session, query)
+        count, results = await self.service.list_and_count(self.session, query)
         return ListT(count=count, results=[schemas.RoleList.model_validate(r) for r in results])
 
     @router.put("/roles/{id}", operation_id="2fda2e00-ad86-4296-a1d4-c7f02366b52e")
     async def update_role(self, id: int, role: schemas.RoleUpdate) -> IdResponse:
-        db_role = await self.dto.get_one_or_404(self.session, id, selectinload(Role.permission))
-        await self.dto.update(self.session, db_role, role)
+        db_role = await self.service.get_one_or_404(self.session, id, selectinload(Role.permission))
+        await self.service.update(self.session, db_role, role)
         return IdResponse(id=id)
 
     @router.delete("/roles/{id}", operation_id="c4e9e0e8-6b0c-4f6f-9e6c-8d9f9f9f9f9f")
     async def delete_role(self, id: int) -> IdResponse:
-        db_role = await self.dto.get_one_or_404(self.session, id)
-        await self.dto.delete(self.session, db_role)
+        db_role = await self.service.get_one_or_404(self.session, id)
+        await self.service.delete(self.session, db_role)
         return IdResponse(id=id)
 
 
@@ -152,26 +152,26 @@ class RoleAPI:
 class MenuAPI:
     user: User = Depends(auth)
     session: AsyncSession = Depends(get_session)
-    dto = MenuDto(Menu)
+    service = MenuService(Menu)
 
     @router.post("/menus", operation_id="008bf4d4-cc01-48b0-82b8-1a67c0348b31")
     async def create_menu(self, meun: schemas.MenuCreate) -> IdResponse:
-        new_menu = await self.dto.create(self.session, meun)
+        new_menu = await self.service.create(self.session, meun)
         return IdResponse(id=new_menu.id)
 
     @router.get("/menus", operation_id="cb7f25ab-798b-4668-a838-6339425e2889")
     async def get_menus(self) -> schemas.MenuTree:
-        results = await self.dto.get_all(self.session)
+        results = await self.service.get_all(self.session)
         data = list_to_tree([r.dict() for r in results])
         return schemas.MenuTree.model_validate(data)
 
     @router.put("menus/{id}", operation_id="b4d7ac97-a182-4bd1-a75c-6ae44b5fcf0a")
     async def update_menu(self, id: int, meun: schemas.MenuUpdate) -> IdResponse:
-        db_menu = await self.dto.get_one_or_404(self.session, id)
-        await self.dto.update(self.session, db_menu, meun)
+        db_menu = await self.service.get_one_or_404(self.session, id)
+        await self.service.update(self.session, db_menu, meun)
         return IdResponse(id=id)
 
     async def delete_menu(self, id: int) -> IdResponse:
-        db_menu = await self.dto.get_one_or_404(self.session, id)
-        await self.dto.delete(self.session, db_menu)
+        db_menu = await self.service.get_one_or_404(self.session, id)
+        await self.service.delete(self.session, db_menu)
         return IdResponse(id=id)

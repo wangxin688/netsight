@@ -43,17 +43,16 @@ class AuditTime(BaseModel):
     updated_at: datetime | None = None
 
 
-class AuditUserBase(BaseModel):
+class AuthUserBase(BaseModel):
     id: int
     name: str
     email: str | None = None
-    phone: str | None = None
     avatar: str | None = None
 
 
-class AuditUser(BaseModel):
-    created_by: AuditUserBase | None = None
-    updated_by: AuditUserBase | None = None
+class AuditUser(AuditTime):
+    created_by: AuthUserBase | None = None
+    updated_by: AuthUserBase | None = None
 
 
 class AuditLog(BaseModel):
@@ -62,7 +61,7 @@ class AuditLog(BaseModel):
     request_id: str
     action: str
     diff: dict | None = None
-    user: AuditUserBase | None = None
+    user: AuthUserBase | None = None
 
 
 class ListT(BaseModel, Generic[T]):
@@ -115,6 +114,3 @@ class I18nField(BaseModel):
 
 class IdResponse(BaseModel):
     id: int
-
-
-class IdCreate(IdResponse): ...

@@ -1,5 +1,3 @@
-from ipaddress import IPv4Address, IPv6Address
-
 from pydantic import IPvAnyAddress, IPvAnyNetwork
 
 from src.features._types import BaseModel, I18nField
@@ -64,8 +62,7 @@ class RouteTargetBrief(BaseModel):
 class DeviceBrief(BaseModel):
     id: int
     name: str
-    management_ipv4: IPv4Address | None = None
-    management_ipv6: IPv6Address | None = None
+    management_ip: IPvAnyAddress
 
 
 class InterfaceBrief(BaseModel):

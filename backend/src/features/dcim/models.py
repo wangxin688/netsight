@@ -31,11 +31,11 @@ class Device(Base, AuditUserMixin, AuditLogMixin):
     management_ip: Mapped[IPvAnyAddress] = mapped_column(PgIpAddress, index=True)
     oob_ip: Mapped[IPvAnyAddress | None] = mapped_column(PgIpAddress, nullable=True)
     status: Mapped[DeviceStatus] = mapped_column(ChoiceType(DeviceStatus))
-    version: Mapped[str | None]
+    software_version: Mapped[str | None]
+    software_patch: Mapped[str | None]
     comments: Mapped[str | None]
     serial_number: Mapped[str | None] = mapped_column(unique=True)  # master
     asset_tag: Mapped[str | None]
-    position: Mapped[int | None]
     device_type_id: Mapped[int] = mapped_column(ForeignKey("device_type.id", ondelete="RESTRICT"))
     device_type: Mapped["DeviceType"] = relationship(backref="device", passive_deletes=True)
     device_role_id: Mapped[int] = mapped_column(ForeignKey("device_role.id", ondelete="RESTRICT"))
@@ -57,13 +57,13 @@ class Device(Base, AuditUserMixin, AuditLogMixin):
     stack: Mapped[list["DeviceStack"]] = relationship(backref="device")
     equipment: Mapped[list["DeviceEquipment"]] = relationship(backref="device")
 
-    # these three are only used for AP device role.
+    # these three are only used for AP device role
     associated_wac_ip: Mapped[IPvAnyAddress | None] = mapped_column(PgIpAddress, nullable=True)
     ap_group: Mapped[str | None]
     ap_mode: Mapped[APMode | None] = mapped_column(ChoiceType(APMode), nullable=True)
 
 
-class DeviceModule(Base):
+class DeviceModule(Base, AuditTimeMixin):
     __tablename__ = "module"
     id: Mapped[int_pk]
     name: Mapped[str]  # huawei: module
@@ -76,17 +76,17 @@ class DeviceModule(Base):
     device_id: Mapped[int] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))
 
 
-class DeviceStack(Base):
+class DeviceStack(Base, AuditTimeMixin):
     __tablename__ = "stack"
     id: Mapped[int_pk]
     role: Mapped[str]
-    mac_address: Mapped[str | None]
+    mac_address: Mapped[str]
     priority: Mapped[int | None]
     device_type: Mapped[str]
     device_id: Mapped[int] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))
 
 
-class DeviceEquipment(Base):
+class DeviceEquipment(Base, AuditTimeMixin):
     # device FAN/Power/SFP Module
     __tablename__ = "equipment"
     __visible_name__ = {"en_US": "Equipment", "zh_CN": "Equipment"}

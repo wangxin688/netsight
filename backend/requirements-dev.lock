@@ -22,6 +22,7 @@ asyncpg==0.29.0
     # via netsight
 bcrypt==4.0.1
     # via netsight
+    # via paramiko
 billiard==4.2.0
     # via celery
 black==23.12.1
@@ -33,6 +34,7 @@ certifi==2023.11.17
     # via sentry-sdk
 cffi==1.16.0
     # via cryptography
+    # via pynacl
 cfgv==3.4.0
     # via pre-commit
 click==8.1.7
@@ -53,6 +55,7 @@ coverage==7.4.0
     # via pytest-cov
 cryptography==42.0.8
     # via netsight
+    # via paramiko
 distlib==0.3.8
     # via virtualenv
 dnspython==2.5.0
@@ -66,6 +69,8 @@ fastapi-cli==0.0.4
     # via fastapi
 filelock==3.13.1
     # via virtualenv
+future==1.0.0
+    # via textfsm
 greenlet==3.0.3
     # via sqlalchemy
 gunicorn==21.2.0
@@ -79,6 +84,8 @@ httptools==0.6.1
     # via uvicorn
 httpx==0.26.0
     # via fastapi
+    # via netsight
+icmplib==3.0.4
     # via netsight
 identify==2.5.33
     # via pre-commit
@@ -105,8 +112,12 @@ mypy==1.8.0
 mypy-extensions==1.0.0
     # via black
     # via mypy
+netmiko==4.3.0
+    # via netsight
 nodeenv==1.8.0
     # via pre-commit
+ntc-templates==5.1.0
+    # via netmiko
 numpy==1.26.4
     # via netsight
     # via pandas
@@ -118,6 +129,9 @@ packaging==23.2
     # via pytest
 pandas==2.2.0
     # via netsight
+paramiko==3.4.0
+    # via netmiko
+    # via scp
 passlib==1.7.4
     # via netsight
 pathspec==0.12.1
@@ -148,10 +162,14 @@ pygments==2.18.0
     # via rich
 pyjwt==2.8.0
     # via netsight
+pynacl==1.5.0
+    # via paramiko
+pyserial==3.5
+    # via netmiko
 pytest==7.4.4
     # via pytest-asyncio
     # via pytest-cov
-pytest-asyncio==0.23.3
+pytest-asyncio==0.23.7
 pytest-cov==4.1.0
 python-dateutil==2.8.2
     # via celery
@@ -165,6 +183,7 @@ python-multipart==0.0.9
 pytz==2024.1
     # via pandas
 pyyaml==6.0.1
+    # via netmiko
     # via pre-commit
     # via uvicorn
 redis==5.0.1
@@ -172,6 +191,8 @@ redis==5.0.1
 rich==13.7.1
     # via typer
 ruff==0.1.11
+scp==0.15.0
+    # via netmiko
 sentry-sdk==1.39.2
     # via netsight
 setuptools==69.0.3
@@ -180,6 +201,7 @@ shellingham==1.5.4
     # via typer
 six==1.16.0
     # via python-dateutil
+    # via textfsm
 sniffio==1.3.0
     # via anyio
     # via httpx
@@ -191,6 +213,11 @@ sqlalchemy-utils==0.41.1
     # via netsight
 starlette==0.37.2
     # via fastapi
+tcppinglib==2.0.3
+    # via netsight
+textfsm==1.1.3
+    # via netmiko
+    # via ntc-templates
 typer==0.12.3
     # via fastapi-cli
 typing-extensions==4.9.0

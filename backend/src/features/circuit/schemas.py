@@ -6,10 +6,10 @@ from pydantic import AnyHttpUrl, EmailStr, Field, IPvAnyAddress, IPvAnyNetwork
 from src.features._types import (
     AuditTime,
     AuditTimeQuery,
+    AuditUser,
     BaseModel,
     BatchUpdate,
     I18nField,
-    IdCreate,
     NameChineseStr,
     NameStr,
     QueryParams,
@@ -31,7 +31,7 @@ class ISPBase(BaseModel):
 
 class ISPCreate(ISPBase):
     slug: NameStr
-    asn: list[IdCreate] | None = Field(default=None, description="List of asn id belong to current isp.")
+    asn: list[int] | None = Field(default=None, description="List of asn id belong to current isp.")
 
 
 class ISPUpdate(ISPCreate):
@@ -109,7 +109,19 @@ class CircuitQuery(QueryParams, AuditTimeQuery):
     device_id: list[int] | None = Field(Query(default=[]))
 
 
-class Circuit(CircuitBase, AuditTime):
+class Circuit(CircuitBase, AuditUser):
+    id: int
+    isp: schemas.ISPBrief
+    circuit_type: schemas.CircuitTypeBrief
+    site_a: schemas.SiteBrief
+    devie_a: schemas.DeviceBrief
+    interface_a: schemas.InterfaceBrief
+    site_z: schemas.SiteBrief | None = None
+    devie_z: schemas.DeviceBrief | None = None
+    interface_z: schemas.InterfaceBrief | None = None
+
+
+class CirctuiList(CircuitBase, AuditTime):
     id: int
     isp: schemas.ISPBrief
     circuit_type: schemas.CircuitTypeBrief

@@ -13,7 +13,7 @@ from src.features.admin.schemas import PermissionCreate, PermissionUpdate
 from src.features.admin.security import verify_password
 
 
-class UserDto(BaseRepository[User, schemas.UserCreate, schemas.UserUpdate, schemas.UserQuery]):
+class UserService(BaseRepository[User, schemas.UserCreate, schemas.UserUpdate, schemas.UserQuery]):
     async def verify_user(self, session: AsyncSession, user: OAuth2PasswordRequestForm) -> User:
         stmt = self._get_base_stmt().where(or_(self.model.email == user.username, self.model.phone == user.username))
         db_user = await session.scalar(stmt)
@@ -24,7 +24,7 @@ class UserDto(BaseRepository[User, schemas.UserCreate, schemas.UserUpdate, schem
         return db_user
 
 
-class PermissionDto(
+class PermissionService(
     BaseRepository[Permission, schemas.PermissionCreate, schemas.PermissionUpdate, schemas.PermissionQuery]
 ):
     async def create(
@@ -52,7 +52,7 @@ class PermissionDto(
         raise NotImplementedError
 
 
-class MenuDto(BaseRepository[Menu, schemas.MenuCreate, schemas.MenuUpdate, schemas.MenuQuery]):
+class MenuService(BaseRepository[Menu, schemas.MenuCreate, schemas.MenuUpdate, schemas.MenuQuery]):
     async def get_all(self, session: AsyncSession) -> Sequence[Menu]:
         return (await session.scalars(select(self.model))).all()
 

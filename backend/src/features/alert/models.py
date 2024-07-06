@@ -23,6 +23,19 @@ if TYPE_CHECKING:
     from src.features.dcim.models import Device, Interface
     from src.features.org.models import Site
 
+__all__ = (
+    "Alert",
+    "AlertUser",
+    "Event",
+    "EventGroup",
+    "EventOperation",
+    "Inhibitor",
+    "Correlation",
+    "Subscription",
+    "NotificationRecord",
+    "EventOperation",
+)
+
 
 class AlertUser(Base, AuditUserMixin):
     __tablename__ = "alert_user"
@@ -98,6 +111,17 @@ class EventGroup(Base, EventMixin):
     event_operation: Mapped[list["EventOperation"]] = relationship(
         back_populates="event_group", secondary="event_operation_event_group"
     )
+
+
+class Correlation(Base, AuditUserMixin):
+    __tablename__ = "correlation"
+    id: Mapped[int_pk]
+    name: Mapped[str]
+    description: Mapped[str | None]
+    order: Mapped[int]
+    source_match: Mapped[list[dict]] = mapped_column(JSON)
+    target_match: Mapped[list[dict]] = mapped_column(JSON)
+    equal_value: Mapped[list[str]] = mapped_column(JSON)
 
 
 class Inhibitor(Base, AuditUserMixin):

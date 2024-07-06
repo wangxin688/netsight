@@ -127,3 +127,10 @@ class CircuitType(StrEnum):
     ADSL = "ADSL"
     MPLS = "MPLS"
     BGP = "BGP"
+
+
+class DeviceRoleSlug(StrEnum):
+    csw = "core-switch"
+    dsw = "distribution-switch"
+    asw = "access-switch"
+    ap = "access-pointt"

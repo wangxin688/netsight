@@ -1,13 +1,11 @@
 from typing import Protocol, TypeVar
 
+from netmiko import BaseConnection, ConnectHandler, ConnectionException
+
 SessionT = TypeVar("SessionT")
 
 
 class NettyFactory(Protocol):
-    def get_session(self) -> SessionT: ...
-
-    def close(self) -> None: ...
-
     def get_hostname(self) -> str: ...
 
     def get_manufacturer(self) -> str: ...
@@ -44,6 +42,52 @@ class NettyFactory(Protocol):
 
 
 class NettySshFactory(NettyFactory):
+    session: BaseConnection | None = None
+
+    def __init__(
+        self,
+        ip_address: str,
+        port: int,
+        username: str,
+        password: str,
+        platform: str,
+        secret: str | None = None,
+        timeout: int = 15,
+    ) -> None:
+        self.ip_address = ip_address
+        self.port = port
+        self.username = username
+        self.password = password
+        self.secret = secret
+        self.timeout = timeout
+        self.device_type = platform
+
+    def __enter__(self) -> None:
+        if self.session is not None:
+            return
+        try:
+            session = ConnectHandler(
+                device_type=self.device_type,
+                host=self.ip_address,
+                username=self.username,
+                password=self.password,
+                secret=self.secret,
+                port=self.port,
+                timeout=self.timeout,
+            )
+        except ConnectionException as e:
+            raise ValueError("Unable to connect to device.") from e  # replace with custom exception
+        self.session = session
+        return
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # noqa: ANN001
+        """Close the session if it's open"""
+        if self.session is None:
+            return
+        self.session.disconnect()
+        self.session = None
+        return
+
     def ping(self) -> None: ...
 
     def traceroute(self) -> None: ...
