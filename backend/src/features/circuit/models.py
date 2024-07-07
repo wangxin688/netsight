@@ -5,7 +5,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils.types import ChoiceType
 
-from src.core.database.base import Base
+from src.core.database import Base
 from src.core.database.mixins import AuditLogMixin, AuditUserMixin
 from src.core.database.types import (
     PgIpAddress,
@@ -33,7 +33,7 @@ class Circuit(Base, AuditUserMixin, AuditLogMixin):
     id: Mapped[int_pk]
     name: Mapped[str] = mapped_column(unique=True)
     cid: Mapped[str | None] = mapped_column(unique=True)
-    status: Mapped[CircuitStatus] = mapped_column(ChoiceType(CircuitStatus))
+    status: Mapped[CircuitStatus] = mapped_column(ChoiceType(CircuitStatus, impl=String()))
     install_date: Mapped[date_optional]
     purchase_term: Mapped[str | None]
     bandwidth: Mapped[int] = mapped_column(comment="Mbps")
@@ -45,7 +45,7 @@ class Circuit(Base, AuditUserMixin, AuditLogMixin):
     isp_id: Mapped[int] = mapped_column(ForeignKey("isp.id", ondelete="RESTRICT"))
     isp: Mapped["ISP"] = relationship(back_populates="circuit")
     circuit_type_id: Mapped[int] = mapped_column(ForeignKey("circuit_type.id", ondelete="RESTRICT"))
-    circuit_type: Mapped["CircuitType"] = relationship(back_populates="circuit")
+    circuit_type: Mapped["CircuitType"] = relationship(backref="circuit")
     site_a_id: Mapped[int] = mapped_column(ForeignKey("site.id", ondelete="RESTRICT"))
     site_a: Mapped["Site"] = relationship(foreign_keys=[site_a_id], backref="a_circuit")
     device_a_id: Mapped[int] = mapped_column(ForeignKey("device.id", ondelete="RESTRICT"))

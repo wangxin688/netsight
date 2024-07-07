@@ -5,7 +5,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils.types import ChoiceType
 
-from src.core.database.base import Base
+from src.core.database import Base
 from src.core.database.mixins import AuditLogMixin
 from src.core.database.types import PgCIDR, PgIpInterface, bool_false, bool_true, int_pk
 from src.features._types import IPvAnyInterface, IPvAnyNetwork
@@ -64,15 +64,15 @@ class Prefix(Base, AuditLogMixin):
     __search_fields__ = {"prefix"}
     id: Mapped[int_pk]
     prefix: Mapped[IPvAnyNetwork] = mapped_column(PgCIDR, unique=True, index=True)
-    status: Mapped[PrefixStatus] = mapped_column(ChoiceType(PrefixStatus))
+    status: Mapped[PrefixStatus] = mapped_column(ChoiceType(PrefixStatus, impl=String()))
     is_dhcp_pool: Mapped[bool_true]
     is_full: Mapped[bool_false]
     vlan_id: Mapped[int | None] = mapped_column(ForeignKey("vlan.id", ondelete="SET NULL"))
     vlan: Mapped["VLAN"] = relationship(backref="prefix")
     site_id: Mapped[int | None] = mapped_column(ForeignKey("site.id", ondelete="SET NULL"))
     site: Mapped["Site"] = relationship(backref="prefix")
-    role_id: Mapped[int | None] = mapped_column(ForeignKey("ip_role.id", ondelete="SET NULL"))
-    role: Mapped["IPRole"] = relationship(back_populates="prefix")
+    role_id: Mapped[int | None] = mapped_column(ForeignKey("ip_role.id", ondelete="CASCADE"))
+    role: Mapped["IPRole"] = relationship(back_populates="prefix", passive_deletes=True)
     vrf_id: Mapped[int | None] = mapped_column(ForeignKey("vrf.id", ondelete="SET NULL"))
     vrf: Mapped["VRF"] = relationship(backref="prefix")
 
@@ -94,7 +94,7 @@ class IPRange(Base, AuditLogMixin):
     id: Mapped[int_pk]
     start_address: Mapped[IPvAnyInterface] = mapped_column(PgIpInterface)
     end_address: Mapped[IPvAnyInterface] = mapped_column(PgIpInterface)
-    status: Mapped[IPRangeStatus] = mapped_column(ChoiceType(IPRangeStatus))
+    status: Mapped[IPRangeStatus] = mapped_column(ChoiceType(IPRangeStatus, impl=String()))
     description: Mapped[str | None]
     vrf_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("vrf.id", ondelete="SET NULL"))
     vrf: Mapped["VRF"] = relationship(backref="ip_range")
@@ -113,7 +113,7 @@ class IPAddress(Base, AuditLogMixin):
     vrf_id: Mapped[int | None] = mapped_column(ForeignKey("vrf.id", ondelete="SET NULL"))
     vrf: Mapped["VRF"] = relationship(backref="ip_address")
     version: Mapped[int]
-    status: Mapped[IPAddressStatus] = mapped_column(ChoiceType(IPAddressStatus))
+    status: Mapped[IPAddressStatus] = mapped_column(ChoiceType(IPAddressStatus, impl=String()))
     dns_name: Mapped[str | None]
     description: Mapped[str | None]
     owner: Mapped[list["User"]] = relationship(secondary="ip_address_user", backref="ip_address")
@@ -129,9 +129,9 @@ class VLAN(Base, AuditLogMixin):
     name: Mapped[str]
     vid: Mapped[int]
     description: Mapped[str | None]
-    status: Mapped[VLANStatus] = mapped_column(ChoiceType(VLANStatus))
+    status: Mapped[VLANStatus] = mapped_column(ChoiceType(VLANStatus, impl=String()))
     ip_address: Mapped[str]
-    associted_interfaces: Mapped[list[str]] = mapped_column(ARRAY(String, dimensions=1), nullable=True)
+    associated_interfaces: Mapped[list[str]] = mapped_column(ARRAY(String, dimensions=1), nullable=True)
     site_id: Mapped[int] = mapped_column(ForeignKey("site.id", ondelete="CASCADE"))
     site: Mapped["Site"] = relationship(backref="vlan", passive_deletes=True)
     role_id: Mapped[int | None] = mapped_column(ForeignKey("ip_role.id", ondelete="SET NULL"))

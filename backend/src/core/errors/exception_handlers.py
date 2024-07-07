@@ -1,5 +1,4 @@
 import logging
-import sys
 import traceback
 from ipaddress import IPv4Address, IPv4Interface, IPv4Network, IPv6Address, IPv6Interface, IPv6Network
 from typing import Any, NewType
@@ -74,31 +73,24 @@ class GenerError(Exception):
         return f"Gener Error Occurred: ErrCode: {self.error.error}, Message: {self.error.message}"
 
 
-def log_exception(exc: type[BaseException] | Exception, logger_trace_info: bool) -> None:
+def log_exception(exception: BaseException, include_traceback: bool) -> None:
     """
     Logs an exception.
 
     Args:
-        exc (Type[BaseException] | Exception): The exception to be logged.
-        logger_trace_info (bool): Indicates whether to include detailed trace information in the log.
+        exception (BaseException): The exception to be logged.
+        include_traceback (bool): Indicates whether to include detailed trace information in the log.
 
     Returns:
         None
-
-    Raises:
-        N/A
     """
-    logger = logging.getLogger(__name__)
-    ex_type, _, ex_traceback = sys.exc_info()
-    trace_back = traceback.format_list(traceback.extract_tb(ex_traceback)[-1:])[-1]
+    exception_type = type(exception).__name__
+    logger.warning(f"ErrorMessage: {exception}")
+    logger.warning(f"Exception Type: {exception_type}")
 
-    logger.warning(f"ErrorMessage: {exc!s}")
-    logger.warning(f"Exception Type {ex_type.__name__}: ")
-
-    if not logger_trace_info:
-        logger.warning(f"Stack trace: {trace_back}")
-    else:
-        logger.exception(f"Stack trace: {trace_back}")
+    if include_traceback:
+        traceback_info = "".join(traceback.format_exc().splitlines()[-3:])
+        logger.warning(f"Traceback: {traceback_info}")
 
 
 async def token_invalid_handler(request: Request, exc: TokenInvalidError) -> JSONResponse:  # noqa: ARG001
@@ -148,7 +140,7 @@ def gener_error_handler(request: Request, exc: GenerError) -> JSONResponse:  # n
 
 
 def default_exception_handler(request: Request, exc: Exception) -> JSONResponse:  # noqa: ARG001
-    log_exception(exc, logger_trace_info=True)
+    log_exception(exc, True)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={

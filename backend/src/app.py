@@ -46,7 +46,9 @@ def create_app() -> FastAPI:
         openapi_url="/api/openapi.json",
     )
 
-    @app.get("/api/elements", include_in_schema=False, operation_id="1a4987dd-6c38-4502-a879-3fe35050ae38")
+    @app.get(
+        "/api/elements", tags=["Docs"], include_in_schema=False, operation_id="1a4987dd-6c38-4502-a879-3fe35050ae38"
+    )
     def get_stoplight_elements() -> HTMLResponse:
         return get_stoplight_elements_html(
             openapi_url="/api/openapi.json", title=settings.PROJECT_NAME, base_path="/api/elements"

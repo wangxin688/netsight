@@ -4,7 +4,7 @@ from sqlalchemy import ForeignKey, String
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.core.database.base import Base
+from src.core.database import Base
 from src.core.database.mixins import AuditLogMixin
 from src.core.database.types import EncryptedString, int_pk
 

@@ -1,12 +1,12 @@
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, func
+from sqlalchemy import ForeignKey, String, func
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils import ChoiceType
 
-from src.core.database.base import Base
+from src.core.database import Base
 from src.core.database.mixins import AuditTimeMixin, AuditUserMixin
 from src.core.database.types import DateTimeTZ, bool_false, bool_true, i18n_name, int_pk
 from src.core.utils.processors import format_duration
@@ -55,18 +55,24 @@ class Alert(Base, AuditTimeMixin):
     possible_impacts: Mapped[i18n_name]
     remediation_suggestion: Mapped[i18n_name]
     references: Mapped[str | None]
-    severity: Mapped[str] = mapped_column(ChoiceType(AlertSeverityType), default=AlertSeverityType.P4.value)
+    severity: Mapped[str] = mapped_column(
+        ChoiceType(AlertSeverityType, impl=String()), default=AlertSeverityType.P4.value
+    )
 
 
 class EventMixin:
-    status: Mapped[AlertStatusType] = mapped_column(ChoiceType(AlertStatusType), default=AlertStatusType.FIRERING.value)
+    status: Mapped[AlertStatusType] = mapped_column(
+        ChoiceType(AlertStatusType, impl=String()), default=AlertStatusType.FIRERING.value
+    )
     started_at: Mapped[datetime] = mapped_column(DateTimeTZ, default=func.now())
     resolved_at: Mapped[datetime] = mapped_column(DateTimeTZ, nullable=True)
     acknowledged_at: Mapped[datetime | None] = mapped_column(DateTimeTZ, nullable=True)
     acknowledged_by: Mapped[int | None] = mapped_column(ForeignKey("alert_user.id"), nullable=True)
     closed_at: Mapped[datetime | None] = mapped_column(DateTimeTZ, nullable=True)
     closed_by: Mapped[int | None] = mapped_column(ForeignKey("alert_user.id"), nullable=True)
-    severity: Mapped[str] = mapped_column(ChoiceType(AlertSeverityType), default=AlertSeverityType.P4.value)
+    severity: Mapped[str] = mapped_column(
+        ChoiceType(AlertSeverityType, impl=String()), default=AlertSeverityType.P4.value
+    )
 
     @property
     def duration(self) -> str:
@@ -84,15 +90,15 @@ class Event(Base, EventMixin):
     event_group_id: Mapped[int | None] = mapped_column(ForeignKey("event_group.id", ondelete="CASCADE"), nullable=True)
     event_group: Mapped["EventGroup"] = relationship(back_populates="event")
     site_id: Mapped[int] = mapped_column(ForeignKey("site.id", ondelete="CASCADE"))
-    site: Mapped["Site"] = relationship(backref="alert")
+    site: Mapped["Site"] = relationship(backref="event")
     device_id: Mapped[int] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))
-    device: Mapped["Device"] = relationship(backref="alert")
+    device: Mapped["Device"] = relationship(backref="event")
     device_role_id: Mapped[int]  # redundant column for performance
     platform_id: Mapped[int]  # redundant column for performance
     device_type_id: Mapped[int]  # redundant column for performance
     interface_id: Mapped[int | None] = mapped_column(ForeignKey("interface.id", ondelete="CASCADE"), nullable=True)
-    interface: Mapped["Interface"] = relationship(backref="alert")
-    inhibitor_id: Mapped[int | None] = mapped_column(ForeignKey("alert.id", ondelete="CASCADE"), nullable=True)
+    interface: Mapped["Interface"] = relationship(backref="event")
+    inhibitor_id: Mapped[int | None] = mapped_column(ForeignKey("inhibitor.id", ondelete="CASCADE"), nullable=True)
     inhibitor: Mapped["Inhibitor"] = relationship(backref="inhibitor")
     event_operation: Mapped[list["EventOperation"]] = relationship(
         back_populates="event", secondary="event_operation_event"
@@ -147,18 +153,18 @@ class Subscription(Base, AuditUserMixin):
     repeat_interval: Mapped[int] = mapped_column(default=0)
     max_repeat: Mapped[int] = mapped_column(default=0)  # 0 means no limit
     send_resolved: Mapped[bool_false]
-    channel_type: Mapped[NotificationChannelType] = mapped_column(ChoiceType(NotificationChannelType))
+    channel_type: Mapped[NotificationChannelType] = mapped_column(ChoiceType(NotificationChannelType, impl=String()))
     channel_config: Mapped[dict] = mapped_column(JSON)
 
 
 class NotificationRecord(Base):
     __tablename__ = "notification_record"
     id: Mapped[int_pk]
-    notification_id: Mapped[int] = mapped_column(ForeignKey("notification.id"))
+    subscription_id: Mapped[int] = mapped_column(ForeignKey("subscription.id"))
     event_id: Mapped[int] = mapped_column(ForeignKey("event.id"), nullable=True)
     event_group_id: Mapped[int] = mapped_column(ForeignKey("event_group.id"), nullable=True)
     sent_at: Mapped[datetime] = mapped_column(DateTimeTZ, default=func.now())
-    result_code: Mapped[NotificationResultType] = mapped_column(ChoiceType(NotificationResultType))
+    result_code: Mapped[NotificationResultType] = mapped_column(ChoiceType(NotificationResultType, impl=String()))
     result_message: Mapped[str | None]
 
 
@@ -177,7 +183,7 @@ class EventOperationEventGroup(Base):
 class EventOperation(Base):
     __tablename__ = "event_operation"
     id: Mapped[int_pk]
-    operation_type: Mapped[EventOperationType] = mapped_column(ChoiceType(EventOperationType))
+    operation_type: Mapped[EventOperationType] = mapped_column(ChoiceType(EventOperationType, impl=String()))
     comment: Mapped[str | None]
     inhibitor_id: Mapped[int | None] = mapped_column(ForeignKey("inhibitor.id"), nullable=True)
     inhibitor: Mapped["Inhibitor"] = relationship(backref="event_operation")
@@ -185,3 +191,7 @@ class EventOperation(Base):
     assignee: Mapped["AlertUser"] = relationship(backref="event_operation")
     created_at: Mapped[datetime] = mapped_column(DateTimeTZ, default=func.now())
     created_by: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    event: Mapped[list["Event"]] = relationship(back_populates="event_operation", secondary="event_operation_event")
+    event_group: Mapped[list["EventGroup"]] = relationship(
+        back_populates="event_operation", secondary="event_operation_event_group"
+    )

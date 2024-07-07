@@ -12,7 +12,7 @@ def register_router() -> APIRouter:
     root_router = APIRouter()
     root_router.include_router(auth_router, prefix="/admin", tags=["Administration"])
     root_router.include_router(org_router, prefix="/org", tags=["Organization"])
-    root_router.include_router(intend_router, prefix="/arch", tags=["NetworkIntend"])
+    root_router.include_router(intend_router, prefix="/intend", tags=["NetworkIntend"])
     root_router.include_router(dcim_router, prefix="/dcim", tags=["DCIM"])
     root_router.include_router(ipam_router, prefix="/ipam", tags=["IPAM"])
     root_router.include_router(circuit_router, prefix="/circuit", tags=["Circuit"])

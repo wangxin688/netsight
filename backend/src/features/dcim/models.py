@@ -1,12 +1,12 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import TEXT, ForeignKey, UniqueConstraint, func
+from sqlalchemy import TEXT, ForeignKey, String, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils.types import ChoiceType
 
-from src.core.database.base import Base
+from src.core.database import Base
 from src.core.database.mixins import AuditLogMixin, AuditTimeMixin, AuditUserMixin
 from src.core.database.types import DateTimeTZ, PgIpAddress, int_pk
 from src.features._types import IPvAnyAddress
@@ -30,7 +30,7 @@ class Device(Base, AuditUserMixin, AuditLogMixin):
     name: Mapped[str] = mapped_column(index=True)
     management_ip: Mapped[IPvAnyAddress] = mapped_column(PgIpAddress, index=True)
     oob_ip: Mapped[IPvAnyAddress | None] = mapped_column(PgIpAddress, nullable=True)
-    status: Mapped[DeviceStatus] = mapped_column(ChoiceType(DeviceStatus))
+    status: Mapped[DeviceStatus] = mapped_column(ChoiceType(DeviceStatus, impl=String()))
     software_version: Mapped[str | None]
     software_patch: Mapped[str | None]
     comments: Mapped[str | None]
@@ -60,7 +60,7 @@ class Device(Base, AuditUserMixin, AuditLogMixin):
     # these three are only used for AP device role
     associated_wac_ip: Mapped[IPvAnyAddress | None] = mapped_column(PgIpAddress, nullable=True)
     ap_group: Mapped[str | None]
-    ap_mode: Mapped[APMode | None] = mapped_column(ChoiceType(APMode), nullable=True)
+    ap_mode: Mapped[APMode | None] = mapped_column(ChoiceType(APMode, impl=String()), nullable=True)
 
 
 class DeviceModule(Base, AuditTimeMixin):
@@ -92,7 +92,7 @@ class DeviceEquipment(Base, AuditTimeMixin):
     __visible_name__ = {"en_US": "Equipment", "zh_CN": "Equipment"}
     id: Mapped[int_pk]
     name: Mapped[str]
-    eq_type: Mapped[DeviceEquipmentType] = mapped_column(ChoiceType(DeviceEquipmentType))
+    eq_type: Mapped[DeviceEquipmentType] = mapped_column(ChoiceType(DeviceEquipmentType, impl=String()))
     description: Mapped[str | None]
     device_type: Mapped[str | None]
     serial_number: Mapped[str | None]
@@ -130,7 +130,7 @@ class Interface(Base, AuditTimeMixin):
     mode: Mapped[str]
     interface_type: Mapped[str | None]
     mtu: Mapped[int | None]
-    admin_status: Mapped[InterfaceAdminStatus] = mapped_column(ChoiceType(InterfaceAdminStatus))
+    admin_status: Mapped[InterfaceAdminStatus] = mapped_column(ChoiceType(InterfaceAdminStatus, impl=String()))
     device_id: Mapped[int] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))
     device: Mapped["Device"] = relationship(back_populates="interface")
     vlan_id: Mapped[int | None] = mapped_column(ForeignKey("vlan.id", ondelete="SET NULL"))  # access port only
@@ -143,11 +143,11 @@ class LldpNeighbor(Base, AuditTimeMixin):
     __visible_name__ = {"en_US": "LLDP Neighbor", "zh_CN": "LLDP邻居"}
     id: Mapped[int_pk]
     source_interface_id: Mapped[int] = mapped_column(ForeignKey("interface.id", ondelete="CASCADE"))
-    source_interface: Mapped["Interface"] = relationship(backref="lldp_neighbor")
+    source_interface: Mapped["Interface"] = relationship(backref="source_interface", foreign_keys=[source_interface_id])
     source_device_id: Mapped[int] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))
-    source_device: Mapped["Device"] = relationship(backref="lldp_neighbor")
+    source_device: Mapped["Device"] = relationship(backref="source_device", foreign_keys=[source_device_id])
     target_interface_id: Mapped[int] = mapped_column(ForeignKey("interface.id", ondelete="CASCADE"))
-    target_interface: Mapped["Interface"] = relationship(backref="lldp_neighbor")
+    target_interface: Mapped["Interface"] = relationship(backref="target_interface", foreign_keys=[target_interface_id])
     target_device_id: Mapped[int] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))
-    target_device: Mapped["Device"] = relationship(backref="lldp_neighbor")
+    target_device: Mapped["Device"] = relationship(backref="target_device", foreign_keys=[target_device_id])
     link_status: Mapped[str | None]

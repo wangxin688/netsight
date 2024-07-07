@@ -12,8 +12,7 @@ from src.core.utils.context import request_id_ctx, user_ctx
 from src.features.admin.models import Group, Role, User
 from src.features.admin.security import get_password_hash
 from src.features.consts import ReservedRoleSlug
-from src.features.dcim.models import DeviceType, Manufacturer
-from src.features.intend.models import CircuitType, DeviceRole, IPRole, Platform
+from src.features.intend.models import CircuitType, DeviceRole, DeviceType, IPRole, Manufacturer, Platform
 from src.features.ipam.models import Block
 
 if TYPE_CHECKING:
@@ -74,16 +73,16 @@ async def init_platform(session: "AsyncSession") -> None:
 
 
 async def init_manufacturer(session: "AsyncSession") -> None:
-    async with await open_file(f"{PROJECT_DIR}/deploy/collections/metadata/vendor.json") as f:
+    async with await open_file(f"{PROJECT_DIR}/deploy/collections/metadata/manufacturer.json") as f:
         contents = await f.read()
-        vendors = json.loads(contents)
-        new_vendors = [Manufacturer(**p) for p in vendors]
+        manufacturers = json.loads(contents)
+        new_manufacturers = [Manufacturer(**p) for p in manufacturers]
         db_objs = (await session.scalars(select(Manufacturer))).all()
         if not db_objs:
-            session.add_all(new_vendors)
+            session.add_all(new_manufacturers)
         else:
             slugs = [v.slug for v in db_objs]
-            for new_v in new_vendors:
+            for new_v in new_manufacturers:
                 if new_v.slug not in slugs:
                     session.add(new_v)
         await session.commit()

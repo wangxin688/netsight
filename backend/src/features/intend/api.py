@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src.core.utils.cbv import cbv
-from src.features._types import AuditLog, IdResponse, ListT
+from src.features._types import IdResponse, ListT
 from src.features.admin.models import User
 from src.features.deps import auth, get_session
 from src.features.intend import schemas, services
@@ -45,13 +45,6 @@ class CircuitTypeAPI:
         await self.service.delete(self.session, db_obj)
         return IdResponse(id=id)
 
-    @router.get("/circuit-types/{id}/auditlogs", operation_id="ab82f114-e360-47f3-9d31-4429b29ed2f5")
-    async def get_circuit_type_auditlogs(self, id: int) -> ListT[AuditLog]:
-        count, results = await self.service.get_audit_log(self.session, id)
-        if not results:
-            return ListT(count=0, results=None)
-        return ListT(count=count, results=[AuditLog.model_validate(r) for r in results])
-
 
 @cbv(router)
 class DeviceRoleAPI:
@@ -85,13 +78,6 @@ class DeviceRoleAPI:
         db_obj = await self.service.get_one_or_404(self.session, id)
         await self.service.delete(self.session, db_obj)
         return IdResponse(id=id)
-
-    @router.get("/device-roles/{id}/auditlogs", operation_id="b5443838-9e09-4cfe-97d5-8bf7285399be")
-    async def get_device_role_auditlogs(self, id: int) -> ListT[AuditLog]:
-        count, results = await self.service.get_audit_log(self.session, id)
-        if not results:
-            return ListT(count=0, results=None)
-        return ListT(count=count, results=[AuditLog.model_validate(r) for r in results])
 
 
 @cbv(router)
@@ -127,13 +113,6 @@ class IPRoleAPI:
         await self.service.delete(self.session, db_obj)
         return IdResponse(id=id)
 
-    @router.get("/ip-roles/{id}/auditlogs", operation_id="fff1a675-1652-42e7-9619-f8be929c1ab9")
-    async def get_ip_role_auditlogs(self, id: int) -> ListT[AuditLog]:
-        count, results = await self.service.get_audit_log(self.session, id)
-        if not results:
-            return ListT(count=0, results=None)
-        return ListT(count=count, results=[AuditLog.model_validate(r) for r in results])
-
 
 @cbv(router)
 class PlatformAPI:
@@ -168,13 +147,6 @@ class PlatformAPI:
         await self.service.delete(self.session, db_platform)
         return IdResponse(id=id)
 
-    @router.get("/platforms/{id}/auditlogs", operation_id="62ca0f32-56b3-47bb-838f-20402c2bb1f4")
-    async def get_platform_audit_logs(self, id: int) -> ListT[AuditLog]:
-        count, results = await self.service.get_audit_log(self.session, id)
-        if not results:
-            return ListT(count=0, results=None)
-        return ListT(count=count, results=[AuditLog.model_validate(r) for r in results])
-
 
 @cbv(router)
 class ManufacturerAPI:
@@ -208,13 +180,6 @@ class ManufacturerAPI:
         db_manufacturer = await self.service.get_one_or_404(self.session, id)
         await self.service.delete(self.session, db_manufacturer)
         return IdResponse(id=id)
-
-    @router.get("/manufacturers/{id}/auditlogs", operation_id="1cc7297f-b208-4381-8ef1-97ad092a82cb")
-    async def get_manufacturer_audit_logs(self, id: int) -> ListT[AuditLog]:
-        count, results = await self.service.get_audit_log(self.session, id)
-        if not results:
-            return ListT(count=0, results=None)
-        return ListT(count=count, results=[AuditLog.model_validate(r) for r in results])
 
 
 @cbv(router)
@@ -260,10 +225,3 @@ class DeviceTypeAPI:
         db_device_type = await self.service.get_one_or_404(self.session, id)
         await self.service.delete(self.session, db_device_type)
         return IdResponse(id=id)
-
-    @router.get("/device-types/{id}/auditlogs", operation_id="1b376206-f410-410c-87a9-e31d6ff2ae87")
-    async def get_device_type_audit_logs(self, id: int) -> ListT[AuditLog]:
-        count, results = await self.service.get_audit_log(self.session, id)
-        if not results:
-            return ListT(count=0, results=None)
-        return ListT(count=count, results=[AuditLog.model_validate(r) for r in results])

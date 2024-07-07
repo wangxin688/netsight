@@ -10,7 +10,7 @@ from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy.orm import InstrumentedAttribute, selectinload, undefer
 from sqlalchemy.sql.base import ExecutableOption
 
-from src.core.database.base import Base
+from src.core.database import Base
 from src.core.database.session import async_engine
 from src.core.errors.exception_handlers import ExistError, NotFoundError
 from src.core.utils.context import locale_ctx

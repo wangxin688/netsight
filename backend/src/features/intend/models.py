@@ -1,14 +1,15 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Float, ForeignKey, UniqueConstraint
+from sqlalchemy import Float, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
+from sqlalchemy_utils.types import ChoiceType
 
-from src.core.database.base import Base
+from src.core.database import Base
 from src.core.database.mixins import AuditUserMixin
 from src.core.database.types import i18n_name, int_pk
+from src.features.consts import CircuitConnectionType
 
 if TYPE_CHECKING:
-    from src.features.circuit.models import Circuit
     from src.features.ipam.models import VLAN, Prefix
 
 __all__ = ("DeviceRole", "IPRole", "CircuitType", "Platform", "Manufacturer", "DeviceType")
@@ -42,8 +43,22 @@ class CircuitType(Base, AuditUserMixin):
     id: Mapped[int_pk]
     name: Mapped[i18n_name]
     slug: Mapped[str] = mapped_column(unique=True)
+    connection_type: Mapped[CircuitConnectionType] = mapped_column(ChoiceType(CircuitConnectionType, impl=String()))
     description: Mapped[str | None]
-    circuit: Mapped[list["Circuit"]] = relationship(back_populates="circuit_type")
+
+    if TYPE_CHECKING:
+        circuit_count: Mapped[int]
+
+    @classmethod
+    def __declare_last__(cls) -> None:
+        from sqlalchemy import func, select
+
+        from src.features.circuit.models import Circuit
+
+        cls.circuit_count = column_property(
+            select(func.count(Circuit.id)).where(Circuit.circuit_type_id == cls.id).scalar_subquery(),
+            deferred=True,
+        )
 
 
 class Platform(Base, AuditUserMixin):
@@ -62,7 +77,8 @@ class Platform(Base, AuditUserMixin):
     def __declare_last__(cls) -> None:
         from sqlalchemy import func, select
 
-        from src.features.dcim.models import Device, DeviceType
+        from src.features.dcim.models import Device
+        from src.features.intend.models import DeviceType
 
         cls.device_count = column_property(
             select(func.count(Device.id)).where(Device.platform_id == cls.id).scalar_subquery(),
@@ -70,6 +86,36 @@ class Platform(Base, AuditUserMixin):
         )
         cls.device_type_count = column_property(
             select(func.count(DeviceType.id)).where(DeviceType.platform_id == cls.id).scalar_subquery(),
+            deferred=True,
+        )
+
+
+class DeviceType(Base, AuditUserMixin):
+    __tablename__ = "device_type"
+    __visible_name__ = {"en_US": "Device Type", "zh_CN": "设备型号"}
+    __table_args__ = (UniqueConstraint("manufacturer_id", "name"),)
+    id: Mapped[int_pk]
+    name: Mapped[str] = mapped_column(unique=True)
+    snmp_sysobjectid: Mapped[str]
+    u_height: Mapped[float] = mapped_column(Float, server_default="1.0")
+    front_image: Mapped[str | None]
+    rear_image: Mapped[str | None]
+    manufacturer_id: Mapped[int] = mapped_column(ForeignKey("manufacturer.id", ondelete="RESTRICT"))
+    manufacturer: Mapped["Manufacturer"] = relationship(backref="device_type", passive_deletes=True)
+    platform_id: Mapped[int] = mapped_column(ForeignKey("platform.id", ondelete="RESTRICT"))
+    platform: Mapped["Platform"] = relationship(backref="device_type")
+
+    if TYPE_CHECKING:
+        device_count: Mapped[int]
+
+    @classmethod
+    def __declare_last__(cls) -> None:
+        from sqlalchemy import func, select
+
+        from src.features.dcim.models import Device
+
+        cls.device_count = column_property(
+            select(func.count(Device.id)).where(Device.device_type_id == cls.id).scalar_subquery(),
             deferred=True,
         )
 
@@ -101,35 +147,5 @@ class Manufacturer(Base, AuditUserMixin):
             .where(DeviceType.manufacturer_id == Manufacturer.id)
             .correlate_except(Manufacturer)
             .scalar_subquery(),
-            deferred=True,
-        )
-
-
-class DeviceType(Base, AuditUserMixin):
-    __tablename__ = "device_type"
-    __visible_name__ = {"en_US": "Device Type", "zh_CN": "设备型号"}
-    __table_args__ = (UniqueConstraint("manufacturer_id", "name"),)
-    id: Mapped[int_pk]
-    name: Mapped[str] = mapped_column(unique=True)
-    snmp_sysobjectid: Mapped[str]
-    u_height: Mapped[float] = mapped_column(Float, server_default="1.0")
-    front_image: Mapped[str | None]
-    rear_image: Mapped[str | None]
-    manufacturer_id: Mapped[int] = mapped_column(ForeignKey("manufacturer.id", ondelete="RESTRICT"))
-    manufacturer: Mapped["Manufacturer"] = relationship(backref="device_type", passive_deletes=True)
-    platform_id: Mapped[int] = mapped_column(ForeignKey("platform.id", ondelete="RESTRICT"))
-    platform: Mapped["Platform"] = relationship(backref="device_type")
-
-    if TYPE_CHECKING:
-        device_count: Mapped[int]
-
-    @classmethod
-    def __declare_last__(cls) -> None:
-        from sqlalchemy import func, select
-
-        from src.features.dcim.models import Device
-
-        cls.device_count = column_property(
-            select(func.count(Device.id)).where(Device.device_type_id == cls.id).scalar_subquery(),
             deferred=True,
         )

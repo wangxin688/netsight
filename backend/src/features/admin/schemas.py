@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 
 from pydantic_extra_types.phone_numbers import PhoneNumber
 
@@ -16,7 +17,7 @@ class AccessToken(BaseModel):
 
 
 class Permission(BaseModel):
-    id: int
+    id: UUID
     name: str
     url: str
     method: str

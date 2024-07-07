@@ -20,14 +20,7 @@ fileConfig(config.config_file_name)  # type: ignore  # noqa: PGH003
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from src.core.database.base import Base
-from src.features.admin.models import *
-from src.features.dcim.models import *
-from src.features.ipam.models import *
-from src.features.circuit.models import *
-from src.features.netconfig.models import *
-from src.features.intend.models import *
-from src.features.org.models import *
+from src.core.database import Base
 
 target_metadata = Base.metadata
 

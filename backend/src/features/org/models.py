@@ -1,11 +1,11 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, Integer, UniqueConstraint, func, select
+from sqlalchemy import ForeignKey, Integer, String, UniqueConstraint, func, select
 from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy_utils.types import ChoiceType
 
-from src.core.database.base import Base
+from src.core.database import Base
 from src.core.database.mixins import AuditLogMixin, AuditUserMixin
 from src.core.database.types import int_pk
 from src.features.consts import LocationStatus, LocationType, SiteStatus
@@ -26,7 +26,7 @@ class Site(Base, AuditUserMixin, AuditLogMixin):
     id: Mapped[int_pk]
     name: Mapped[str] = mapped_column(unique=True)
     site_code: Mapped[str] = mapped_column(unique=True, index=True)
-    status: Mapped[SiteStatus] = mapped_column(ChoiceType(SiteStatus))
+    status: Mapped[SiteStatus] = mapped_column(ChoiceType(SiteStatus, impl=String()))
     facility_code: Mapped[str | None]
     time_zone: Mapped[int | None]
     country: Mapped[str | None]
@@ -41,8 +41,8 @@ class Site(Base, AuditUserMixin, AuditLogMixin):
     asn: Mapped[list["ASN"]] = relationship(secondary="site_asn", back_populates="site")
     network_contact_id: Mapped[int | None] = mapped_column(ForeignKey("user.id", ondelete="SET NULL"))
     it_contact_id: Mapped[int | None] = mapped_column(ForeignKey("user.id", ondelete="SET NULL"))
-    network_contact: Mapped["User"] = relationship(back_populates="site_network_contact")
-    it_contact: Mapped["User"] = relationship(back_populates="site_it_contact")
+    network_contact: Mapped["User"] = relationship(backref="site_network_contact", foreign_keys=[network_contact_id])
+    it_contact: Mapped["User"] = relationship(backref="site_it_contact", foreign_keys=[it_contact_id])
 
     if TYPE_CHECKING:
         device_count: Mapped[int]
@@ -94,9 +94,9 @@ class Location(Base, AuditUserMixin, AuditLogMixin):
     __visible_name__ = {"en_US": "Location", "zh_CN": "位置"}
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
-    location_type: Mapped[LocationType] = mapped_column(ChoiceType(LocationType))
+    location_type: Mapped[LocationType] = mapped_column(ChoiceType(LocationType, impl=String()))
     description: Mapped[str | None]
-    status: Mapped[LocationStatus] = mapped_column(ChoiceType(LocationStatus))
+    status: Mapped[LocationStatus] = mapped_column(ChoiceType(LocationStatus, impl=String()))
     site_id: Mapped[int] = mapped_column(Integer, ForeignKey("site.id", ondelete="CASCADE"))
     site: Mapped["Site"] = relationship(backref="location", passive_deletes=True)
     parent_id: Mapped[int | None] = mapped_column(Integer, ForeignKey(id))

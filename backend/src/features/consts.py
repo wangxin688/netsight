@@ -129,6 +129,11 @@ class CircuitType(StrEnum):
     BGP = "BGP"
 
 
+class CircuitConnectionType(StrEnum):
+    LAN = "LAN"
+    WAN = "WAN"
+
+
 class DeviceRoleSlug(StrEnum):
     csw = "core-switch"
     dsw = "distribution-switch"

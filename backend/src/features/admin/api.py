@@ -190,17 +190,22 @@ class PermissionAPI:
 
     @router.post("/permissions", operation_id="e0fe80d5-cbe0-4c2c-9eff-57e80ecba522", summary="Permissions: Sync All")
     async def sync_db_permission(self, request: Request) -> dict:
-        routes = request.app.routes
-        operation_ids = [route.operation_id for route in routes]
-        router_mappings = {
-            router.operation_id: {
-                "name": router.name,
-                "path": router.path,
-                "methods": router.methods,
-                "description": router.description,
+        routes = request.app.router.__dict__["routes"]
+        operation_ids = []
+        router_mappings = {}
+        for route in routes:
+            if hasattr(route, "tags") and not hasattr(route, "operation_id"):
+                msg = f"Missing operation_id for route: {route.path}"
+                raise ValueError(msg)
+            if not hasattr(route, "operation_id") and not hasattr(route, "tags"):
+                continue
+            operation_ids.append(route.operation_id)
+            router_mappings[route.operation_id] = {
+                "name": route.name,
+                "url": route.path,
+                "method": next(iter(route.methods)),
+                "tag": route.tags[0],
             }
-            for router in routes
-        }
         permissions = await self.service.get_multi_by_ids(self.session, operation_ids)
         removed = {str(p.id) for p in permissions} - set(operation_ids)
         added = set(operation_ids) - {str(p.id) for p in permissions}

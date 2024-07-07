@@ -8,7 +8,7 @@ from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import Mapped, Mapper, class_mapper, mapped_column, relationship
 from sqlalchemy.orm.attributes import get_history
 
-from src.core.database.base import Base
+from src.core.database import Base
 from src.core.database.types import DateTimeTZ, int_pk
 from src.core.utils.context import orm_diff_ctx, request_id_ctx, user_ctx
 

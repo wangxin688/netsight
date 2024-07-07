@@ -24,7 +24,7 @@ class SiteGroupAPI:
         new_group = await self.service.create(self.session, site_group)
         return IdResponse(id=new_group.id)
 
-    @router.put("site-groups/{id}", operation_id="f85e5555-546d-44a3-8f39-44ef62de8d87")
+    @router.put("/site-groups/{id}", operation_id="f85e5555-546d-44a3-8f39-44ef62de8d87")
     async def update_site_group(self, id: int, site_group: schemas.SiteGroupUpdate) -> IdResponse:
         db_group = await self.service.get_one_or_404(self.session, id)
         await self.service.update(self.session, db_group, site_group)
@@ -68,7 +68,7 @@ class SiteAPI:
         new_site = await self.service.create(self.session, site)
         return IdResponse(id=new_site.id)
 
-    @router.put("site/{id}", operation_id="b1497fbc-5675-470a-9cfb-c829860b3a3d")
+    @router.put("/sites/{id}", operation_id="b1497fbc-5675-470a-9cfb-c829860b3a3d")
     async def update_site(self, id: int, site: schemas.SiteUpdate) -> IdResponse:
         db_site = await self.service.get_one_or_404(self.session, id)
         await self.service.update(self.session, db_site, site)
@@ -125,18 +125,18 @@ class LocationAPI:
     user: User = Depends(auth)
     service = services.location_service
 
-    @router.post("/location", operation_id="0ffd1157-d326-49b8-a470-07027c962fed")
+    @router.post("/locations", operation_id="0ffd1157-d326-49b8-a470-07027c962fed")
     async def create_location(self, location: schemas.LocationCreate) -> IdResponse:
         new_location = await self.service.create(self.session, location)
         return IdResponse(id=new_location.id)
 
-    @router.put("location/{id}", operation_id="bb6d3b19-70fc-4501-add1-cc6f8376dd49")
+    @router.put("/locations/{id}", operation_id="bb6d3b19-70fc-4501-add1-cc6f8376dd49")
     async def update_location(self, id: int, location: schemas.LocationUpdate) -> IdResponse:
         db_location = await self.service.get_one_or_404(self.session, id)
         await self.service.update(self.session, db_location, location)
         return IdResponse(id=id)
 
-    @router.get("/location/{id}", operation_id="740bbfd7-673e-4c66-884f-f1d83f43c946")
+    @router.get("/locations/{id}", operation_id="740bbfd7-673e-4c66-884f-f1d83f43c946")
     async def get_location(self, id: int) -> schemas.Location:
         db_location = await self.service.get_one_or_404(
             self.session,
