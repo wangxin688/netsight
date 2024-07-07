@@ -8,9 +8,17 @@ from src.core.errors.exception_handlers import NotFoundError, PermissionDenyErro
 from src.core.repositories import BaseRepository
 from src.core.utils.context import locale_ctx
 from src.features.admin import schemas
-from src.features.admin.models import Menu, Permission, User
+from src.features.admin.models import Group, Menu, Permission, Role, User
 from src.features.admin.schemas import PermissionCreate, PermissionUpdate
 from src.features.admin.security import verify_password
+
+__all__ = (
+    "user_service",
+    "permission_service",
+    "menu_service",
+    "group_service",
+    "role_service",
+)
 
 
 class UserService(BaseRepository[User, schemas.UserCreate, schemas.UserUpdate, schemas.UserQuery]):
@@ -51,6 +59,9 @@ class PermissionService(
     async def delete(self, session: AsyncSession, db_obj: Permission) -> None:
         raise NotImplementedError
 
+    async def get_all(self, session: AsyncSession) -> Sequence[Permission]:
+        return (await session.scalars(select(self.model))).all()
+
 
 class MenuService(BaseRepository[Menu, schemas.MenuCreate, schemas.MenuUpdate, schemas.MenuQuery]):
     async def get_all(self, session: AsyncSession) -> Sequence[Menu]:
@@ -58,3 +69,16 @@ class MenuService(BaseRepository[Menu, schemas.MenuCreate, schemas.MenuUpdate, s
 
     @staticmethod
     def menu_tree_transform(menus: Sequence[Menu]) -> list[dict]: ...
+
+
+class GroupService(BaseRepository[Group, schemas.GroupCreate, schemas.GroupUpdate, schemas.GroupQuery]): ...
+
+
+class RoleService(BaseRepository[Role, schemas.RoleCreate, schemas.RoleUpdate, schemas.RoleQuery]): ...
+
+
+user_service = UserService(User)
+permission_service = PermissionService(Permission)
+menu_service = MenuService(Menu)
+group_service = GroupService(Group)
+role_service = RoleService(Role)

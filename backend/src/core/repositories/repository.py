@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar, overload
 from uuid import UUID
 
 from pydantic import BaseModel
-from sqlalchemy import Row, Select, Text, cast, desc, func, inspect, not_, or_, select, text, types
+from sqlalchemy import Row, Select, Text, cast, delete, desc, func, inspect, not_, or_, select, text, types
 from sqlalchemy.dialects.postgresql import ARRAY, HSTORE, INET, JSON, JSONB, MACADDR
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.mutable import Mutable
@@ -943,6 +943,12 @@ class BaseRepository(Generic[ModelT, CreateSchemaType, UpdateSchemaType, QuerySc
             None
         """
         await session.delete(db_obj)
+        await session.commit()
+
+    async def batch_delete(self, session: AsyncSession, ids: list[PkIdT]) -> None:
+        """batch delete without fetch data for performance"""
+        id_str = self.get_id_attribute_value(self.model)
+        await session.execute(delete(self.model).where(id_str.in_(ids)))
         await session.commit()
 
     async def get_audit_log(self, session: AsyncSession, pk_id: PkIdT) -> tuple[int, Sequence["AuditLog"] | None]:

@@ -46,23 +46,11 @@ def create_app() -> FastAPI:
         openapi_url="/api/openapi.json",
     )
 
-    @app.get(
-        "/api/health", include_in_schema=False, tags=["Internal"], operation_id="e7372032-61c5-4e3d-b2f1-b788fe1c52ba"
-    )
-    def health() -> dict[str, str]:
-        return {"status": "ok"}
-
-    @app.get(
-        "/api/version", include_in_schema=False, tags=["Internal"], operation_id="47918987-15d9-4eea-8c29-e73cb009a4d5"
-    )
-    def version() -> dict[str, str]:
-        return {"version": settings.VERSION}
-
-    @app.get(
-        "/api/elements", include_in_schema=False, tags=["Docs"], operation_id="1a4987dd-6c38-4502-a879-3fe35050ae38"
-    )
+    @app.get("/api/elements", include_in_schema=False, operation_id="1a4987dd-6c38-4502-a879-3fe35050ae38")
     def get_stoplight_elements() -> HTMLResponse:
-        return get_stoplight_elements_html(openapi_url="/api/openapi.json", title=settings.PROJECT_NAME)
+        return get_stoplight_elements_html(
+            openapi_url="/api/openapi.json", title=settings.PROJECT_NAME, base_path="/api/elements"
+        )
 
     app.include_router(router, prefix="/api")
     for handler in exception_handlers:

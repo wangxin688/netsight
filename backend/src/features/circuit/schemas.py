@@ -3,6 +3,7 @@ from datetime import date
 from fastapi import Query
 from pydantic import AnyHttpUrl, EmailStr, Field, IPvAnyAddress, IPvAnyNetwork
 
+from src.features import schemas
 from src.features._types import (
     AuditTime,
     AuditTimeQuery,
@@ -15,7 +16,6 @@ from src.features._types import (
     QueryParams,
 )
 from src.features.consts import CircuitStatus
-from src.features.internal import schemas
 
 
 class ISPBase(BaseModel):

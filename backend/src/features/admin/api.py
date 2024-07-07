@@ -1,18 +1,19 @@
-from fastapi import APIRouter, Depends, status
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from src.core.config import settings
 from src.core.errors.err_codes import ERR_10005
 from src.core.errors.exception_handlers import GenerError
-from src.core.repositories import BaseRepository
 from src.core.utils.cbv import cbv
 from src.core.utils.validators import list_to_tree
 from src.features._types import IdResponse, ListT
-from src.features.admin import schemas
-from src.features.admin.models import Group, Menu, Role, User
+from src.features.admin import schemas, services
+from src.features.admin.models import Group, Permission, Role, User
 from src.features.admin.security import generate_access_token_response
-from src.features.admin.services import MenuService, UserService
 from src.features.deps import auth, get_session
 
 router = APIRouter()
@@ -23,8 +24,7 @@ async def login_pwd(
     user: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(get_session),
 ) -> schemas.AccessToken:
-    service = UserService(User)
-    result = await service.verify_user(session, user)
+    result = await services.user_service.verify_user(session, user)
     return generate_access_token_response(result.id)
 
 
@@ -32,7 +32,7 @@ async def login_pwd(
 class UserAPI:
     user: User = Depends(auth)
     session: AsyncSession = Depends(get_session)
-    service = UserService(User)
+    service = services.user_service
 
     @router.post("/users", operation_id="5091fff6-1adc-4a22-8a8c-ef0107122df7", summary="创建新用户/Create new user")
     async def create_user(self, user: schemas.UserCreate) -> IdResponse:
@@ -84,7 +84,7 @@ class UserAPI:
 class GroupAPI:
     user: User = Depends(auth)
     session: AsyncSession = Depends(get_session)
-    service = BaseRepository(Group)
+    service = services.group_service
 
     @router.post("/groups", operation_id="9e3e639d-c694-467d-9209-717b038cf267")
     async def create_group(self, group: schemas.GroupCreate) -> IdResponse:
@@ -118,7 +118,7 @@ class GroupAPI:
 class RoleAPI:
     user: User = Depends(auth)
     session: AsyncSession = Depends(get_session)
-    service = BaseRepository(Role)
+    service = services.role_service
 
     @router.post("/roles", operation_id="a18a152b-e9e9-4128-b8be-8a8e9c842abb")
     async def create_role(self, role: schemas.RoleCreate) -> IdResponse:
@@ -152,7 +152,7 @@ class RoleAPI:
 class MenuAPI:
     user: User = Depends(auth)
     session: AsyncSession = Depends(get_session)
-    service = MenuService(Menu)
+    service = services.menu_service
 
     @router.post("/menus", operation_id="008bf4d4-cc01-48b0-82b8-1a67c0348b31")
     async def create_menu(self, meun: schemas.MenuCreate) -> IdResponse:
@@ -175,3 +175,49 @@ class MenuAPI:
         db_menu = await self.service.get_one_or_404(self.session, id)
         await self.service.delete(self.session, db_menu)
         return IdResponse(id=id)
+
+
+@cbv(router)
+class PermissionAPI:
+    user: User = Depends(auth)
+    session: AsyncSession = Depends(get_session)
+    service = services.permission_service
+
+    @router.get("/permissions", operation_id="8057d614-150f-42ee-984c-d0af35796da3", summary="Permissions: Get All")
+    async def get_permissions(self) -> list[schemas.Permission]:
+        permissions = await services.permission_service.get_all(self.session)
+        return [schemas.Permission.model_validate(p) for p in permissions]
+
+    @router.post("/permissions", operation_id="e0fe80d5-cbe0-4c2c-9eff-57e80ecba522", summary="Permissions: Sync All")
+    async def sync_db_permission(self, request: Request) -> dict:
+        routes = request.app.routes
+        operation_ids = [route.operation_id for route in routes]
+        router_mappings = {
+            router.operation_id: {
+                "name": router.name,
+                "path": router.path,
+                "methods": router.methods,
+                "description": router.description,
+            }
+            for router in routes
+        }
+        permissions = await self.service.get_multi_by_ids(self.session, operation_ids)
+        removed = {str(p.id) for p in permissions} - set(operation_ids)
+        added = set(operation_ids) - {str(p.id) for p in permissions}
+        if removed:
+            await self.service.batch_delete(self.session, [UUID(r) for r in removed])
+        if added:
+            new_permissions = [Permission(id=p_id, **router_mappings[p_id]) for p_id in added]
+            self.session.add_all(new_permissions)
+            await self.session.commit()
+        return {"added": added, "removed": removed}
+
+
+@router.get("/health", operation_id="e7372032-61c5-4e3d-b2f1-b788fe1c52ba", summary="Service Health check")
+def health() -> dict[str, str]:
+    return {"status": "ok"}
+
+
+@router.get("/version", operation_id="47918987-15d9-4eea-8c29-e73cb009a4d5", summary="Get Service Version")
+def version() -> dict[str, str]:
+    return {"version": settings.VERSION}

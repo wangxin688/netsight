@@ -1,6 +1,7 @@
 from fastapi import Query
 from pydantic import Field, model_validator
 
+from src.features import schemas
 from src.features._types import (
     AuditUser,
     AuthUserBase,
@@ -10,7 +11,6 @@ from src.features._types import (
     QueryParams,
 )
 from src.features.consts import LocationStatus, LocationType, SiteStatus
-from src.features.internal import schemas
 
 
 class SiteGroupBase(BaseModel):

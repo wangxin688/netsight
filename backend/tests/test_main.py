@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 @pytest.mark.parametrize(
     "path",
-    ["/api/docs", "/api/redoc", "/api/openapi.json", "/api/health", "/api/version", "/api/elements"],
+    ["/api/docs", "/api/redoc", "/api/openapi.json", "/api/admin/health", "/api/admin/version", "/api/elements"],
 )
 async def test_main(client: "AsyncClient", path: str) -> None:
     response = await client.get(path)

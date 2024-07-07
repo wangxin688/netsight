@@ -1,8 +1,8 @@
 from fastapi import Query
 from pydantic import AnyHttpUrl, Field
 
+from src.features import schemas
 from src.features._types import AuditTime, BaseModel, I18nField, NameStr, QueryParams
-from src.features.internal import schemas
 
 
 class CircuitTypeCreate(BaseModel):

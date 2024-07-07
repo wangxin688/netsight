@@ -3,6 +3,7 @@ from datetime import datetime
 from fastapi import Query
 from pydantic import Field, IPvAnyAddress, model_validator
 
+from src.features import schemas
 from src.features._types import (
     AuditTime,
     AuditUser,
@@ -11,7 +12,6 @@ from src.features._types import (
     QueryParams,
 )
 from src.features.consts import APMode, DeviceEquipmentType, DeviceStatus, InterfaceAdminStatus
-from src.features.internal import schemas
 
 
 class DeviceBase(BaseModel):
