@@ -1,3 +1,4 @@
+import logging
 from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
 from typing import Annotated
@@ -6,24 +7,33 @@ import jwt
 from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src.core.config import settings
 from src.core.database.session import async_session
-from src.core.errors.exception_handlers import NotFoundError, PermissionDenyError, TokenExpireError, TokenInvalidError
-from src.core.utils.context import locale_ctx
+from src.core.errors.exception_handlers import PermissionDenyError, TokenExpireError, TokenInvalidError
 from src.features.admin.models import RolePermission, User
 from src.features.admin.security import API_WHITE_LISTS, JWT_ALGORITHM, JwtTokenPayload
+from src.features.admin.services import user_service
 from src.features.consts import ReservedRoleSlug
 from src.libs.redis.session import CacheNamespace, redis_client
+
+logger = logging.getLogger(__name__)
 
 token = HTTPBearer()
 
 
-async def get_session() -> AsyncGenerator[AsyncSession, None]:
+async def get_session() -> AsyncGenerator["AsyncSession", None]:
     async with async_session() as session:
-        yield session
+        try:
+            yield session
+        except SQLAlchemyError as e:
+            logger.exception("Database error: %s", e)  # noqa: TRY401
+            await session.rollback()
+        finally:
+            await session.aclose()
 
 
 async def auth(
@@ -43,9 +53,7 @@ async def auth(
     now = datetime.now(tz=UTC)
     if now < token_data.issued_at or now > token_data.expires_at:
         raise TokenExpireError
-    user = await session.get(User, token_data.sub, options=[selectinload(User.role)])
-    if not user:
-        raise NotFoundError(User.__visible_name__[locale_ctx.get()], "id", token_data.sub)
+    user = await user_service.get_one_or_404(session, token_data.sub, selectinload(User.role))
     check_user_active(user.is_active)
     operation_id = request.scope["route"].operation_id
     if operation_id and not check_privileged_role(user.role.slug, operation_id):

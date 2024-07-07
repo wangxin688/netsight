@@ -44,11 +44,13 @@ managed = true
 dev-dependencies = [
     "pytest>=7.4.4",
     "pre-commit>=3.5.0",
-    "ruff>=0.1.11",
+    "ruff>=0.5.1",
     "pytest-cov>=4.1.0",
     "pytest-asyncio>=0.23.7",
     "black>=23.12.1",
     "mypy>=1.8.0",
+    "pytest-sugar>=1.0.0",
+    "pytest-tldr>=0.2.5",
 ]
 
 [tool.hatch.metadata]
@@ -113,10 +115,10 @@ line-length = 120
 preview = true
 
 [tool.pytest.ini_options]
-addopts = "--cov-report term --cov-config=.coveragerc -W ignore:DeprecationWarning --cov=src -v"
+addopts = "--cov-report term --cov-config=.coveragerc -W ignore --cov=src -v"
 xfail_strict = true
 asyncio_mode = "auto"
-markers = ["pytest.mark.anyio"]
+markers = ["pytest.mark.asyncio"]
 testpaths = ["tests"]
 
 [tool.coverage.report]

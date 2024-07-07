@@ -14,15 +14,15 @@ from src.features._types import IdResponse, ListT
 from src.features.admin import schemas, services
 from src.features.admin.models import Group, Permission, Role, User
 from src.features.admin.security import generate_access_token_response
-from src.features.deps import auth, get_session
+from src.features.deps import SqlaSession, auth, get_session
 
 router = APIRouter()
 
 
 @router.post("/pwd-login", operation_id="c5f719b1-7adf-4b4e-a498-732b8da7d758")
 async def login_pwd(
+    session: SqlaSession,
     user: OAuth2PasswordRequestForm = Depends(),
-    session: AsyncSession = Depends(get_session),
 ) -> schemas.AccessToken:
     result = await services.user_service.verify_user(session, user)
     return generate_access_token_response(result.id)
