@@ -25,15 +25,15 @@ logger = logging.getLogger(__name__)
 token = HTTPBearer()
 
 
-async def get_session() -> AsyncGenerator["AsyncSession", None]:
-    async with async_session() as session:
-        try:
-            yield session
-        except SQLAlchemyError as e:
-            logger.exception("Database error: %s", e)  # noqa: TRY401
-            await session.rollback()
-        finally:
-            await session.aclose()
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
+    session: AsyncSession = async_session()
+    try:
+        yield session
+    except SQLAlchemyError as e:
+        logger.exception("Database error: %s", e)  # noqa: TRY401
+        await session.rollback()
+    finally:
+        await session.aclose()
 
 
 async def auth(

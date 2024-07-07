@@ -63,6 +63,8 @@ dnspython==2.5.0
 email-validator==2.1.0.post1
     # via fastapi
     # via netsight
+faker==26.0.0
+    # via polyfactory
 fastapi==0.111.0
     # via netsight
 fastapi-cli==0.0.4
@@ -144,6 +146,7 @@ platformdirs==4.1.0
     # via virtualenv
 pluggy==1.3.0
     # via pytest
+polyfactory==2.16.0
 pre-commit==3.6.0
 prompt-toolkit==3.0.47
     # via click-repl
@@ -172,12 +175,13 @@ pytest==7.4.4
     # via pytest-cov
     # via pytest-sugar
     # via pytest-tldr
-pytest-asyncio==0.23.7
+pytest-asyncio==0.20.3
 pytest-cov==4.1.0
 pytest-sugar==1.0.0
 pytest-tldr==0.2.5
 python-dateutil==2.8.2
     # via celery
+    # via faker
     # via pandas
 python-dotenv==1.0.0
     # via pydantic-settings
@@ -231,6 +235,7 @@ typing-extensions==4.9.0
     # via alembic
     # via fastapi
     # via mypy
+    # via polyfactory
     # via pydantic
     # via pydantic-core
     # via sqlalchemy

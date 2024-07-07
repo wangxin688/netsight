@@ -53,7 +53,7 @@ class SiteBase(BaseModel):
     address: str
     latitude: float
     longitude: float
-    classfication: str | None = None
+    classification: str | None = None
     comments: str | None
 
 

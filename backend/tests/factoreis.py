@@ -1,8 +1,11 @@
+from polyfactory.factories.pydantic_factory import ModelFactory
 from polyfactory.factories.sqlalchemy_factory import SQLAlchemyFactory
 from polyfactory.fields import Ignore
 
 from src.features.admin.models import Group, Menu, Permission, Role, User
 from src.features.admin.security import get_password_hash
+from src.features.org import models as org_models
+from src.features.org import schemas as org_schemas
 
 
 class UserFactory(SQLAlchemyFactory[User]):
@@ -35,3 +38,20 @@ class MenuFactory(SQLAlchemyFactory[Menu]):
     id = Ignore()
 
     permission = [1, 2, 3, 4]  # noqa: RUF012
+
+
+class SiteCreateFactory(ModelFactory[org_schemas.SiteCreate]):
+    __model__ = org_schemas.SiteCreate
+
+
+class SiteGroupCreateFactory(ModelFactory[org_schemas.SiteGroupCreate]):
+    __model__ = org_schemas.SiteGroupCreate
+
+
+class SiteFactory(SQLAlchemyFactory[org_models.Site]):
+    __model__ = org_models.Site
+    __set_foreign_keys__ = False
+    id = Ignore()
+    status = "Active"
+    country = "China"
+    time_zone = 8
