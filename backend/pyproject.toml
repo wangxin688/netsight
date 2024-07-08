@@ -1,5 +1,5 @@
 [project]
-name = "netsight"
+name = "Netsight"
 version = "0.1.0"
 description = "network full life-cycle automation system"
 authors = [

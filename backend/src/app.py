@@ -77,11 +77,33 @@ def add_views(admin: Admin) -> None:
     # it's only and POC for now and simplified for the demo to admin user.
     # all views should be added to views.py without any migical implementation
     from src.features.admin.views import GroupView, RoleView, UserView
+    from src.features.circuit.views import CircuitView
+    from src.features.dcim.views import DeviceView
+    from src.features.intend.views import (
+        CircuitTypeView,
+        DeviceRoleView,
+        DeviceTypeView,
+        IPRoleView,
+        ManufacturerView,
+        PlatformView,
+    )
+    from src.features.ipam.views import BlockView, PrefixView, VLANView
     from src.features.org.views import LocationView, SiteGroupView, SiteView
 
+    admin.add_view(LocationView)
+    admin.add_view(DeviceTypeView)
+    admin.add_view(PlatformView)
+    admin.add_view(ManufacturerView)
+    admin.add_view(IPRoleView)
+    admin.add_view(CircuitTypeView)
+    admin.add_view(DeviceRoleView)
     admin.add_view(SiteGroupView)
     admin.add_view(SiteView)
-    admin.add_view(LocationView)
+    admin.add_view(DeviceView)
+    admin.add_view(BlockView)
+    admin.add_view(PrefixView)
+    admin.add_view(VLANView)
+    admin.add_view(CircuitView)
     admin.add_view(GroupView)
     admin.add_view(RoleView)
     admin.add_view(UserView)
