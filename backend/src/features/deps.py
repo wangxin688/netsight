@@ -61,6 +61,25 @@ async def auth(
     return user
 
 
+async def sqladmin_auth(token: str) -> User:
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[JWT_ALGORITHM])
+    except jwt.DecodeError as e:
+        raise TokenInvalidError from e
+    token_data = JwtTokenPayload(**payload)
+    if token_data.refresh:
+        raise TokenInvalidError
+    now = datetime.now(tz=UTC)
+    if now < token_data.issued_at or now > token_data.expires_at:
+        raise TokenExpireError
+    async with async_session() as session:
+        user = await user_service.get_one_or_404(session, token_data.sub, selectinload(User.role))
+        check_user_active(user.is_active)
+        if user.role.slug == ReservedRoleSlug.ADMIN:
+            return user
+        raise PermissionDenyError
+
+
 def check_user_active(is_active: bool) -> None:
     if not is_active:
         raise PermissionDenyError

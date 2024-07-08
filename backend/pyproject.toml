@@ -31,6 +31,8 @@ dependencies = [
     "icmplib>=3.0.4",
     "tcppinglib>=2.0.3",
     "netmiko>=4.3.0",
+    "sqladmin>=0.18.0",
+    "itsdangerous>=2.2.0",
 ]
 readme = "README.md"
 requires-python = ">= 3.11"
@@ -100,6 +102,7 @@ fixable = ["ALL"]
 "src/features/admin/schemas.py" = ["N815"]        # frontend menu
 "alembic/*.py" = ["INP001", "UP007", "PLR0915", "E402", "F403"]
 "__init__.py" = ["F403", "F401"]
+"views.py" = ["RUF012"]
 
 [tool.ruff.lint.flake8-bugbear]
 extend-immutable-calls = [

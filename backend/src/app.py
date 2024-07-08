@@ -5,11 +5,14 @@ import redis.asyncio as aioreids
 import sentry_sdk
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
+from sqladmin import Admin
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.errors import ServerErrorMiddleware
 
 from src.core.config import _Env, settings
+from src.core.database.session import async_engine
 from src.core.errors.exception_handlers import default_exception_handler, exception_handlers, sentry_ignore_errors
+from src.features.admin.views import AdminAuth
 from src.libs.redis import session
 from src.register.middlewares import RequestMiddleware
 from src.register.openapi import get_open_api_intro, get_stoplight_elements_html
@@ -69,4 +72,18 @@ def create_app() -> FastAPI:
     return app
 
 
+def add_views(admin: Admin) -> None:
+    # remove the default admin views if I have time in future to build frontend by React
+    # it's only and POC for now and simplified for the demo to admin user.
+    # all views should be added to views.py without any migical implementation
+    from src.features.admin.views import GroupView, RoleView, UserView
+
+    admin.add_view(GroupView)
+    admin.add_view(RoleView)
+    admin.add_view(UserView)
+
+
+auth_backend = AdminAuth(secret_key=settings.SECRET_KEY)
 app = create_app()
+admin = Admin(app=app, engine=async_engine, authentication_backend=auth_backend)
+add_views(admin)

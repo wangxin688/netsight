@@ -81,8 +81,11 @@ idna==3.6
     # via anyio
     # via email-validator
     # via httpx
+itsdangerous==2.2.0
+    # via netsight
 jinja2==3.1.4
     # via fastapi
+    # via sqladmin
 kombu==5.3.7
     # via celery
 mako==1.3.0
@@ -92,6 +95,7 @@ markdown-it-py==3.0.0
 markupsafe==2.1.3
     # via jinja2
     # via mako
+    # via wtforms
 mdurl==0.1.2
     # via markdown-it-py
 netmiko==4.3.0
@@ -145,6 +149,7 @@ python-dotenv==1.0.0
 python-multipart==0.0.9
     # via fastapi
     # via netsight
+    # via sqladmin
 pytz==2024.1
     # via pandas
 pyyaml==6.0.1
@@ -166,14 +171,18 @@ six==1.16.0
 sniffio==1.3.0
     # via anyio
     # via httpx
+sqladmin==0.18.0
+    # via netsight
 sqlalchemy==2.0.31
     # via alembic
     # via netsight
+    # via sqladmin
     # via sqlalchemy-utils
 sqlalchemy-utils==0.41.1
     # via netsight
 starlette==0.37.2
     # via fastapi
+    # via sqladmin
 tcppinglib==2.0.3
     # via netsight
 textfsm==1.1.3
@@ -210,3 +219,5 @@ wcwidth==0.2.13
     # via prompt-toolkit
 websockets==12.0
     # via uvicorn
+wtforms==3.1.2
+    # via sqladmin

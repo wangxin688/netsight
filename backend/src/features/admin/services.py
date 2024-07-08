@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.errors.exception_handlers import NotFoundError, PermissionDenyError
@@ -29,6 +29,9 @@ class UserService(BaseRepository[User, schemas.UserCreate, schemas.UserUpdate, s
             raise NotFoundError(self.model.__visible_name__[locale_ctx.get()], "username", user.username)
         if not verify_password(user.password, db_user.password):
             raise PermissionDenyError
+        db_user.last_login = func.now()
+        session.add(db_user)
+        await session.commit()
         return db_user
 
 

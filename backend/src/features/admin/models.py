@@ -27,16 +27,39 @@ class RoleMenu(Base):
     menu_id: Mapped[UUID] = mapped_column(ForeignKey("menu.id"), primary_key=True)
 
 
-class Role(Base, AuditTimeMixin):
-    __tablename__ = "role"
-    __search_fields__: ClassVar = {"name"}
-    __visible_name__ = {"en_US": "Role", "zh_CN": "用户角色"}
+class User(Base, AuditTimeMixin):
+    __tablename__ = "user"
+    __search_fields__: ClassVar = {"email", "name", "phone"}
+    __visible_name__ = {"en_US": "User", "zh_CN": "用户"}
     id: Mapped[int_pk]
     name: Mapped[str]
-    slug: Mapped[str]
+    email: Mapped[str | None] = mapped_column(unique=True)
+    phone: Mapped[str | None] = mapped_column(unique=True)
+    password: Mapped[str]
+    avatar: Mapped[str | None]
+    last_login: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    is_active: Mapped[bool_true]
+    group_id: Mapped[int] = mapped_column(ForeignKey("group.id", ondelete="CASCADE"))
+    group: Mapped["Group"] = relationship(back_populates="user", passive_deletes=True)
+    role_id: Mapped[int] = mapped_column(ForeignKey("role.id", ondelete="CASCADE"))
+    role: Mapped["Role"] = relationship(backref="user", passive_deletes=True)
+    auth_info: Mapped[dict | None] = mapped_column(MutableDict.as_mutable(JSON))
+
+
+class Group(Base, AuditTimeMixin):
+    __tablename__ = "group"
+    __search_fields__: ClassVar = {"name"}
+    __visible_name__ = {"en_US": "Group", "zh_CN": "用户组"}
+    id: Mapped[int_pk] = mapped_column(nullable=False)
+    name: Mapped[str]
     description: Mapped[str | None]
-    permission: Mapped[list["Permission"]] = relationship(secondary="role_permission", back_populates="role")
-    menu: Mapped[list["Menu"]] = relationship(secondary="role_menu", back_populates="role")
+    role_id: Mapped[int] = mapped_column(ForeignKey("role.id", ondelete="CASCADE"))
+    role: Mapped["Role"] = relationship(backref="group", passive_deletes=True)
+    user: Mapped[list["User"]] = relationship(back_populates="group")
+    user_count: Mapped[int] = column_property(
+        select(func.count(User.id)).where(User.group_id == id).scalar_subquery(),
+        deferred=True,
+    )
 
 
 class Permission(Base):
@@ -50,35 +73,27 @@ class Permission(Base):
     role: Mapped[list["Role"]] = relationship(secondary="role_permission", back_populates="permission")
 
 
-class Group(Base, AuditTimeMixin):
-    __tablename__ = "group"
+class Role(Base, AuditTimeMixin):
+    __tablename__ = "role"
     __search_fields__: ClassVar = {"name"}
-    __visible_name__ = {"en_US": "Group", "zh_CN": "用户组"}
-    id: Mapped[int_pk]
+    __visible_name__ = {"en_US": "Role", "zh_CN": "用户角色"}
+    id: Mapped[int_pk] = mapped_column(nullable=False)
     name: Mapped[str]
+    slug: Mapped[str]
     description: Mapped[str | None]
-    role_id: Mapped[int] = mapped_column(ForeignKey(Role.id, ondelete="CASCADE"))
-    role: Mapped["Role"] = relationship(backref="group", passive_deletes=True)
-    user: Mapped[list["User"]] = relationship(back_populates="group")
+    permission: Mapped[list["Permission"]] = relationship(secondary="role_permission", back_populates="role")
+    menu: Mapped[list["Menu"]] = relationship(secondary="role_menu", back_populates="role")
 
-
-class User(Base, AuditTimeMixin):
-    __tablename__ = "user"
-    __search_fields__: ClassVar = {"email", "name", "phone"}
-    __visible_name__ = {"en_US": "User", "zh_CN": "用户"}
-    id: Mapped[int_pk]
-    name: Mapped[str]
-    email: Mapped[str | None] = mapped_column(unique=True)
-    phone: Mapped[str | None] = mapped_column(unique=True)
-    password: Mapped[str]
-    avatar: Mapped[str | None]
-    last_login: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    is_active: Mapped[bool_true]
-    group_id: Mapped[int] = mapped_column(ForeignKey(Group.id, ondelete="CASCADE"))
-    group: Mapped["Group"] = relationship(back_populates="user", passive_deletes=True)
-    role_id: Mapped[int] = mapped_column(ForeignKey(Role.id, ondelete="CASCADE"))
-    role: Mapped["Role"] = relationship(backref="user", passive_deletes=True)
-    auth_info: Mapped[dict | None] = mapped_column(MutableDict.as_mutable(JSON))
+    permission_count: Mapped[int] = column_property(
+        select(func.count(Permission.id))
+        .where(and_(RolePermission.role_id == id, RolePermission.permission_id == Permission.id))
+        .scalar_subquery(),
+        deferred=True,
+    )
+    user_count: Mapped[int] = column_property(
+        select(func.count(User.id)).where(User.role_id == id).scalar_subquery(),
+        deferred=True,
+    )
 
 
 class Menu(Base):
@@ -102,20 +117,3 @@ class Menu(Base):
         collection_class=attribute_mapped_collection("name"),
     )
     role: Mapped[list["Role"]] = relationship(back_populates="menu", secondary="role_menu")
-
-
-Group.user_count = column_property(
-    select(func.count(User.id)).where(User.group_id == Group.id).correlate_except(Group).scalar_subquery(),
-    deferred=True,
-)
-Role.permission_count = column_property(
-    select(func.count(Permission.id))
-    .where(and_(RolePermission.role_id == Role.id, RolePermission.permission_id == Permission.id))
-    .correlate_except(Role)
-    .scalar_subquery(),
-    deferred=True,
-)
-Role.user_count = column_property(
-    select(func.count(User.id)).where(User.role_id == Role.id).correlate_except(Role).scalar_subquery(),
-    deferred=True,
-)
