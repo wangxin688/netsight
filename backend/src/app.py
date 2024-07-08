@@ -77,7 +77,11 @@ def add_views(admin: Admin) -> None:
     # it's only and POC for now and simplified for the demo to admin user.
     # all views should be added to views.py without any migical implementation
     from src.features.admin.views import GroupView, RoleView, UserView
+    from src.features.org.views import LocationView, SiteGroupView, SiteView
 
+    admin.add_view(SiteGroupView)
+    admin.add_view(SiteView)
+    admin.add_view(LocationView)
     admin.add_view(GroupView)
     admin.add_view(RoleView)
     admin.add_view(UserView)
@@ -85,5 +89,7 @@ def add_views(admin: Admin) -> None:
 
 auth_backend = AdminAuth(secret_key=settings.SECRET_KEY)
 app = create_app()
-admin = Admin(app=app, engine=async_engine, authentication_backend=auth_backend)
+admin = Admin(
+    app=app, engine=async_engine, authentication_backend=auth_backend, title=settings.PROJECT_NAME, debug=True
+)
 add_views(admin)

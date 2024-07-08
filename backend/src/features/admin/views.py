@@ -36,7 +36,7 @@ class AdminAuth(AuthenticationBackend):
 
 class UserView(ModelView, model=models.User):
     name = models.User.__visible_name__[locale_ctx.get()]
-
+    category = "Administration"
     column_list = [
         models.User.id,
         models.User.name,
@@ -62,6 +62,7 @@ class UserView(ModelView, model=models.User):
 
 class GroupView(ModelView, model=models.Group):
     name = models.Group.__visible_name__[locale_ctx.get()]
+    category = "Administration"
 
     column_list = [
         models.Group.id,
@@ -83,7 +84,7 @@ class GroupView(ModelView, model=models.Group):
 
 class RoleView(ModelView, model=models.Role):
     name = models.Role.__visible_name__[locale_ctx.get()]
-
+    category = "Administration"
     column_list = [
         models.Role.id,
         models.Role.name,
