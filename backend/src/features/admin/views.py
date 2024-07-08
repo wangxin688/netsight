@@ -38,7 +38,6 @@ class UserView(ModelView, model=models.User):
     name = models.User.__visible_name__[locale_ctx.get()]
     category = "Administration"
     column_list = [
-        models.User.id,
         models.User.name,
         models.User.email,
         models.User.phone,
@@ -65,7 +64,6 @@ class GroupView(ModelView, model=models.Group):
     category = "Administration"
 
     column_list = [
-        models.Group.id,
         models.Group.name,
         models.Group.description,
         models.Group.role,
@@ -86,7 +84,6 @@ class RoleView(ModelView, model=models.Role):
     name = models.Role.__visible_name__[locale_ctx.get()]
     category = "Administration"
     column_list = [
-        models.Role.id,
         models.Role.name,
         models.Role.description,
         models.Role.permission_count,

@@ -9,7 +9,6 @@ class SiteGroupView(ModelView, model=models.SiteGroup):
     category = "Organization"
 
     column_list = [
-        models.SiteGroup.id,
         models.SiteGroup.name,
         models.SiteGroup.description,
         models.SiteGroup.site_count,
@@ -32,7 +31,6 @@ class SiteView(ModelView, model=models.Site):
     category = "Organization"
 
     column_list = [
-        models.Site.id,
         models.Site.name,
         models.Site.site_code,
         models.Site.status,
@@ -59,7 +57,6 @@ class LocationView(ModelView, model=models.Location):
     category = "Organization"
 
     column_list = [
-        models.Location.id,
         models.Location.name,
         models.Location.site,
         models.Location.location_type,
