@@ -24,7 +24,9 @@ class Base(DeclarativeBase):
         return super().__getattribute__(name)
 
     def __str__(self) -> str:
-        return f"{self.__class__.__name__: self.id}"
+        if hasattr(self, "name"):
+            return f"{self.__class__.__name__}: {self.name}"
+        return f"{type(self).__name__: self.id}"
 
 
 ModelT = TypeVar("ModelT", bound=Base)
