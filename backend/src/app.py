@@ -90,7 +90,6 @@ def add_views(admin: Admin) -> None:
     from src.features.ipam.views import BlockView, PrefixView, VLANView
     from src.features.org.views import LocationView, SiteGroupView, SiteView
 
-    admin.add_view(LocationView)
     admin.add_view(DeviceTypeView)
     admin.add_view(PlatformView)
     admin.add_view(ManufacturerView)
@@ -99,6 +98,7 @@ def add_views(admin: Admin) -> None:
     admin.add_view(DeviceRoleView)
     admin.add_view(SiteGroupView)
     admin.add_view(SiteView)
+    admin.add_view(LocationView)
     admin.add_view(DeviceView)
     admin.add_view(BlockView)
     admin.add_view(PrefixView)

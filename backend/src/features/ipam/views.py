@@ -20,6 +20,7 @@ class BlockView(ModelView, model=models.Block):
         models.Block.block,
         models.Block.is_private,
     ]
+    icon = "codepen"
 
 
 class PrefixView(ModelView, model=models.Prefix):

@@ -7,6 +7,8 @@ class DeviceTypeView(ModelView, model=models.DeviceType):
     name = "Device Type"
     name_plural = "Device Types"
 
+    icon = "mdi:server"
+
 
 class PlatformView(ModelView, model=models.Platform):
     category = "Intend"

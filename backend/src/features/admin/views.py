@@ -58,6 +58,8 @@ class UserView(ModelView, model=models.User):
 
     form_ajax_refs = {"group": {"fields": ("name",), "order_by": "id"}, "role": {"fields": ("name",), "order_by": "id"}}
 
+    icon = "fa-solid fa-user"
+
 
 class GroupView(ModelView, model=models.Group):
     name = models.Group.__visible_name__[locale_ctx.get()]
@@ -78,6 +80,7 @@ class GroupView(ModelView, model=models.Group):
     page_size_options = [20, 50, 100, 200]
 
     form_ajax_refs = {"role": {"fields": ("name",), "order_by": "id"}}
+    icon = "fa-solid fa-user-group"
 
 
 class RoleView(ModelView, model=models.Role):
@@ -98,3 +101,4 @@ class RoleView(ModelView, model=models.Role):
     page_size_options = [20, 50, 100, 200]
 
     form_ajax_refs = {"group": {"fields": ("name",), "order_by": "id"}}
+    icon = "fa-sharp fa-solid fa-circle-user"

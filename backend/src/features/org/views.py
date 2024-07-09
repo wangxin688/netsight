@@ -23,6 +23,7 @@ class SiteGroupView(ModelView, model=models.SiteGroup):
     page_size = 20
     page_size_options = [20, 50, 100, 200]
     form_create_rules = ["name", "description"]
+    icon = "fa-solid fa-sitemap"
 
 
 class SiteView(ModelView, model=models.Site):
