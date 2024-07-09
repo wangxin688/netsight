@@ -87,7 +87,7 @@ class AuditLogMixin:
             {
                 "request_id": request_id_ctx.get(),
                 "action": "create",
-                "diff": target.dict(native_dict=True),
+                "diff": target.dict(native_dict=False),
                 "parent_id": target.id,
                 "user_id": user_ctx.get(),
             },
@@ -116,7 +116,7 @@ class AuditLogMixin:
             {
                 "request_id": request_id_ctx.get(),
                 "action": "delete",
-                "diff": target.dict(native_dict=True),
+                "diff": target.dict(native_dict=False),
                 "parent_id": target.id,
                 "user_id": user_ctx.get(),
             },

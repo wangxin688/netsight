@@ -6,11 +6,8 @@ WORKDIR /home/app
 ENV PYTHONPATH=/home/app PYTHONHASHSEED=0
 
 
-COPY alembic.ini .env requirements.lock pyproject.toml README.md ./
+COPY alembic.ini requirements.lock pyproject.toml README.md ./
 COPY src/ src/
 COPY alembic/ alembic/
-RUN chmod 755 .env
+COPY deploy/ deploy/
 RUN PYTHONDONTWRITEBYTECODE=1 pip install -r requirements.lock
-RUN alembic upgrade head
-
-CMD ["python", "src/__main__.py"]

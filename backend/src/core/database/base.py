@@ -26,7 +26,7 @@ class Base(DeclarativeBase):
     def __str__(self) -> str:
         if hasattr(self, "name"):
             return f"{self.__class__.__name__}: {self.name}"
-        return f"{type(self).__name__: self.id}"
+        return f"{type(self).__name__}:{self.id}"
 
 
 ModelT = TypeVar("ModelT", bound=Base)

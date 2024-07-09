@@ -1,4 +1,4 @@
-### HLEP WANTED for frontend development
+### HELP WANTED for frontend development
 > Because of my personal time limitation, I don't have too much time for frontend size constructing.
 > If anyone is interested with frontend part I will be happy with contributions. (Vue3/React are both accepted ^_^)
 
@@ -60,3 +60,48 @@ Simplifying the data model by removing device components such as slots, console 
 Removing select tables and utilizing enum types to define certain fields contributes to a lighter-weight object relationship model. While acknowledging that this may reduce flexibility for some users, the primary goal is to construct a system that efficiently supports large-scale networks without necessitating exhaustive details for every network element. This compromise aims to strike a balance between simplicity and usability.
 - And a lot of changes will be introuduced later
 ### New Features(later)
+
+
+### StartUp
+> current only backend is support with docker compose
+> if docker compose not installed, please install docker compose first.
+
+```shell
+# if you want customize ENVIRONMENT for backend, such a DATABASE_USER, PASSWORD
+# just replace environment in docker-compose.yaml
+
+docker compose up -d
+# if code update:
+# run `docker-compose up -d --no-deps --build backend` to upgrade to latest
+docker ps
+```
+#### OpenAPI
+1. swagger: http://localhost:8000/api/docs
+2. redoc: http://localhost:8000/api/redoc
+3. elements: http://localhost:8000/api/elements
+#### Built-in(but very limited) Admin Dashboard
+Admin Page: http://localhost:8000/admin/login  demo_user/password: admin@netsight.com/admin
+
+### Development Guide
+#### install Rye for python project management
+> full step: https://rye.astral.sh/guide/installation/
+```shell
+cd backend
+curl -sSf https://rye.astral.sh/get | bash
+
+# install packages
+rye sync
+
+# please comment backend part in docker-compose.yaml
+# pull up postgresql and redis
+docker compose up -d
+
+#
+alembic upgrade head
+python deploy/init_metadata.py
+python src/__main__.py
+
+# if you want run app in debug mode, run following command
+uvicorn src.app:app --reload
+
+```

@@ -14,6 +14,7 @@ from src.features.admin.security import get_password_hash
 from src.features.consts import ReservedRoleSlug
 from src.features.intend.models import CircuitType, DeviceRole, DeviceType, IPRole, Manufacturer, Platform
 from src.features.ipam.models import Block
+from src.features.org.models import Location, Site, SiteGroup
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -170,6 +171,51 @@ async def init_block(session: "AsyncSession") -> None:
         await session.commit()
 
 
+async def init_org(session: "AsyncSession") -> None:
+    new_site_groups = SiteGroup(
+        name="Global",
+        description="Global site group",
+    )
+    local_site_group = (await session.scalars(select(SiteGroup).where(SiteGroup.name == "Global"))).one_or_none()
+    if not local_site_group:
+        session.add(new_site_groups)
+        await session.commit()
+        local_site_group = new_site_groups
+
+    new_sites = Site(
+        name="成都办公室",
+        site_code="CNCTU01",
+        status="Active",
+        time_zone=8,
+        country="中国",
+        city="成都",
+        address="成都市武侯区",
+        latitude=30.59,
+        longitude=104.06,
+        site_group_id=local_site_group.id,
+        network_contact_id=user_ctx.get(),
+        it_contact_id=user_ctx.get(),
+    )
+    local_site = (await session.scalars(select(Site).where(Site.site_code == "CNCTU01"))).one_or_none()
+    if not local_site:
+        session.add(new_sites)
+        await session.commit()
+        local_site = new_sites
+
+    new_location = Location(
+        name="F01",
+        description="Floor 01",
+        location_type="Floor",
+        status="Active",
+        site_id=local_site.id,
+    )
+    local_location = (await session.scalars(select(Location).where(Location.name == "F01"))).one_or_none()
+    if not local_location:
+        session.add(new_location)
+        await session.commit()
+        local_location = new_location
+
+
 async def init_meta() -> None:
     request_id_ctx.set(str(uuid4()))
     async with async_session() as session:
@@ -179,6 +225,9 @@ async def init_meta() -> None:
         await init_device_type(session)
         await init_circuit_type(session)
         await init_device_role(session)
+        await init_block(session)
+        await init_ip_role(session)
+        await init_org(session)
 
 
 if __name__ == "__main__":

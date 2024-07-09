@@ -8,13 +8,17 @@ class DeviceView(ModelView, model=models.Device):
 
     name = "Device"
     name_plural = "Devices"
+    icon = "fa-solid fa-router"
     column_list = [
         models.Device.name,
-        models.Device.device_type,
-        models.Device.device_role,
+        models.Device.management_ip,
+        models.Device.status,
         models.Device.site,
         models.Device.location,
-        models.Device.status,
+        models.Device.device_type,
+        models.Device.device_role,
+        models.Device.platform,
+        models.Device.manufacturer,
         models.Device.created_at,
         models.Device.updated_at,
     ]

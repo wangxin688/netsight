@@ -2,10 +2,11 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.core.database import Base
+from src.core.database.mixins import AuditUserMixin
 from src.core.database.types import bool_false, bool_true, int_pk
 
 
-class Template(Base):
+class Template(Base, AuditUserMixin):
     __tablename__ = "template"
 
     id: Mapped[int_pk]
@@ -16,7 +17,7 @@ class Template(Base):
     discovery_bgp_id: Mapped[int | None]
 
 
-class Monitor(Base):
+class Monitor(Base, AuditUserMixin):
     __tablename__ = "monitor"
 
     id: Mapped[int_pk]

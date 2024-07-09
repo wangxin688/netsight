@@ -28,6 +28,22 @@ class PrefixView(ModelView, model=models.Prefix):
     name = "Prefix"
     name_plural = "Prefixes"
 
+    column_list = [
+        models.Prefix.prefix,
+        models.Prefix.site,
+        models.Prefix.vrf,
+        models.Prefix.role,
+        models.Prefix.vlan,
+    ]
+    column_searchable_list = [models.Prefix.prefix]
+    column_filters = [
+        models.Prefix.site,
+        models.Prefix.vrf,
+        models.Prefix.role,
+        models.Prefix.vlan,
+    ]
+    icon = "codepen"
+
 
 class ASNView(ModelView, model=models.ASN):
     category = "IPAM"

@@ -30,6 +30,7 @@ class SiteView(ModelView, model=models.Site):
     name = "Site"
     name_plural = "Sites"
     category = "Organization"
+    icon = "fa-solid fa-location-dot"
 
     column_list = [
         models.Site.name,
@@ -56,6 +57,7 @@ class LocationView(ModelView, model=models.Location):
     name = "Location"
     name_plural = "Locations"
     category = "Organization"
+    icon = "fa-solid fa-buildings"
 
     column_list = [
         models.Location.name,

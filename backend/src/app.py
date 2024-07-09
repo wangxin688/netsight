@@ -88,6 +88,12 @@ def add_views(admin: Admin) -> None:
         PlatformView,
     )
     from src.features.ipam.views import BlockView, PrefixView, VLANView
+    from src.features.netconfig.views import (
+        AuthCredentialView,
+        BaseLineConfigView,
+        JinjaTemplateView,
+        TextFsmTemplateView,
+    )
     from src.features.org.views import LocationView, SiteGroupView, SiteView
 
     admin.add_view(DeviceTypeView)
@@ -96,6 +102,10 @@ def add_views(admin: Admin) -> None:
     admin.add_view(IPRoleView)
     admin.add_view(CircuitTypeView)
     admin.add_view(DeviceRoleView)
+    admin.add_view(BaseLineConfigView)
+    admin.add_view(AuthCredentialView)
+    admin.add_view(JinjaTemplateView)
+    admin.add_view(TextFsmTemplateView)
     admin.add_view(SiteGroupView)
     admin.add_view(SiteView)
     admin.add_view(LocationView)

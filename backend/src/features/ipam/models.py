@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils.types import ChoiceType
 
 from src.core.database import Base
-from src.core.database.mixins import AuditLogMixin
+from src.core.database.mixins import AuditLogMixin, AuditUserMixin
 from src.core.database.types import PgCIDR, PgIpInterface, bool_false, bool_true, int_pk
 from src.features._types import IPvAnyInterface, IPvAnyNetwork
 from src.features.consts import IPAddressStatus, IPRangeStatus, PrefixStatus, VLANStatus
@@ -45,20 +45,20 @@ class IPAddressUser(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), primary_key=True)
 
 
-class Block(Base, AuditLogMixin):
+class Block(Base, AuditUserMixin, AuditLogMixin):
     __tablename__ = "block"
     __visible_name__ = {"en_US": "IP Block", "zh_CN": "IP地址段"}
     __search_fields__ = {"block"}
     id: Mapped[int_pk]
     name: Mapped[str]
-    block: Mapped[IPvAnyNetwork] = mapped_column(PgCIDR, unique=True)
+    block: Mapped[str] = mapped_column(PgCIDR, unique=True)
     size: Mapped[int]
     range: Mapped[str]
     is_private: Mapped[bool]
     description: Mapped[str | None]
 
 
-class Prefix(Base, AuditLogMixin):
+class Prefix(Base, AuditUserMixin, AuditLogMixin):
     __tablename__ = "prefix"
     __visible_name__ = {"en_US": "IP Prefix", "zh_CN": "IP子网段"}
     __search_fields__ = {"prefix"}
@@ -77,7 +77,7 @@ class Prefix(Base, AuditLogMixin):
     vrf: Mapped["VRF"] = relationship(backref="prefix")
 
 
-class ASN(Base, AuditLogMixin):
+class ASN(Base, AuditUserMixin, AuditLogMixin):
     __tablename__ = "asn"
     __visible_name__ = {"en_US": "AS Number", "zh_CN": "AS号"}
     __search_fields__ = {"asn"}
@@ -88,7 +88,7 @@ class ASN(Base, AuditLogMixin):
     isp: Mapped[list["ISP"]] = relationship(secondary="isp_asn", back_populates="asn")
 
 
-class IPRange(Base, AuditLogMixin):
+class IPRange(Base, AuditUserMixin, AuditLogMixin):
     __tablename__ = "ip_range"
     __visible_name__ = {"en_US": "IP Range", "zh_CN": "IP地址串"}
     id: Mapped[int_pk]
@@ -104,7 +104,7 @@ class IPRange(Base, AuditLogMixin):
         return int(self.end_address) - int(self.start_address)
 
 
-class IPAddress(Base, AuditLogMixin):
+class IPAddress(Base, AuditUserMixin, AuditLogMixin):
     __tablename__ = "ip_address"
     __visible_name__ = {"en_US": "IP Address", "zh_CN": "IP地址"}
     __search_fields__ = {"address"}
@@ -121,7 +121,7 @@ class IPAddress(Base, AuditLogMixin):
     interface: Mapped["Interface"] = relationship(back_populates="ip_address")
 
 
-class VLAN(Base, AuditLogMixin):
+class VLAN(Base, AuditUserMixin, AuditLogMixin):
     __tablename__ = "vlan"
     __table_args__ = (UniqueConstraint("site_id", "vid"),)
     __search_fields__ = {"name", "vid"}
@@ -146,7 +146,7 @@ class VRFRouteTarget(Base):
     target: Mapped[str]
 
 
-class VRF(Base, AuditLogMixin):
+class VRF(Base, AuditUserMixin, AuditLogMixin):
     __tablename__ = "vrf"
     id: Mapped[int_pk]
     name: Mapped[str] = mapped_column(unique=True)
@@ -157,7 +157,7 @@ class VRF(Base, AuditLogMixin):
     route_target: Mapped[list["RouteTarget"]] = relationship(secondary="vrf_route_target", back_populates="vrf")
 
 
-class RouteTarget(Base, AuditLogMixin):
+class RouteTarget(Base, AuditUserMixin, AuditLogMixin):
     __tablename__ = "route_target"
     id: Mapped[int_pk]
     name: Mapped[str] = mapped_column(unique=True)

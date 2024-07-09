@@ -5,7 +5,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.database import Base
-from src.core.database.mixins import AuditLogMixin
+from src.core.database.mixins import AuditLogMixin, AuditUserMixin
 from src.core.database.types import EncryptedString, int_pk
 
 if TYPE_CHECKING:
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 __all__ = ("BaseLineConfig", "AuthCredential", "TextFsmTemplate", "JinjaTemplate")
 
 
-class BaseLineConfig(Base, AuditLogMixin):
+class BaseLineConfig(Base, AuditUserMixin, AuditLogMixin):
     __tablename__ = "baseline_config"
     __visible_name__ = {"en_US": "Baseline Configuration", "zh_CN": "基线配置"}
     id: Mapped[int_pk]
@@ -29,7 +29,7 @@ class BaseLineConfig(Base, AuditLogMixin):
     device_id: Mapped[int | None] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))
 
 
-class AuthCredential(Base, AuditLogMixin):
+class AuthCredential(Base, AuditUserMixin, AuditLogMixin):
     __tablename__ = "auth_credential"
     __visible_name__ = {"en_US": "Auth Crendential", "zh_CN": "认证凭证"}
     id: Mapped[int_pk]
@@ -41,20 +41,21 @@ class AuthCredential(Base, AuditLogMixin):
     device_id: Mapped[int | None] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))
 
 
-class TextFsmTemplate(Base):
+class TextFsmTemplate(Base, AuditUserMixin):
     __tablename__ = "textfsm_template"
     __visible_name__ = {"en_US": "TextFSM Template", "zh_CN": "TextFSM模板"}
     id: Mapped[int_pk]
     name: Mapped[str]
-    commonad: Mapped[str]
+    template: Mapped[str]
     platform_id: Mapped[int] = mapped_column(ForeignKey("platform.id", ondelete="RESTRICT"))
     platform: Mapped["Platform"] = relationship(backref="textfsm_template")
 
 
-class JinjaTemplate(Base):
+class JinjaTemplate(Base, AuditUserMixin):
     __tablename__ = "jinja_template"
     __visible_name__ = {"en_US": "Jinja Template", "zh_CN": "Jinja模板"}
     id: Mapped[int_pk]
     name: Mapped[str]
+    template: Mapped[str]
     platform_id: Mapped[int] = mapped_column(ForeignKey("platform.id", ondelete="RESTRICT"))
     platform: Mapped["Platform"] = relationship(backref="jinja_template")
