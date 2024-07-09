@@ -1,19 +1,15 @@
-### HELP WANTED for frontend development
-> Because of my personal time limitation, I don't have too much time for frontend size constructing.
-> If anyone is interested with frontend part I will be happy with contributions. (Vue3/React are both accepted ^_^)
-
-### Background
+## Background
 This project draws inspiration from Netbox, incorporating significant changes to better support built-in automation systems for netdevops. Having worked as a network engineer for over 5 years, I've managed more than 50,000 network devices, including but not limited to switches, routers, firewalls, SD-WAN, OVS, SDN, from various vendors in enterprise LAN/WAN/WLAN, and datacenter environments. Our team, consisting of more than 40 people, has been using Netbox for over 4 years. However, reaching a consensus on standards has proven challenging due to the lack of validations and limitations of netbox.
 
 While Netbox is undoubtedly a great and powerful tool, in my personal view, some of its data structures are too complex for efficient automation. It's better suited for modeling your network rather than serving as a primary tool for automation."
 
 Based on this foundation, I plan to launch a completely new project and build on top of FastAPI with pydantic. The new product will focus on simplifying data structures, providing more robust validation capabilities, and better supporting network automation processes. By optimizing these aspects, my goal is to offer a more user-friendly and efficient tool for netdevops, enabling them to smoothly devise and execute standardized network operational procedures.
 
-### Architecture
+## Architecture
 ![netsight-arch drawio](https://github.com/wangxin688/netsight/assets/36665036/3649d2ff-fdae-42aa-8fc8-0c74e9dc0473)
 
 
-### Introducation
+## Introducation
 Netsight aims to serve as a comprehensive network full life-cycle automation system. It is constructed on top of FastAPI, empowered by Pydantic to ensure robust data validation and limitations. This platform is designed to offer a multitude of features catering to the following functions:
 
 - Network Source of Truth:
@@ -62,7 +58,7 @@ Removing select tables and utilizing enum types to define certain fields contrib
 ### New Features(later)
 
 
-### StartUp
+## StartUp
 > current only backend is support with docker compose
 > if docker compose not installed, please install docker compose first.
 
@@ -75,15 +71,15 @@ docker compose up -d
 # run `docker-compose up -d --no-deps --build backend` to upgrade to latest
 docker ps
 ```
-#### OpenAPI
+### OpenAPI
 1. swagger: http://localhost:8000/api/docs
 2. redoc: http://localhost:8000/api/redoc
 3. elements: http://localhost:8000/api/elements
-#### Built-in(but very limited) Admin Dashboard
+### Built-in(but very limited) Admin Dashboard
 Admin Page: http://localhost:8000/admin/login  demo_user/password: admin@netsight.com/admin
 
-### Development Guide
-#### install Rye for python project management
+## Development Guide
+### install Rye for python project management
 > full step: https://rye.astral.sh/guide/installation/
 ```shell
 cd backend
@@ -105,3 +101,8 @@ python src/__main__.py
 uvicorn src.app:app --reload
 
 ```
+
+## HELP WANTED for frontend development
+> Because of my personal time limitation, I don't have too much time for frontend side development.(now I only add a very simple admin dashboard to show data. I have no plans to invest too much time on that)
+> On the first stage, I will focus on backend development, especially extend network related features.
+> If anyone is interested with frontend part I will be happy with contributions. (Vue3/React are both accepted ^_^, React is much more recommend).
