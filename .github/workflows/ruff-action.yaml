@@ -1,8 +1,14 @@
-name: Ruff
-on: [push, pull_request]
+name: pre-commit
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
 jobs:
-  ruff:
+  pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: chartboost/ruff-action@v1
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v3
+    - uses: pre-commit/action@v3.0.1
