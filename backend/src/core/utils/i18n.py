@@ -11,7 +11,7 @@ from src.core.utils.translations import translations
 
 @singleton
 class I18n:
-    accepted_languages: ClassVar[set[str]] = {"en_US", "zh_CN"}
+    accepted_languages: ClassVar[set[str]] = {"en", "zh"}
 
     def __init__(self) -> None:
         self.translations = translations
@@ -19,7 +19,7 @@ class I18n:
     def gettext(self, path: str, **kwargs: Any) -> dict | str:
         locale = locale_ctx.get()
         if not locale or locale not in self.accepted_languages:
-            locale = "en_US"
+            locale = "en"
         founded: dict | str = self._find(locale, path)
 
         if len(kwargs) > 0 and isinstance(founded, str):

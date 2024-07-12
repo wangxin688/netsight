@@ -47,7 +47,7 @@ class AlertUser(Base, AuditUserMixin):
 
 class Alert(Base, AuditTimeMixin):
     __tablename__ = "alert"
-    __visible_name__ = {"en_US": "AlertMeta", "zh_CN": "告警定义"}
+    __visible_name__ = {"en": "AlertMeta", "zh": "告警定义"}
     id: Mapped[int_pk]
     name: Mapped[i18n_name] = mapped_column(unique=True)
     slug: Mapped[str] = mapped_column(unique=True)
@@ -83,7 +83,7 @@ class EventMixin:
 
 class Event(Base, EventMixin):
     __tablename__ = "event"
-    __visible_name__ = {"en_US": "AlertEvent", "zh_CN": "告警事件"}
+    __visible_name__ = {"en": "AlertEvent", "zh": "告警事件"}
     id: Mapped[int_pk]
     alert_id: Mapped[int] = mapped_column(ForeignKey("alert.id", ondelete="CASCADE"))
     alert: Mapped["Alert"] = relationship(backref="event")
@@ -107,7 +107,7 @@ class Event(Base, EventMixin):
 
 class EventGroup(Base, EventMixin):
     __tablename__ = "event_group"
-    __visible_name__ = {"en_US": "AlertEventGroup", "zh_CN": "告警事件组"}
+    __visible_name__ = {"en": "AlertEventGroup", "zh": "告警事件组"}
     id: Mapped[int_pk]
     name: Mapped[str]
     group_key: Mapped[str | None]

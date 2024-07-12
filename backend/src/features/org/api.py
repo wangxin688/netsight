@@ -35,8 +35,8 @@ class SiteGroupAPI:
         db_group = await self.service.get_one_or_404(
             self.session,
             id,
-            selectinload(SiteGroup.created_by).load_only(User.id, User.name, User.email, User.phone, User.avatar),
-            selectinload(SiteGroup.updated_by).load_only(User.id, User.name, User.email, User.phone, User.avatar),
+            selectinload(SiteGroup.created_by).load_only(User.id, User.name, User.email, User.avatar),
+            selectinload(SiteGroup.updated_by).load_only(User.id, User.name, User.email, User.avatar),
         )
         return schemas.SiteGroup.model_validate(db_group)
 
@@ -45,8 +45,8 @@ class SiteGroupAPI:
         count, results = await self.service.list_and_count(
             self.session,
             q,
-            selectinload(SiteGroup.created_by).load_only(User.id, User.name, User.email, User.phone, User.avatar),
-            selectinload(SiteGroup.updated_by).load_only(User.id, User.name, User.email, User.phone, User.avatar),
+            selectinload(SiteGroup.created_by).load_only(User.id, User.name, User.email, User.avatar),
+            selectinload(SiteGroup.updated_by).load_only(User.id, User.name, User.email, User.avatar),
         )
         return ListT(count=count, results=[schemas.SiteGroupList.model_validate(r) for r in results])
 
@@ -79,11 +79,11 @@ class SiteAPI:
         db_site = await self.service.get_one_or_404(
             self.session,
             id,
-            selectinload(SiteGroup.created_by).load_only(User.id, User.name, User.email, User.phone, User.avatar),
-            selectinload(SiteGroup.updated_by).load_only(User.id, User.name, User.email, User.phone, User.avatar),
+            selectinload(SiteGroup.created_by).load_only(User.id, User.name, User.email, User.avatar),
+            selectinload(SiteGroup.updated_by).load_only(User.id, User.name, User.email, User.avatar),
             selectinload(Site.site_group).load_only(SiteGroup.id, SiteGroup.name),
-            selectinload(Site.network_contact).load_only(User.id, User.name, User.email, User.phone, User.avatar),
-            selectinload(Site.it_contact).load_only(User.id, User.name, User.email, User.phone, User.avatar),
+            selectinload(Site.network_contact).load_only(User.id, User.name, User.email, User.avatar),
+            selectinload(Site.it_contact).load_only(User.id, User.name, User.email, User.avatar),
         )
         return schemas.Site.model_validate(db_site)
 
@@ -92,11 +92,11 @@ class SiteAPI:
         count, results = await self.service.list_and_count(
             self.session,
             q,
-            selectinload(SiteGroup.created_by).load_only(User.id, User.name, User.email, User.phone, User.avatar),
-            selectinload(SiteGroup.updated_by).load_only(User.id, User.name, User.email, User.phone, User.avatar),
+            selectinload(SiteGroup.created_by).load_only(User.id, User.name, User.email, User.avatar),
+            selectinload(SiteGroup.updated_by).load_only(User.id, User.name, User.email, User.avatar),
             selectinload(Site.site_group).load_only(SiteGroup.id, SiteGroup.name),
-            selectinload(Site.network_contact).load_only(User.id, User.name, User.email, User.phone, User.avatar),
-            selectinload(Site.it_contact).load_only(User.id, User.name, User.email, User.phone, User.avatar),
+            selectinload(Site.network_contact).load_only(User.id, User.name, User.email, User.avatar),
+            selectinload(Site.it_contact).load_only(User.id, User.name, User.email, User.avatar),
         )
         return ListT(count=count, results=[schemas.Site.model_validate(r) for r in results])
 
@@ -142,8 +142,8 @@ class LocationAPI:
             self.session,
             id,
             selectinload(Location.site).load_only(Site.id, Site.name, Site.site_code),
-            selectinload(Location.created_by).load_only(User.id, User.name, User.email, User.phone, User.avatar),
-            selectinload(Location.updated_by).load_only(User.id, User.name, User.email, User.phone, User.avatar),
+            selectinload(Location.created_by).load_only(User.id, User.name, User.email, User.avatar),
+            selectinload(Location.updated_by).load_only(User.id, User.name, User.email, User.avatar),
         )
         return schemas.Location.model_validate(db_location)
 

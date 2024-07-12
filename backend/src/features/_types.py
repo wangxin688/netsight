@@ -108,8 +108,8 @@ class BatchUpdate(BaseModel):
 
 
 class I18nField(BaseModel):
-    en_US: str  # noqa: N815
-    zh_CN: str  # noqa: N815
+    en: str
+    zh: str
 
 
 class IdResponse(BaseModel):

@@ -1,46 +1,46 @@
 [
     {
-        "name": {"en_US": "Wireless", "zh_CN": "无线"},
+        "name": {"en": "Wireless", "zh": "无线"},
         "slug": "wireless",
         "description": "wireless mixed access"
     },
     {
-        "name": {"en_US": "Wireless Empolyee", "zh_CN": "员工无线"},
+        "name": {"en": "Wireless Empolyee", "zh": "员工无线"},
         "slug": "wireless-employee",
         "description": "wireless employee access"
     },
     {
-        "name": {"en_US": "Wireless Guest", "zh_CN": "访客无线"},
+        "name": {"en": "Wireless Guest", "zh": "访客无线"},
         "slug": "wireless-guest",
         "description": "wireless guest access"
     },
     {
-        "name": {"en_US": "Wireless Iot", "zh_CN": "物联网无线"},
+        "name": {"en": "Wireless Iot", "zh": "物联网无线"},
         "slug": "wireless-iot",
         "description": "wireless iot access"
     },
     {
-        "name": {"en_US": "Wired User", "zh_CN": "有线用户"},
+        "name": {"en": "Wired User", "zh": "有线用户"},
         "slug": "wired-user",
         "description": "wired user access"
     },
     {
-        "name": {"en_US": "Printer", "zh_CN": "打印机"},
+        "name": {"en": "Printer", "zh": "打印机"},
         "slug": "printer",
         "description": "printer access"
     },
     {
-        "name": {"en_US": "Video Conference", "zh_CN": "视频会议"},
+        "name": {"en": "Video Conference", "zh": "视频会议"},
         "slug": "video-conference",
         "description": "video-conference"
     },
     {
-        "name": {"en_US": "Server Farm", "zh_CN": "服务器"},
+        "name": {"en": "Server Farm", "zh": "服务器"},
         "slug": "server-farm",
         "description": "server farm access"
     },
     {
-        "name": {"en_US": "Testing", "zh_CN": "测试"},
+        "name": {"en": "Testing", "zh": "测试"},
         "slug": "testing",
         "description": "tesings network access"
     }

@@ -47,7 +47,7 @@ class IPAddressUser(Base):
 
 class Block(Base, AuditUserMixin, AuditLogMixin):
     __tablename__ = "block"
-    __visible_name__ = {"en_US": "IP Block", "zh_CN": "IP地址段"}
+    __visible_name__ = {"en": "IP Block", "zh": "IP地址段"}
     __search_fields__ = {"block"}
     id: Mapped[int_pk]
     name: Mapped[str]
@@ -60,7 +60,7 @@ class Block(Base, AuditUserMixin, AuditLogMixin):
 
 class Prefix(Base, AuditUserMixin, AuditLogMixin):
     __tablename__ = "prefix"
-    __visible_name__ = {"en_US": "IP Prefix", "zh_CN": "IP子网段"}
+    __visible_name__ = {"en": "IP Prefix", "zh": "IP子网段"}
     __search_fields__ = {"prefix"}
     id: Mapped[int_pk]
     prefix: Mapped[IPvAnyNetwork] = mapped_column(PgCIDR, unique=True, index=True)
@@ -79,7 +79,7 @@ class Prefix(Base, AuditUserMixin, AuditLogMixin):
 
 class ASN(Base, AuditUserMixin, AuditLogMixin):
     __tablename__ = "asn"
-    __visible_name__ = {"en_US": "AS Number", "zh_CN": "AS号"}
+    __visible_name__ = {"en": "AS Number", "zh": "AS号"}
     __search_fields__ = {"asn"}
     id: Mapped[int_pk]
     asn: Mapped[int] = mapped_column(unique=True)
@@ -90,7 +90,7 @@ class ASN(Base, AuditUserMixin, AuditLogMixin):
 
 class IPRange(Base, AuditUserMixin, AuditLogMixin):
     __tablename__ = "ip_range"
-    __visible_name__ = {"en_US": "IP Range", "zh_CN": "IP地址串"}
+    __visible_name__ = {"en": "IP Range", "zh": "IP地址串"}
     id: Mapped[int_pk]
     start_address: Mapped[IPvAnyInterface] = mapped_column(PgIpInterface)
     end_address: Mapped[IPvAnyInterface] = mapped_column(PgIpInterface)
@@ -106,7 +106,7 @@ class IPRange(Base, AuditUserMixin, AuditLogMixin):
 
 class IPAddress(Base, AuditUserMixin, AuditLogMixin):
     __tablename__ = "ip_address"
-    __visible_name__ = {"en_US": "IP Address", "zh_CN": "IP地址"}
+    __visible_name__ = {"en": "IP Address", "zh": "IP地址"}
     __search_fields__ = {"address"}
     id: Mapped[int_pk]
     address: Mapped[IPvAnyInterface] = mapped_column(PgIpInterface)

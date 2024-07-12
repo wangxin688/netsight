@@ -1,62 +1,62 @@
 [
     {
-        "name": {"en_US": "Core Switch", "zh_CN": "核心交换机"},
+        "name": {"en": "Core Switch", "zh": "核心交换机"},
         "slug": "core-switch",
         "description": "",
         "abbreviation": "CSW",
         "priority": 100
     },
     {
-        "name": {"en_US": "Distribution Switch", "zh_CN": "汇聚交换机"},
+        "name": {"en": "Distribution Switch", "zh": "汇聚交换机"},
         "slug": "distribution-switch",
         "description": "",
         "abbreviation": "DSW",
         "priority": 200
     },
     {
-        "name": {"en_US": "Access Switch", "zh_CN": "接入交换机"},
+        "name": {"en": "Access Switch", "zh": "接入交换机"},
         "slug": "access-switch",
         "description": "",
         "abbreviation": "ASW",
         "priority": 300
     },
     {
-        "name": {"en_US": "Leaf Switch", "zh_CN": "leaf交换机"},
+        "name": {"en": "Leaf Switch", "zh": "leaf交换机"},
         "slug": "leaf",
         "description": "",
         "abbreviation": "LEAF",
         "priority": 300
     },
     {
-        "name": {"en_US": "Spine Switch", "zh_CN": "Spine交换机"},
+        "name": {"en": "Spine Switch", "zh": "Spine交换机"},
         "slug": "spine",
         "description": "",
         "abbreviation": "SPINE",
         "priority": 100
     },
     {
-        "name": {"en_US": "Border Leaf Switch", "zh_CN": "边缘leaf交换机"},
+        "name": {"en": "Border Leaf Switch", "zh": "边缘leaf交换机"},
         "slug": "border-leaf",
         "description": "",
         "abbreviation": "BLEAF",
         "priority": 200
     },
     {
-        "name": {"en_US": "Firewall", "zh_CN": "防火墙"},
+        "name": {"en": "Firewall", "zh": "防火墙"},
         "slug": "firewall",
         "description": "",
         "abbreviation": "FW",
         "priority": 50
     },
     {
-        "name": {"en_US": "Gateway Router", "zh_CN": "网关路由器"},
+        "name": {"en": "Gateway Router", "zh": "网关路由器"},
         "slug": "gateway-router",
         "description": "",
         "abbreviation": "GR",
         "priority": 30
     },
     {
-        "name": {"en_US": "Access Point", "zh_CN": "无线AP"},
+        "name": {"en": "Access Point", "zh": "无线AP"},
         "slug": "access-point",
         "description": "",
         "abbreviation": "AP",
@@ -64,7 +64,7 @@
 
     },
     {
-        "name": {"en_US": "WLAN Controller", "zh_CN": "无线控制器"},
+        "name": {"en": "WLAN Controller", "zh": "无线控制器"},
         "slug": "wlan-ac",
         "description": "",
         "abbreviation": "WLC",

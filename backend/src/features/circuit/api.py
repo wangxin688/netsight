@@ -103,8 +103,8 @@ class CircuitAPI:
             selectinload(Circuit.site_z).load_only(Site.id, Site.name, Site.site_code),
             selectinload(Circuit.device_z).load_only(Device.id, Device.name, Device.management_ip),
             selectinload(Circuit.interface_z).load_only(Interface.id, Interface.name),
-            selectinload(Circuit.created_by).load_only(User.id, User.name, User.email, User.phone, User.avatar),
-            selectinload(Circuit.updated_by).load_only(User.id, User.name, User.email, User.phone, User.avatar),
+            selectinload(Circuit.created_by).load_only(User.id, User.name, User.email, User.avatar),
+            selectinload(Circuit.updated_by).load_only(User.id, User.name, User.email, User.avatar),
         )
         return schemas.Circuit.model_validate(db_circuit)
 

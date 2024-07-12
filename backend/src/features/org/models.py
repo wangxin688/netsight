@@ -22,7 +22,7 @@ class Site(Base, AuditUserMixin, AuditLogMixin):
 
     __tablename__ = "site"
     __search_fields__ = {"name", "site_code", "physical_address"}
-    __visible_name__ = {"en_US": "Site", "zh_CN": "站点"}
+    __visible_name__ = {"en": "Site", "zh": "站点"}
     id: Mapped[int_pk]
     name: Mapped[str] = mapped_column(unique=True)
     site_code: Mapped[str] = mapped_column(unique=True, index=True)
@@ -75,7 +75,7 @@ class SiteGroup(Base, AuditUserMixin):
 
     __tablename__ = "site_group"
     __search_fields__ = {"name", "slug"}
-    __visible_name__ = {"en_US": "Site Group", "zh_CN": "站点组"}
+    __visible_name__ = {"en": "Site Group", "zh": "站点组"}
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(unique=True)
     description: Mapped[str | None]
@@ -91,7 +91,7 @@ class Location(Base, AuditUserMixin, AuditLogMixin):
 
     __tablename__ = "location"
     __table_args__ = (UniqueConstraint("site_id", "name"),)
-    __visible_name__ = {"en_US": "Location", "zh_CN": "位置"}
+    __visible_name__ = {"en": "Location", "zh": "位置"}
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
     location_type: Mapped[LocationType] = mapped_column(ChoiceType(LocationType, impl=String()))

@@ -5,12 +5,12 @@ from sqlalchemy.orm import DeclarativeBase
 
 
 class VisibleName(TypedDict, total=True):
-    en_US: str
-    zh_CN: str
+    en: str
+    zh: str
 
 
 class Base(DeclarativeBase):
-    __visible_name__: ClassVar[VisibleName] = {"en_US": "base", "zh_CN": "base"}
+    __visible_name__: ClassVar[VisibleName] = {"en": "base", "zh": "base"}
     __search_fields__: ClassVar[set[str]] = set()
     __i18n_fields__: ClassVar[set[str]] = set()
 

@@ -1,8 +1,6 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic_extra_types.phone_numbers import PhoneNumber
-
 from src.features._types import AuditTime, BaseModel, QueryParams
 
 
@@ -36,7 +34,6 @@ class PermissionQuery(QueryParams): ...
 class UserBase(BaseModel):
     name: str
     email: str | None = None
-    phone: PhoneNumber | None = None
     avatar: str | None = None
 
 

@@ -15,8 +15,6 @@ dependencies = [
     "redis>=5.0.1",
     "sentry_sdk>=1.39.2",
     "httpx>=0.26.0",
-    "pydantic_extra_types>=2.4.1",
-    "phonenumbers>=8.13.27",
     "asyncpg>=0.29.0",
     "sqlalchemy-utils>=0.41.1",
     "python-multipart>=0.0.6",
@@ -31,8 +29,6 @@ dependencies = [
     "icmplib>=3.0.4",
     "tcppinglib>=2.0.3",
     "netmiko>=4.3.0",
-    "sqladmin>=0.18.0",
-    "itsdangerous>=2.2.0",
 ]
 readme = "README.md"
 requires-python = ">= 3.11"

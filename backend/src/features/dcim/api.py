@@ -42,8 +42,8 @@ class DeviceAPI:
             selectinload(Device.device_role).load_only(DeviceRole.id, DeviceRole.name),
             selectinload(Device.location).load_only(Location.id, Location.name),
             selectinload(Device.site).load_only(Site.id, Site.name),
-            selectinload(Device.created_by).load_only(User.id, User.name, User.email, User.phone, User.avatar),
-            selectinload(Device.updated_by).load_only(User.id, User.name, User.email, User.phone, User.avatar),
+            selectinload(Device.created_by).load_only(User.id, User.name, User.email, User.avatar),
+            selectinload(Device.updated_by).load_only(User.id, User.name, User.email, User.avatar),
             undefer_load=True,
         )
         return schemas.Device.model_validate(db_device)

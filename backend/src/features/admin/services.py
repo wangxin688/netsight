@@ -23,7 +23,7 @@ __all__ = (
 
 class UserService(BaseRepository[User, schemas.UserCreate, schemas.UserUpdate, schemas.UserQuery]):
     async def verify_user(self, session: AsyncSession, user: OAuth2PasswordRequestForm) -> User:
-        stmt = self._get_base_stmt().where(or_(self.model.email == user.username, self.model.phone == user.username))
+        stmt = self._get_base_stmt().where(or_(self.model.email == user.username))
         db_user = await session.scalar(stmt)
         if not db_user:
             raise NotFoundError(self.model.__visible_name__[locale_ctx.get()], "username", user.username)

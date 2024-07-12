@@ -28,7 +28,7 @@ __all__ = ("Circuit", "ISP", "ISPASN")
 
 class Circuit(Base, AuditUserMixin, AuditLogMixin):
     __tablename__ = "circuit"
-    __visible_name__ = {"en_US": "Circuit", "zh_CN": "线路"}
+    __visible_name__ = {"en": "Circuit", "zh": "线路"}
     __search_fields__ = {"name", "slug", "cid"}
     id: Mapped[int_pk]
     name: Mapped[str] = mapped_column(unique=True)
@@ -62,7 +62,7 @@ class Circuit(Base, AuditUserMixin, AuditLogMixin):
 
 class ISP(Base, AuditUserMixin, AuditLogMixin):
     __tablename__ = "isp"
-    __visible_name__ = {"en_US": "ISP", "zh_CN": "营运商"}
+    __visible_name__ = {"en": "ISP", "zh": "营运商"}
     __i18n_fields__ = {"name"}
     __search_fields__ = {"name", "slug"}
     id: Mapped[int_pk]

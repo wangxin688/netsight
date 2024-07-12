@@ -17,7 +17,7 @@ __all__ = ("DeviceRole", "IPRole", "CircuitType", "Platform", "Manufacturer", "D
 
 class DeviceRole(Base, AuditUserMixin):
     __tablename__ = "device_role"
-    __visible_name__ = {"en_US": "Device Role", "zh_CN": "设备角色"}
+    __visible_name__ = {"en": "Device Role", "zh": "设备角色"}
     id: Mapped[int_pk] = mapped_column(nullable=False)
     name: Mapped[i18n_name]
     slug: Mapped[str] = mapped_column(unique=True)
@@ -41,7 +41,7 @@ class DeviceRole(Base, AuditUserMixin):
 
 class IPRole(Base, AuditUserMixin):
     __tablename__ = "ip_role"
-    __visible_name__ = {"en_US": "IP Role", "zh_CN": "IP角色"}
+    __visible_name__ = {"en": "IP Role", "zh": "IP角色"}
     id: Mapped[int_pk]
     name: Mapped[i18n_name]
     slug: Mapped[str] = mapped_column(unique=True)
@@ -52,7 +52,7 @@ class IPRole(Base, AuditUserMixin):
 
 class CircuitType(Base, AuditUserMixin):
     __tablename__ = "circuit_type"
-    __visible_name__ = {"en_US": "Circuit Type", "zh_CN": "线路类型"}
+    __visible_name__ = {"en": "Circuit Type", "zh": "线路类型"}
     id: Mapped[int_pk] = mapped_column(nullable=False)
     name: Mapped[i18n_name]
     slug: Mapped[str] = mapped_column(unique=True)
@@ -105,7 +105,7 @@ class Platform(Base, AuditUserMixin):
 
 class DeviceType(Base, AuditUserMixin):
     __tablename__ = "device_type"
-    __visible_name__ = {"en_US": "Device Type", "zh_CN": "设备型号"}
+    __visible_name__ = {"en": "Device Type", "zh": "设备型号"}
     __table_args__ = (UniqueConstraint("manufacturer_id", "name"),)
     id: Mapped[int_pk] = mapped_column(nullable=False)
     name: Mapped[str] = mapped_column(unique=True)
@@ -135,7 +135,7 @@ class DeviceType(Base, AuditUserMixin):
 
 class Manufacturer(Base, AuditUserMixin):
     __tablename__ = "manufacturer"
-    __visible_name__ = {"en_US": "Manufacturer", "zh_CN": "厂商"}
+    __visible_name__ = {"en": "Manufacturer", "zh": "厂商"}
     __i18n_fields__ = {"name"}
     id: Mapped[int_pk] = mapped_column(nullable=False)
     name: Mapped[i18n_name]

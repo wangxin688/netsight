@@ -29,12 +29,11 @@ class RoleMenu(Base):
 
 class User(Base, AuditTimeMixin):
     __tablename__ = "user"
-    __search_fields__: ClassVar = {"email", "name", "phone"}
-    __visible_name__ = {"en_US": "User", "zh_CN": "用户"}
+    __search_fields__: ClassVar = {"email", "name"}
+    __visible_name__ = {"en": "User", "zh": "用户"}
     id: Mapped[int_pk]
     name: Mapped[str]
-    email: Mapped[str | None] = mapped_column(unique=True)
-    phone: Mapped[str | None] = mapped_column(unique=True)
+    email: Mapped[str] = mapped_column(unique=True)
     password: Mapped[str]
     avatar: Mapped[str | None]
     last_login: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -49,9 +48,9 @@ class User(Base, AuditTimeMixin):
 class Group(Base, AuditTimeMixin):
     __tablename__ = "group"
     __search_fields__: ClassVar = {"name"}
-    __visible_name__ = {"en_US": "Group", "zh_CN": "用户组"}
+    __visible_name__ = {"en": "Group", "zh": "用户组"}
     id: Mapped[int_pk] = mapped_column(nullable=False)
-    name: Mapped[str]
+    name: Mapped[str] = mapped_column(unique=True, nullable=False)
     description: Mapped[str | None]
     role_id: Mapped[int] = mapped_column(ForeignKey("role.id", ondelete="CASCADE"))
     role: Mapped["Role"] = relationship(backref="group", passive_deletes=True)
@@ -64,7 +63,7 @@ class Group(Base, AuditTimeMixin):
 
 class Permission(Base):
     __tablename__ = "permission"
-    __visible_name__ = {"en_US": "Permission", "zh_CN": "权限"}
+    __visible_name__ = {"en": "Permission", "zh": "权限"}
     id: Mapped[uuid_pk]
     name: Mapped[str]
     url: Mapped[str]
@@ -76,10 +75,10 @@ class Permission(Base):
 class Role(Base, AuditTimeMixin):
     __tablename__ = "role"
     __search_fields__: ClassVar = {"name"}
-    __visible_name__ = {"en_US": "Role", "zh_CN": "用户角色"}
+    __visible_name__ = {"en": "Role", "zh": "用户角色"}
     id: Mapped[int_pk] = mapped_column(nullable=False)
-    name: Mapped[str]
-    slug: Mapped[str]
+    name: Mapped[str] = mapped_column(unique=True, nullable=False)
+    slug: Mapped[str] = mapped_column(unique=True, nullable=False)
     description: Mapped[str | None]
     permission: Mapped[list["Permission"]] = relationship(secondary="role_permission", back_populates="role")
     menu: Mapped[list["Menu"]] = relationship(secondary="role_menu", back_populates="role")
@@ -98,7 +97,7 @@ class Role(Base, AuditTimeMixin):
 
 class Menu(Base):
     __tablename__ = "menu"
-    __visible_name__ = {"en_US": "Menu", "zh_CN": "菜单"}
+    __visible_name__ = {"en": "Menu", "zh": "菜单"}
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(unique=True, comment="the unique name of route")
     hidden: Mapped[bool_false]

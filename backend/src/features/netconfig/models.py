@@ -16,7 +16,7 @@ __all__ = ("BaseLineConfig", "AuthCredential", "TextFsmTemplate", "JinjaTemplate
 
 class BaseLineConfig(Base, AuditUserMixin, AuditLogMixin):
     __tablename__ = "baseline_config"
-    __visible_name__ = {"en_US": "Baseline Configuration", "zh_CN": "基线配置"}
+    __visible_name__ = {"en": "Baseline Configuration", "zh": "基线配置"}
     id: Mapped[int_pk]
     aaa_server: Mapped[list[str] | None] = mapped_column(ARRAY(String, dimensions=1))
     dhcp_server: Mapped[list[str] | None] = mapped_column(ARRAY(String, dimensions=1))
@@ -31,7 +31,7 @@ class BaseLineConfig(Base, AuditUserMixin, AuditLogMixin):
 
 class AuthCredential(Base, AuditUserMixin, AuditLogMixin):
     __tablename__ = "auth_credential"
-    __visible_name__ = {"en_US": "Auth Crendential", "zh_CN": "认证凭证"}
+    __visible_name__ = {"en": "Auth Crendential", "zh": "认证凭证"}
     id: Mapped[int_pk]
     cli: Mapped[str | None] = mapped_column(EncryptedString())
     snmpv2_community: Mapped[str | None] = mapped_column(EncryptedString())
@@ -43,7 +43,7 @@ class AuthCredential(Base, AuditUserMixin, AuditLogMixin):
 
 class TextFsmTemplate(Base, AuditUserMixin):
     __tablename__ = "textfsm_template"
-    __visible_name__ = {"en_US": "TextFSM Template", "zh_CN": "TextFSM模板"}
+    __visible_name__ = {"en": "TextFSM Template", "zh": "TextFSM模板"}
     id: Mapped[int_pk]
     name: Mapped[str]
     template: Mapped[str]
@@ -53,7 +53,7 @@ class TextFsmTemplate(Base, AuditUserMixin):
 
 class JinjaTemplate(Base, AuditUserMixin):
     __tablename__ = "jinja_template"
-    __visible_name__ = {"en_US": "Jinja Template", "zh_CN": "Jinja模板"}
+    __visible_name__ = {"en": "Jinja Template", "zh": "Jinja模板"}
     id: Mapped[int_pk]
     name: Mapped[str]
     template: Mapped[str]

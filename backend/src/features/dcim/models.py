@@ -24,7 +24,7 @@ class Device(Base, AuditUserMixin, AuditLogMixin):
     # make sure device is management by logic in dcim.views. if device is stacked
     #  members should be added and treated as stacked for this master device
     __tablename__ = "device"
-    __visible_name__ = {"en_US": "Device", "zh_CN": "设备"}
+    __visible_name__ = {"en": "Device", "zh": "设备"}
     __search_fields__ = {"name", "management_ipv4", "management_ipv6", "serial_num", "oob_ip"}
     id: Mapped[int_pk]
     name: Mapped[str] = mapped_column(index=True)
@@ -34,7 +34,7 @@ class Device(Base, AuditUserMixin, AuditLogMixin):
     software_version: Mapped[str | None]
     software_patch: Mapped[str | None]
     comments: Mapped[str | None]
-    serial_number: Mapped[str | None] = mapped_column(unique=True)  # master
+    serial_number: Mapped[str | None]
     asset_tag: Mapped[str | None]
     device_type_id: Mapped[int] = mapped_column(ForeignKey("device_type.id", ondelete="RESTRICT"))
     device_type: Mapped["DeviceType"] = relationship(backref="device", passive_deletes=True)
@@ -65,6 +65,7 @@ class Device(Base, AuditUserMixin, AuditLogMixin):
 
 class DeviceModule(Base, AuditTimeMixin):
     __tablename__ = "module"
+    __search_fields__ = {"name", "serial_number"}
     id: Mapped[int_pk]
     name: Mapped[str]  # huawei: module
     description: Mapped[str | None]  # huawei board info
@@ -78,6 +79,8 @@ class DeviceModule(Base, AuditTimeMixin):
 
 class DeviceStack(Base, AuditTimeMixin):
     __tablename__ = "stack"
+    __visible_name__ = {"en": "Stack", "zh": "stack"}
+    __search_fields__ = {"mac_address"}
     id: Mapped[int_pk]
     role: Mapped[str]
     mac_address: Mapped[str]
@@ -89,7 +92,8 @@ class DeviceStack(Base, AuditTimeMixin):
 class DeviceEquipment(Base, AuditTimeMixin):
     # device FAN/Power/SFP Module
     __tablename__ = "equipment"
-    __visible_name__ = {"en_US": "Equipment", "zh_CN": "Equipment"}
+    __visible_name__ = {"en": "Equipment", "zh": "Equipment"}
+    __search_fields__ = {"name", "serial_number"}
     id: Mapped[int_pk]
     name: Mapped[str]
     eq_type: Mapped[DeviceEquipmentType] = mapped_column(ChoiceType(DeviceEquipmentType, impl=String()))
@@ -101,7 +105,7 @@ class DeviceEquipment(Base, AuditTimeMixin):
 
 class DeviceConfig(Base):
     __tablename__ = "device_config"
-    __visible_name__ = {"en_US": "Device Config", "zh_CN": "设备配置"}
+    __visible_name__ = {"en": "Device Config", "zh": "设备配置"}
     id: Mapped[int_pk]
     # if you want to save many history configuration versions, db is not recommended.
     # store content in Object Storage
@@ -121,7 +125,7 @@ class DeviceConfig(Base):
 class Interface(Base, AuditTimeMixin):
     __tablename__ = "interface"
     __table_args__ = (UniqueConstraint("device_id", "name"),)
-    __visible_name__ = {"en_US": "Interface", "zh_CN": "interface"}
+    __visible_name__ = {"en": "Interface", "zh": "interface"}
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
     description: Mapped[str | None]
@@ -140,7 +144,7 @@ class Interface(Base, AuditTimeMixin):
 
 class LldpNeighbor(Base, AuditTimeMixin):
     __tablename__ = "lldp_neighbor"
-    __visible_name__ = {"en_US": "LLDP Neighbor", "zh_CN": "LLDP邻居"}
+    __visible_name__ = {"en": "LLDP Neighbor", "zh": "LLDP邻居"}
     id: Mapped[int_pk]
     source_interface_id: Mapped[int] = mapped_column(ForeignKey("interface.id", ondelete="CASCADE"))
     source_interface: Mapped["Interface"] = relationship(backref="source_interface", foreign_keys=[source_interface_id])

@@ -269,8 +269,8 @@ class BaseRepository(Generic[ModelT, CreateSchemaType, UpdateSchemaType, QuerySc
                     if key in self.model.__i18n_fields__ and type(getattr(self.model, key).type) is types.JSON:
                         stmt = stmt.where(
                             or_(
-                                getattr(self.model, key)["zh_CN"].in_(value),
-                                getattr(self.model, key)["en_US"].in_(value),
+                                getattr(self.model, key)["zh"].in_(value),
+                                getattr(self.model, key)["en"].in_(value),
                             )
                         )
                     else:
