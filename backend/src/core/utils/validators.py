@@ -22,7 +22,7 @@ def mac_address_validator(mac: str) -> str:
     """
     _mac_address_re = r"^[0-9a-fA-F]{12}$"
     input_mac = re.sub(r"[^0-9a-fA-F]", "", mac)
-    if len(mac) != MAC_ADDRESS_LENGTH:
+    if len(input_mac) != MAC_ADDRESS_LENGTH:
         raise ValueError("validation_error.bad_mac_format")
     if re.match(_mac_address_re, input_mac):
         return ":".join(input_mac[i : i + 2] for i in range(0, len(input_mac), 2)).lower()
